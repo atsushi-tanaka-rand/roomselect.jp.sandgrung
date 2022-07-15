@@ -1,0 +1,1732 @@
+<!--建物登録-->
+<apex:page standardStylesheets="false" docType="html-5.0" controller="GA104003Controller" title="建物登録">
+    <head>
+        <meta charset="utf-8"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+        <meta name="format-detection" content="telephone=no"/>
+        <meta name="robots" content="noindex" />
+        <title>建物登録</title>
+        
+        <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery-3.6.0.min.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jQueryUI/jquery-ui.min.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery.blockUI.js')}"/>     
+        <apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/common_screen_util.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/input_rules.js')}"/>
+        <!-- ▼ 2022.04.07 No.782 問合せNo0782_建物画面の沿線名と駅名の登録について モーダル-->
+        <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/modaal.css')}" />
+        <apex:includeScript value="{!URLFOR($Resource.designer_file, 'designer_file/js/modaal.js')}" />
+        <!-- ▲ 2022.04.07 No.782 問合せNo0782_建物画面の沿線名と駅名の登録について -->
+        <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery.autoKana.js')}"/>
+        
+        <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/reset.min.css')}"/> 
+        <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/foundation.css')}"/>
+        <apex:stylesheet value="https://use.fontawesome.com/releases/v5.0.6/css/all.css"/>   
+        <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/style.css')}"/> 
+        <apex:stylesheet value="{!URLFOR($Resource.external_file, 'external_file/common_style.css')}"/>  
+        <apex:stylesheet value="{!URLFOR($Resource.jQuery,'jQuery/jQueryUI/jquery-ui.css')}"/>
+
+        <style type="text/css">
+            .parent-row .serach_check5 {
+                visibility: hidden;
+            }
+            /* ▼　2022.04.25 No0805対応*/
+            #ga104007 table.gray{overflow-y:scroll;margin-bottom:30px;}
+            /* ▲　2022.04.25 No0805対応*/
+        </style>
+
+        <script type="text/javascript">
+        
+        //削除確認メッセージ
+        async function checkDelete(mode, index) {
+            var message = "{! MSG_COM_V_DELETE}";
+            if (await showConfirm(message)) {
+                blockUi();
+                if (mode == 'building') {
+                    deleteBuilding();
+                } else if (mode == 'anyPhoto') {
+                    $('.deletePhotoIndex').val(index);
+                    deleteAnyPhoto();
+                } else if (mode == 'surroundingPhoto') {
+                    $('.deletePhotoIndex').val(index);
+                    deleteSurroundingPhoto();
+                }
+                
+            }
+        }
+
+        //▼問合せNo0345で追加
+        // 画像一括削除確認メッセージ
+        async function checkDeleteImageAll() {
+            var message = "{! MSG_COM_V_DELETE_IMAGE}";
+            if (await showConfirm(message)) {
+                blockUi();
+                // 画像一括削除実行
+                deletePhotoAll();
+            }
+        }
+        //▲問合せNo0345で追加
+        
+        //保存確認メッセージ
+        async function checkSave() {
+            var message = "{! MSG_COM_V_SAVE}";
+            if (await showConfirm(message)) {
+                blockUi();
+                saveBuilding();
+            }
+        }
+        
+        //削除完了メッセージ
+        async function alertDeleteFinish() {
+            //完了メッセージ
+            await showAlert("{! MSG_COM_I_DELETE}");
+            
+            //画面を閉じる
+            closePage();
+        }
+        
+        //▼問合せNo0345で追加
+        // 削除完了メッセージ
+        async function alertDeleteMessage() {
+            //完了メッセージ
+            await showAlert("{! MSG_COM_I_DELETE}");
+        }
+        //▲問合せNo0345で追加
+        
+        //保存完了メッセージ
+        async function alertSaveFinish() {
+            //完了メッセージ
+            await showAlert("{! MSG_COM_I_SAVE}");
+            
+            //画面を閉じる
+            closePage();
+        }
+        
+        //周辺情報の再取得を実行するか確認メッセージ
+        async function alertReacquisitionSurroundigInfo() {
+            //メッセージ
+            var message = "{! MSG_PROP_V_REACQUISITION_SURROUNDING_INFO}";
+            if (await showConfirm(message)) {
+                blockUi();
+                getSurroundingEnvironment();
+            }
+        }
+        
+        //周辺情報の再取得完了メッセージ
+        async function alertReacquisitionSurroundingFinish() {
+            //メッセージ
+            var message = "{! MSG_PROP_I_FACILITY_IMPORT_END}"
+            await showAlert(message);
+        }
+        
+        //ファイルが画像ではない場合エラーメッセージ
+        async function alertWImageFileType() {
+            //メッセージ
+            await showAlert("{! MSG_COM_W_SELECTION_IMAGE_FILETYPE}");
+        }
+        $(document).ready(
+            
+            function() {          
+                $('.buildName1').blur();//フォーカスを外す     
+                $.fn.autoKana('.buildName1', '.buildNameKana1', {
+                    katakana : true  //trulastNamee：カタカナ、false：ひらがな（デフォルト）
+                });            
+                $.fn.autoKana('.buildName2', '.buildNameKana2', {
+                    katakana : true  //true：カタカナ、false：ひらがな（デフォルト）
+                });              
+                $.fn.autoKana('.buildName3', '.buildNameKana3', {
+                    katakana : true  //true：カタカナ、false：ひらがな（デフォルト）
+                });
+            });     
+        
+        //カナの自動入力設定後、フォーカスを再設定（こうしないとフォーカスを一度外さないと動作しない）
+        $(function(){
+            $('.buildName1').focus();
+        });
+        </script>
+    </head>
+    
+    <body style="background-color:#ffffff;">
+        <main id="ga104003">
+            <article>
+                <apex:form id="GA104003Form">
+                    <apex:pageMessages id="messageArea" />
+                    <apex:actionFunction name="changeState"                action="{!changeState}"        oncomplete="unblockUi();"    rerender="district, choazaCode, latitude, longitude" />
+                    <apex:actionFunction name="changeCity"                 action="{!changeCity}"         oncomplete="unblockUi();"    rerender="district, choazaCode, latitude, longitude" />
+                    <apex:actionFunction name="changeCityOrStreet"         action="{!changeCityOrStreet}" oncomplete="unblockUi();"    rerender="district, choazaCode, latitude, longitude" />
+                    <apex:actionFunction name="schoolRecalculateFormula"   action="{!recalculateFormula}" rerender="PrimarySchoolWalkTime1,PrimarySchoolWalkTime2,PrimarySchoolWalkTime3,juniorHighSchoolWalkTime1,juniorHighSchoolWalkTime2,juniorHighSchoolWalkTime3,StationWalkTime1,StationWalkTime2,StationWalkTime3,busStopWalkTime1, busStopWalkTime2, busStopWalkTime3, busStopToStationWalkTime1, busStopToStationWalkTime2, busStopToStationWalkTime3 " />
+                    <apex:actionFunction name="basicRecalculateFormula"    action="{!recalculateFormula}" rerender="buildingage" />
+                    <apex:actionFunction name="routeStationRecalculateFormula" action="{!recalculateFormula}" rerender="StationWalkTime1,StationWalkTime2,StationWalkTime3,busStopWalkTime1, busStopWalkTime2, busStopWalkTime3, busStopToStationWalkTime1, busStopToStationWalkTime2, busStopToStationWalkTime3 " />
+                    <apex:actionFunction name="routeBusRecalculateFormula" action="{!recalculateFormula}" rerender="busStopWalkTime1, busStopWalkTime2, busStopWalkTime3, busStopToStationWalkTime1, busStopToStationWalkTime2, busStopToStationWalkTime3 " />
+                    <apex:actionFunction name="GA102006FormClose"          action="{!GA102006FormClose}"  rerender="accordionScript, basicInformation, schoolInformation, surroundingFacilities, routeBusInformation" />
+                    <apex:actionFunction name="updateAnyPhoto"             action="{!updateAnyPhoto}"         oncomplete="unblockUi()" rerender="messageArea, anyPhotoBlock,bulkDeleteButon" />
+                    <apex:actionFunction name="updateSurroundingPhoto"     action="{!updateSurroundingPhoto}" oncomplete="unblockUi()" rerender="messageArea, surroundingPhotoBlock, surroundingPhotoUploadBlock,bulkDeleteButon" />
+                    <apex:actionFunction name="deleteBuilding"             action="{!deleteBuilding}"
+                                         oncomplete="unblockUi();if(!{! hasErrorMessage}){alertDeleteFinish()}else{gotoTop()}" rerender="accordionScript, messageArea" />
+                    <apex:actionFunction name="getSurroundingEnvironment"  action="{!getSurroundingEnvironment}"
+                                         oncomplete="unblockUi();if(!{! hasErrorMessage}){alertReacquisitionSurroundingFinish()}else{gotoTop()}"
+                                         reRender="accordionScript, messageArea, latitude, longitude, schoolInformation, surroundingFacilities, routeBusInformation" />
+                                         
+                    <apex:actionFunction name="deleteAnyPhoto"             action="{!deleteAnyPhoto}"
+                                         oncomplete="unblockUi()" rerender="messageArea, anyPhotoBlock,bulkDeleteButon" />
+                    <apex:actionFunction name="deleteSurroundingPhoto"     action="{!deleteSurroundingPhoto}"
+                                         oncomplete="unblockUi()" rerender="messageArea, surroundingPhotoBlock, surroundingPhotoUploadBlock,bulkDeleteButon" />
+                    <!-- 画像一括削除処理 ▼問合せNo0345で追加 -->
+                    <apex:actionFunction name="deletePhotoAll"             action="{!deletePhotoAll}"
+                                         oncomplete="unblockUi();if(!{! hasErrorMessage}){alertDeleteMessage()}else{gotoTop()}" rerender="messageArea,bulkDeleteButon, anyPhotoBlock,surroundingPhotoBlock,surroundingPhotoUploadBlock" />
+                    <!-- 画像一括削除処理 ▲問合せNo0345で追加 -->
+                    <apex:actionFunction name="changeprimarySchool1" action="{!getprimarySchoolFilePath1}" rerender="primarySchool1" />
+                    <apex:actionFunction name="changeprimarySchool2" action="{!getprimarySchoolFilePath2}" rerender="primarySchool2" />
+                    <apex:actionFunction name="changeprimarySchool3" action="{!getprimarySchoolFilePath3}" rerender="primarySchool3" />
+                    <apex:actionFunction name="changejuniorHighSchool1" action="{!getjuniorHighSchoolFilePath1}" rerender="juniorHighSchool1" />
+                    <apex:actionFunction name="changejuniorHighSchool2" action="{!getjuniorHighSchoolFilePath2}" rerender="juniorHighSchool2" />
+                    <apex:actionFunction name="changejuniorHighSchool3" action="{!getjuniorHighSchoolFilePath3}" rerender="juniorHighSchool3" />
+                    <!-- actionFunctionへのパラメータ引渡用 隠し項目 -->
+
+                    <!-- ▼ 2022.04.08 No.782 問合せNo0782_建物画面の沿線名と駅名の登録について モーダル処理追加-->
+                    <apex:actionFunction name="closeModal"    action="{!closeModal}"          rerender="routeBusInformation" />
+                    <!-- ▲ 2022.04.08 No.782 問合せNo0782_建物画面の沿線名と駅名の登録について-->
+
+                    <apex:input styleClass="deletePhotoIndex" style="display:none" value="{!deletePhotoIndex}" /> <!-- 削除対象写真のインデックス -->
+
+                    <!--建物コード履歴の削除 -->
+                    <apex:actionFunction name="delBuildingCdHist" action="{! delBuildingCdHist }"
+                                         oncomplete="unblockUi(); if({!hasErrorMessage}){gotoTop(); return false;} alertDeleteMessage();" 
+                                         reRender="messageArea, buildingCdHistDetail"/>
+                    <!-- メンテナンス物件コードの存在チェック -->
+                    <apex:actionFunction name="chkExistsMaintPropCd" action="{! setExistsMaintPropCdFlg }"
+                                         oncomplete="unblockUi(); if({! existsMaintPropCd }){showAlert2('{! MSG_PROP_W_EXISTS_MAINT_PROP_HIST }')};" 
+                                         reRender="dummy"/>
+
+                    <section>
+                        <section style="display:flex">
+                            <h1 class="fontb font3rem" style="margin-bottom: 10px">建物登録</h1>
+                            <apex:commandButton style="visibility:hidden;" rerender="dummy"/>
+                        </section>
+                        <div class="flex-wrap justify-between align_center mb10">
+                            <h1 class="fontb font2rem">{!targetBuilding.Name}</h1>
+                            <div>
+                                <apex:commandButton styleClass="btn btn btn-sm btn-normal" value="名寄せ" disabled="{!targetBuilding.ID == '' || displayTargetRecord.isMergeCompletedFlag || isOpenError}"
+                                                    onclick="showPage('GD601006View', '', 'TRUE', 'Id={!displayTargetRecord.buildId}&Mode=建物名寄せ'); "
+                                                    rerender="messageArea" tabindex="1" />
+                                <apex:commandButton styleClass="btn btn btn-sm btn-normal" value="削除"   rendered="{!targetBuilding.ID != ''}"
+                                                    onclick="checkDelete('building')" disabled="{!isOpenError}" 
+                                                    rerender="dummy" tabindex="1" />
+                            </div>
+                        </div>  
+                        <div class="border-g-3 mb60">
+                            <div class="flex-wrap flex_wrap justify-between">
+                                <div class="wd19 wd49_md wd100_xs">
+                                    <div class="information_title">郵便番号</div>
+                                    <div class="information_contents">
+                                        <apex:outputText value="{!targetBuilding.PostalCode__c}" />
+                                    </div>
+                                </div>
+                                <div class="wd19 wd49_md wd100_xs">
+                                    <div class="information_title">住所</div>
+                                    <div class="information_contents">
+                                        <apex:outputText value="{!targetBuilding.Address__c}" />
+                                    </div>
+                                </div>
+                                <div class="wd19 wd49_md wd100_xs">
+                                    <div class="information_title">建物構造</div>
+                                    <div class="information_contents">
+                                        <apex:outputText value="{!targetBuilding.Structure__c}" />
+                                    </div>
+                                </div>
+                                <div class="wd19 wd49_md wd100_xs">
+                                    <div class="information_title">築年月</div>
+                                    <div class="information_contents">
+                                        <apex:outputtext value="{!targetBuilding.BuildingYM__c}" />
+                                    </div>
+                                </div>
+                                <div class="wd19 wd49_md wd100_xs">
+                                    <div class="information_title">最寄駅</div>
+                                    <div class="information_contents">
+                                        <apex:outputText value="{!targetBuilding.Station1__r.NAME}駅" />
+                                        <apex:outputText value=" 徒歩{!targetBuilding.StationWalkTimeFormat1__c}" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                    <apex:outputText value="【Attention】建物名・建物名カナ・「都道府県＋住所１＋住所２」のいずれか、またはすべてが一致する建物情報が存在します。「名寄せ」を実施してください。" style="color:red;" rendered="{!displayTargetRecord.isMergeCompletedFlag == FALSE && targetBuilding.ID != ''}" />
+                    <section>
+                        <div class="border-g-4">
+                            <div class="tabs">
+                                <input id="all" type="radio" name="tab_item" checked = 'true' />
+                                <label class="tab_item ml10" for="all">詳細</label>
+                                <input id="programming" type="radio" name="tab_item" />
+                                <label class="tab_item" for="programming">関連</label>
+                                <div class="tab_content" id="all_content">
+                                    <ul id="accordion" class="accordion-defalt">
+                                        <li class="default open">
+                                            <div class="link"><i class="fa fa-chevron-up"></i>基本情報</div>
+                                            <apex:outputPanel id="basicInformation" >
+                                                <ul class="submenu-defalt">
+                                                    <li>
+                                                        <div class="flex-wrap  flex_wrap justify-between align_center ">
+                                                            <div class=" mb10 wd47 wd100_xs">
+                                                                <div class="information_title">建物名</div>
+                                                                <div>
+                                                                    <apex:input type="text" styleClass="form-control buildName1" value="{!displayTargetRecord.buildName}" onchange="correctInputRules(this,'text',80);" tabindex="2" />
+                                                                </div>
+                                                            </div>
+                                                            <div class=" mb10 wd47 wd100_xs">
+                                                                <div class="information_title">建物名(カナ)</div>
+                                                                <div>
+                                                                    <apex:input type="text" styleClass="form-control buildNameKana1" value="{!displayTargetRecord.buildNameKana}" onchange="correctInputRules(this,'textKana',120);" tabindex="3" />
+                                                                </div>
+                                                            </div>
+                                                            <div class=" mb10 wd47 wd100_xs">
+                                                                <div class="information_title">建物名2</div>
+                                                                <div>
+                                                                    <apex:input type="text" styleClass="form-control buildName2" value="{!displayTargetRecord.buildName2}" onchange="correctInputRules(this,'text',80);" tabindex="4" />
+                                                                </div>
+                                                            </div>
+                                                            <div class=" mb10 wd47 wd100_xs">
+                                                                <div class="information_title">建物名2(カナ)</div>
+                                                                <div>
+                                                                    <apex:input type="text" styleClass="form-control buildNameKana2" value="{!displayTargetRecord.buildNameKana2}" onchange="correctInputRules(this,'textKana',120);" tabindex="5" />                                                                
+                                                                </div>
+                                                            </div>
+                                                            <div class=" mb10 wd47 wd100_xs">
+                                                                <div class="information_title">建物名3</div>
+                                                                <div>
+                                                                    <apex:input type="text" styleClass="form-control buildName3" value="{!displayTargetRecord.buildName3}" onchange="correctInputRules(this,'text',80);" tabindex="6" />                                                                
+                                                                </div>
+                                                            </div>
+                                                            <div class=" mb10 wd47 wd100_xs">
+                                                                <div class="information_title">建物名3(カナ)</div>
+                                                                <div>
+                                                                    <apex:input type="text" styleClass="form-control buildNameKana3" value="{!displayTargetRecord.buildNameKana3}" onchange="correctInputRules(this,'textKana',120);" tabindex="7" />                                                                
+                                                                </div>
+                                                            </div>
+                                                            <div class="mb10 wd47 wd100_xs">
+                                                                <div class="information_title  flex-wrap  flex_wrap justify-between">
+                                                                    <div>郵便番号</div>
+                                                                    <div class="mb3">
+                                                                        <apex:commandButton styleClass="blue btn-normal-detail txt-deco-none" value="郵便番号検索・住所検索"
+                                                                                            disabled="{! isOpenError}" onclick="blockUi();"
+                                                                                            rerender="GA102006Form" status="loadComponent" action="{!GA102006FormOpen}"
+                                                                                            oncomplete="unblockUi(); jQuery('#dialog-GA102006Form').dialog('open');" tabindex="9" />
+                                                                    </div>
+                                                                </div>
+                                                                <div>
+                                                                    <apex:input type="text" styleClass="form-control" value="{!displayTargetRecord.postalCode}" onchange="correctInputRules(this,'postalCode',7,0);"  tabindex="8" />                                                                
+                                                                </div>
+                                                            </div>
+                                                            <div class=" mb10 wd47 wd100_xs">
+                                                                <div class="information_title">都道府県</div>
+                                                                <div style="margin-bottom:0">
+                                                                    <apex:selectList styleClass="form-control" value="{!displayTargetRecord.state}" size="1" onchange="changeState();blockUi();"  tabindex="10" >
+                                                                        <apex:selectOptions value="{!stateOption}"/>
+                                                                    </apex:selectList>                                                                
+                                                                </div>
+                                                            </div>
+                                                            <div class=" mb10 wd47 wd100_xs">
+                                                                <div class="information_title flex-wrap  flex_wrap justify-between">
+                                                                    <div>住所１（市区町村・丁目まで）</div>
+                                                                </div>
+                                                                <div>
+                                                                    <apex:input type="text" styleClass="form-control" value="{!displayTargetRecord.city}" onchange="correctInputRules(this,'text',50); changeCity();blockUi();" tabindex="11" />
+                                                                </div>
+                                                            </div>
+                                                            <div class=" mb10 wd47 wd100_xs">
+                                                                <div class="information_title  flex-wrap  flex_wrap justify-between">
+                                                                    <div>住所２（番地以降）</div>
+                                                                    <div class="mb3">
+                                                                        <apex:commandButton styleClass="blue btn-normal-detail txt-deco-none" value="周辺情報の再取得" disabled="{! isOpenError}"
+                                                                                            onclick="alertReacquisitionSurroundigInfo()"
+                                                                                            rerender="dummy"
+                                                                                            tabindex="13" />
+                                                                    </div>
+                                                                </div>
+                                                                <div>
+                                                                    <apex:input type="text" styleClass="form-control" value="{!displayTargetRecord.street}" onchange="correctInputRules(this,'text',255); changeCityOrStreet();blockUi();" tabindex="12" />                                                                
+                                                                </div>
+                                                            </div>
+                                                            <div class=" mb10 wd47 wd100_xs">
+                                                                <div class="information_title">地区</div>
+                                                                <div class="information_contents" style="margin-bottom:0">
+                                                                    <apex:outputText id="district" value="{!displayTargetRecord.district}"/>
+                                                                </div>
+                                                            </div>
+                                                            <div class=" mb10 wd47 wd100_xs">
+                                                                <div class="information_title">町・字コード</div>
+                                                                <div class="information_contents" style="margin-bottom:0">
+                                                                    <apex:outputText id="choazaCode" value="{!displayTargetRecord.choazaCode}" />                                                                
+                                                                </div>
+                                                            </div>
+                                                            <div class=" mb10 wd47 wd100_xs">
+                                                                <div class="information_title">種別</div>
+                                                                <div>
+                                                                    <apex:selectList styleClass="form-control" value="{!displayTargetRecord.propertyType}" size="1" tabindex="15" >
+                                                                        <apex:selectOptions value="{!propertyTypeOption}"/>
+                                                                    </apex:selectList>                                                                
+                                                                </div>
+                                                            </div>
+                                                            <div class=" mb10 wd47 wd100_xs">
+                                                                <div class="information_title">構造</div>
+                                                                <div>
+                                                                    <apex:selectList styleClass="form-control" value="{!displayTargetRecord.structure}" size="1" tabindex="16" >
+                                                                        <apex:selectOptions value="{!structureOption}"/>
+                                                                    </apex:selectList>                                                                
+                                                                </div>
+                                                            </div>
+                                                            <div class=" mb10 wd47 wd100_xs">
+                                                                <div class="information_title">築年月</div>
+                                                                <div>
+                                                                    <apex:input type="text" styleClass="form-control" value="{!displayTargetRecord.buildingYM}" onchange="correctInputRules(this,'yearMonth'); basicRecalculateFormula();" tabindex="17" />                                                                
+                                                                </div>
+                                                            </div>
+                                                            <div class=" mb10 wd47 wd100_xs">
+                                                                <div class="information_title">築年数</div>
+                                                                <div class="information_contents" style="margin-bottom:0">
+                                                                    <apex:outputText id="buildingage" value="{!displayTargetRecord.displayCalculateFormulas.BuildingAge__c}" />
+                                                                </div>
+                                                            </div>
+                                                            <div class=" mb10 wd47 wd100_xs">
+                                                                <div class="information_title">地上階数</div>
+                                                                <div>
+                                                                    <div>
+                                                                        <apex:input type="text" styleClass="form-control" value="{!displayTargetRecord.groundFloorCount}" onchange="correctInputRules(this,'number',3,0,'','','0');" tabindex="18" />
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div class=" mb10 wd47 wd100_xs">
+                                                                <div class="information_title">地下階数</div>
+                                                                <div>
+                                                                    <div>
+                                                                        <apex:input type="text" styleClass="form-control" value="{!displayTargetRecord.undergroundFloorCount}" onchange="correctInputRules(this,'number',2,0,'','','0');" tabindex="19" />
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div class=" mb10 wd47 wd100_xs">
+                                                                <div class="information_title">棟総戸数</div>
+                                                                <div>
+                                                                    <apex:input type="text" styleClass="form-control" value="{!displayTargetRecord.houseCount}" onchange="correctInputRules(this,'number',4,0,'','','0');" tabindex="20" />
+                                                                </div>
+                                                            </div>
+                                                            <div class=" mb10 wd47 wd100_xs">
+                                                                <div class="information_title">緯度</div>
+                                                                <div class="information_contents" style="margin-bottom:0">
+                                                                    <apex:outputLabel value="{!displayTargetRecord.latitude}" id="latitude"/>
+                                                                </div>
+                                                            </div>
+                                                            <div class=" mb10 wd47 wd100_xs">
+                                                                <div class="information_title">経度</div>
+                                                                <div class="information_contents" style="margin-bottom:0">
+                                                                    <apex:outputLabel value="{!displayTargetRecord.longitude}" id="longitude"/>
+                                                                </div>
+                                                            </div>
+                                                            <div class=" mb10 wd47 wd100_xs">
+                                                                <div class="information_title">管理人種別</div>
+                                                                <div>
+                                                                    <apex:selectList styleClass="form-control" value="{!displayTargetRecord.caretakerType}" size="1" tabindex="21" >
+                                                                        <apex:selectOptions value="{!caretakerTypeOption}"/>
+                                                                    </apex:selectList>
+                                                                </div>
+                                                            </div>
+                                                            
+                                                            <div class=" mb10 wd100">
+                                                                <div class="information_title">建物備考（公開）</div>
+                                                                <div>
+                                                                    <apex:inputTextarea styleClass="form-control" cols="20" rows="3"  value="{!displayTargetRecord.buildingRemarksPublic}" onchange="correctInputRules(this,'text',80000);" tabindex="22" />
+                                                                </div>
+                                                            </div>
+                                                            <div class=" mb10 wd100">
+                                                                <div class="information_title">建物備考（非公開）</div>
+                                                                <div class="information_contents" style="margin-bottom:0">
+                                                                    <apex:outputField value="{!targetBuilding.BuildingRemarksPrivate__c}"/>
+                                                                </div>
+                                                            </div>
+                                                            <div class=" mb10 wd47 wd100_xs">
+                                                                <div class="information_title">メンテナンス建物コード</div>
+                                                                <div class="information_contents" style="margin-bottom:0">
+                                                                    <apex:outputLabel value="{!displayTargetRecord.maintenanceBuildingCode}" />
+                                                                </div>
+                                                            </div>
+                                                            <div class=" mb10 wd47 wd100_xs">
+                                                                <div class="information_title">取込先</div>
+                                                                <div>
+                                                                    <apex:selectList styleClass="form-control" onchange="chkExistsMaintPropCdProcess(this)"
+                                                                                     value="{!displayTargetRecord.importType}" size="1" >
+                                                                        <apex:selectOptions value="{!importTypeOption}"/>
+                                                                    </apex:selectList>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </li>
+                                                </ul>
+                                            </apex:outputPanel>
+                                        </li>
+                                        <apex:outputPanel rendered="{! !isNew }" >
+                                            <li class="default open">
+                                                <div class="link posi_re">
+                                                    <i class="fa fa-chevron-up"></i>メンテナンス建物コード履歴
+                                                    <div class="ab_btn ab_btn_xs">
+                                                        <apex:commandButton value="削除"
+                                                                            styleClass="btn-w-2 blue"
+                                                                            disabled="{! isOpenError }"
+                                                                            onclick="delBuildingCdHistProcess();"/>
+                                                    </div>
+                                                </div>
+
+                                                <ul class="submenu-defalt">
+                                                    <li>
+                                                        <apex:outputPanel id="buildingCdHistDetail" >
+                                                            <table class="gray mb30 nowrap" style="max-height:350px;">
+                                                                <tr>
+                                                                    <th class="wd0"></th>
+                                                                    <th>履歴メンテナンス建物コード</th>
+                                                                    <th>履歴取込先</th>
+                                                                    <th>情報更新日</th>
+                                                                </tr>
+                                                                <apex:repeat value="{! screenBuildingCdHistList }" var="buildingCdHist">
+                                                                    <tr class="{! buildingCdHist.parentRowClass }">
+                                                                        <td>
+                                                                            <apex:inputCheckbox id="selectedBuildingCdHist" value="{! buildingCdHist.IsSelected }"></apex:inputCheckbox>
+                                                                            <apex:outputlabel styleClass="serach_check5" for="selectedBuildingCdHist" />
+                                                                        </td>
+                                                                        <td><apex:outputText value="{! buildingCdHist.HistMaintenanceBuildingCd }" /></td>
+                                                                        <td><apex:outputText value="{! buildingCdHist.HistImportDestination }" /></td>
+                                                                        <td><apex:outputText value="{! buildingCdHist.InformationUpdateDate }" /></td>
+                                                                    </tr>
+                                                                </apex:repeat>
+                                                            </table>
+                                                        </apex:outputPanel>
+                                                    </li>
+                                                </ul>
+                                            </li>
+                                        </apex:outputPanel>
+                                        <li class="default open">
+                                            <div class="link"><i class="fa fa-chevron-up"></i>学校情報</div>
+                                            <apex:outputPanel id="schoolInformation" >
+                                                <ul class="submenu-defalt ensen">
+                                                    <li>
+                                                        <div class="flex-wrap  flex_wrap justify-between align_center ">
+                                                            <apex:outputPanel id="primarySchool1" styleClass=" mb50_xs30 wd33">
+                                                                <div class="information_title">小学校</div>
+                                                                <div class="posi_re" style="margin-bottom: 15px;">
+                                                                    <!-- <apex:outputText value="{!displayTargetRecord.primarySchool1Name}" /> -->
+                                                                    <apex:selectList styleClass="form-control" value="{!displayTargetRecord.primarySchool1}" onchange="changeprimarySchool1();" size="1" tabindex="23" >
+                                                                        <apex:selectOptions value="{!elementarySchoolList}"/>
+                                                                    </apex:selectList>
+                                                                    <apex:commandButton value="詳細情報" styleClass="blue btn-normal-detail ab_right txt-deco-none"
+                                                                                        disabled="{! isOpenError || displayTargetRecord.primarySchool1 == ''}"
+                                                                                        onclick="showPage('GF501002View', '', 'TRUE', 'Id={!displayTargetRecord.primarySchool1}');"
+                                                                                        rerender="messageArea" tabindex="24" />
+                                                                </div>
+                                                                <div class="flex-wrap  flex_wrap justify-between align_center " style="margin-bottom: 15px;">
+                                                                    <div class="wd47">
+                                                                        <div class="information_title">小学校1までの距離(m)</div>
+                                                                        <div>
+                                                                            <!-- <apex:outputText value="{0, Number, ###,###}">
+                                                                                <apex:param value="{!displayTargetRecord.primarySchoolDistance2}"/>
+                                                                            </apex:outputText> -->
+                                                                            <apex:input type="text" styleClass="form-control" value="{!displayTargetRecord.primarySchoolDistance1}" onchange="correctInputRules(this,'number',5,0,'','','0');schoolRecalculateFormula();" tabindex="25" />
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="wd47">
+                                                                        <div class="information_title">小学校1までの徒歩時間(分)</div>
+                                                                        <div class="information_contents" style="margin-bottom:0">
+                                                                            <!-- <apex:outputText value="{!displayTargetRecord.primarySchoolWalkTime1}" /> -->
+                                                                            <apex:outputText id="PrimarySchoolWalkTime1" value="{!displayTargetRecord.displayCalculateFormulas.PrimarySchoolWalkTime1__c}" />
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="box ratio-1_1">
+                                                                    <div class="ratio-1_1_txt">小学校1の写真</div>
+																	<!-- ▼ 2022.03.31 No0781 対応で変更 -->
+																	<apex:outputPanel layout="block" styleClass="flex-wrap flex_wrap justify-between align_center" rendered="{!NOT(isOpenError || displayTargetRecord.primarySchoolFilePath1 == '')}">
+																		<div class="img-wrapper-inner">
+																			<apex:image alt="" value="{!displayTargetRecord.primarySchoolFilePath1}" styleClass="img-contain" />
+																		</div>
+																	</apex:outputPanel>
+																	<!-- ▲ 2022.03.31 No0781 対応で変更 -->
+                                                                </div>
+                                                            </apex:outputPanel>
+                                                            
+                                                            
+                                                            <apex:outputPanel id="primarySchool2" styleClass=" mb50_xs30 wd33">
+                                                                <div class="information_title">小学校2</div>
+                                                                <div class="posi_re" style="margin-bottom: 15px;">
+                                                                    <!-- <apex:outputText value="{!displayTargetRecord.primarySchool2Name}" /> -->
+                                                                    <apex:selectList styleClass="form-control" value="{!displayTargetRecord.primarySchool2}" onchange="changeprimarySchool2();" size="1" tabindex="26" >
+                                                                        <apex:selectOptions value="{!elementarySchool2List}" />
+                                                                    </apex:selectList>
+                                                                    <apex:commandButton value="詳細情報" styleClass="blue btn-normal-detail ab_right txt-deco-none"
+                                                                                        disabled="{! isOpenError || displayTargetRecord.primarySchool2 == null}"
+                                                                                        onclick="showPage('GF501002View', '', 'TRUE', 'Id={!displayTargetRecord.primarySchool2}'); "
+                                                                                        rerender="messageArea" tabindex="27" />
+                                                                </div>
+                                                                <div class="flex-wrap  flex_wrap justify-between align_center " style="margin-bottom: 15px;">
+                                                                    <div class="wd47">
+                                                                        <div class="information_title">小学校2までの距離(m)</div>
+                                                                        <div>
+                                                                            <!-- <apex:outputText value="{0, Number, ###,###}">
+                                                                                <apex:param value="{!displayTargetRecord.primarySchoolDistance1}"/>
+                                                                            </apex:outputText> -->
+                                                                            <apex:input type="text" styleClass="form-control" value="{!displayTargetRecord.primarySchoolDistance2}" onchange="correctInputRules(this,'number',5,0,'','','0');schoolRecalculateFormula();" tabindex="27" />
+                                                                        </div></div>
+                                                                    <div class="wd47">
+                                                                        <div class="information_title">小学校2までの徒歩時間(分)</div>
+                                                                        <div class="information_contents" style="margin-bottom:0">
+                                                                            <!-- <apex:outputText value="{!displayTargetRecord.PrimarySchoolWalkTime2}" /> -->
+                                                                            <apex:outputText id="PrimarySchoolWalkTime2" value="{!displayTargetRecord.displayCalculateFormulas.PrimarySchoolWalkTime2__c}" />
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="box ratio-1_1">
+                                                                    <div class="ratio-1_1_txt">小学校2の写真</div>
+                                                                    <!-- ▼ 2022.03.31 No0781 対応で変更 -->
+																	<apex:outputPanel layout="block" styleClass="flex-wrap flex_wrap justify-between align_center" rendered="{!NOT(isOpenError || displayTargetRecord.primarySchoolFilePath2 == '')}">
+																		<div class="img-wrapper-inner">
+																			<apex:image alt="" value="{!displayTargetRecord.primarySchoolFilePath2}" styleClass="img-contain" />
+																		</div>
+																	</apex:outputPanel>
+																	<!-- ▲ 2022.03.31 No0781 対応で変更 -->
+                                                                </div>
+                                                            </apex:outputPanel>
+                                                            
+                                                            <apex:outputPanel id="primarySchool3" styleClass=" mb50_xs30 wd33">
+                                                                <div class="information_title">小学校3</div>
+                                                                <div class="posi_re" style="margin-bottom: 15px;">
+                                                                    <!-- <apex:outputText value="{!displayTargetRecord.primarySchool3Name}" /> -->
+                                                                    <apex:selectList styleClass="form-control" value="{!displayTargetRecord.primarySchool3}" onchange="changeprimarySchool3();" size="1" tabindex="28" >
+                                                                        <apex:selectOptions value="{!elementarySchool3List}"/>
+                                                                    </apex:selectList>
+                                                                    <apex:commandButton value="詳細情報" styleClass="blue btn-normal-detail ab_right txt-deco-none"
+                                                                                        disabled="{! isOpenError || displayTargetRecord.primarySchool3 == ''}"
+                                                                                        onclick="showPage('GF501002View', '', 'TRUE', 'Id={!displayTargetRecord.primarySchool3}');"
+                                                                                        rerender="messageArea" tabindex="29" />
+                                                                </div>
+                                                                <div class="flex-wrap  flex_wrap justify-between align_center " style="margin-bottom: 15px;">
+                                                                    <div class="wd47">
+                                                                        <div class="information_title">小学校3までの距離(m)</div>
+                                                                        <div>
+                                                                            <!-- <apex:outputText value="{0, Number, ###,###}">
+                                                                                <apex:param value="{!displayTargetRecord.primarySchoolDistance3}"/>
+                                                                            </apex:outputText> -->
+                                                                            <apex:input type="text" styleClass="form-control" value="{!displayTargetRecord.primarySchoolDistance3}" onchange="correctInputRules(this,'number',5,0,'','','0');schoolRecalculateFormula();" tabindex="30" />
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="wd47">
+                                                                        <div class="information_title">小学校3までの徒歩時間(分)</div>
+                                                                        <div class="information_contents" style="margin-bottom:0">
+                                                                            <!-- <apex:outputText value="{!displayTargetRecord.PrimarySchoolWalkTime3}" /> -->
+                                                                            <apex:outputText id="PrimarySchoolWalkTime3" value="{!displayTargetRecord.displayCalculateFormulas.PrimarySchoolWalkTime3__c}" />
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="box ratio-1_1">
+                                                                    <div class="ratio-1_1_txt">小学校3の写真</div>
+                                                                    <!-- ▼ 2022.03.31 No0781 対応で変更 -->
+																	<apex:outputPanel layout="block" styleClass="flex-wrap flex_wrap justify-between align_center" rendered="{!NOT(isOpenError || displayTargetRecord.primarySchoolFilePath3 == '')}">
+																		<div class="img-wrapper-inner">
+																			<apex:image alt="" value="{!displayTargetRecord.primarySchoolFilePath3}" styleClass="img-contain" />
+																		</div>
+																	</apex:outputPanel>
+																	<!-- ▲ 2022.03.31 No0781 対応で変更 -->
+                                                                </div>
+                                                            </apex:outputPanel>
+                                                            
+                                                            <apex:outputPanel id="juniorHighSchool1" styleClass=" mb50_xs30 wd33">
+                                                                <div class="information_title">中学校1</div>
+                                                                <div class="posi_re" style="margin-bottom: 15px;">
+                                                                    <!-- <apex:outputText value="{!displayTargetRecord.juniorHighSchool1Name}" /> -->
+                                                                    <apex:selectList styleClass="form-control" value="{!displayTargetRecord.juniorHighSchool1}" onchange="changejuniorHighSchool1();" size="1" tabindex="32" >
+                                                                        <apex:selectOptions value="{!juniorHighSchoolList}"/>
+                                                                    </apex:selectList>
+                                                                    <apex:commandButton value="詳細情報" styleClass="blue btn-normal-detail ab_right txt-deco-none"
+                                                                                        disabled="{! isOpenError || displayTargetRecord.juniorHighSchool1 == ''}"
+                                                                                        onclick="showPage('GF501002View', '', 'TRUE', 'Id={!displayTargetRecord.juniorHighSchool1}');"
+                                                                                        rerender="messageArea" tabindex="33" />
+                                                                </div>
+                                                                <div class="flex-wrap  flex_wrap justify-between align_center " style="margin-bottom: 15px;">
+                                                                    <div class="wd47">
+                                                                        <div class="information_title">中学校1までの距離(m)</div>
+                                                                        <div>
+                                                                            <!-- <apex:outputText value="{0, Number, ###,###}">
+                                                                                <apex:param value="{!displayTargetRecord.juniorHighSchoolDistance1}"/>
+                                                                            </apex:outputText> -->
+                                                                            <apex:input type="text" styleClass="form-control" value="{!displayTargetRecord.juniorHighSchoolDistance1}" onchange="correctInputRules(this,'number',5,0,'','','0');schoolRecalculateFormula();" tabindex="34" />
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="wd47">
+                                                                        <div class="information_title">中学校1までの徒歩時間(分)</div>
+                                                                        <div class="information_contents" style="margin-bottom:0">
+                                                                            <!-- <apex:outputText value="{!displayTargetRecord.juniorHighSchoolWalkTime1}" /> -->
+                                                                            <apex:outputText id="juniorHighSchoolWalkTime1" value="{!displayTargetRecord.displayCalculateFormulas.JuniorHighSchoolWalkTime1__c}" />
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="box ratio-1_1">
+                                                                    <div class="ratio-1_1_txt">中学校1の写真</div>
+                                                                    <!-- ▼ 2022.03.31 No0781 対応で変更 -->
+																	<apex:outputPanel layout="block" styleClass="flex-wrap flex_wrap justify-between align_center" rendered="{!NOT(isOpenError || displayTargetRecord.juniorHighSchoolFilePath1 == '')}">
+																		<div class="img-wrapper-inner">
+																			<apex:image alt="" value="{!displayTargetRecord.juniorHighSchoolFilePath1}" styleClass="img-contain" />
+																		</div>
+																	</apex:outputPanel>
+																	<!-- ▲ 2022.03.31 No0781 対応で変更 -->
+                                                                </div>
+                                                            </apex:outputPanel>
+                                                            
+                                                            <apex:outputPanel id="juniorHighSchool2" styleClass=" mb50_xs30 wd33">
+                                                                <div class="information_title">中学校2</div>
+                                                                <div class="posi_re" style="margin-bottom: 15px;">
+                                                                    <!-- <apex:outputText value="{!displayTargetRecord.juniorHighSchool2Name}" /> -->
+                                                                    <apex:selectList styleClass="form-control" value="{!displayTargetRecord.juniorHighSchool2}" onchange="changejuniorHighSchool2();" size="1" tabindex="35" >
+                                                                        <apex:selectOptions value="{!juniorHighSchool2List}"/>
+                                                                    </apex:selectList>
+                                                                    <apex:commandButton value="詳細情報" styleClass="blue btn-normal-detail ab_right txt-deco-none"
+                                                                                        disabled="{! isOpenError || displayTargetRecord.juniorHighSchool2 == ''}"
+                                                                                        onclick="showPage('GF501002View', '', 'TRUE', 'Id={!displayTargetRecord.juniorHighSchool2}');"
+                                                                                        rerender="messageArea" tabindex="36" />
+                                                                </div>
+                                                                <div class="flex-wrap  flex_wrap justify-between align_center " style="margin-bottom: 15px;">
+                                                                    <div class="wd47">
+                                                                        <div class="information_title">中学校2までの距離(m)</div>
+                                                                        <div>
+                                                                            <!-- <apex:outputText value="{0, Number, ###,###}">
+                                                                                <apex:param value="{!displayTargetRecord.juniorHighSchoolDistance2}"/>    
+                                                                            </apex:outputText> -->
+                                                                            <apex:input type="text" styleClass="form-control" value="{!displayTargetRecord.juniorHighSchoolDistance2}" onchange="correctInputRules(this,'number',5,0,'','','0');schoolRecalculateFormula();" tabindex="37" />
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="wd47">
+                                                                        <div class="information_title">中学校2までの徒歩時間(分)</div>
+                                                                        <div class="information_contents" style="margin-bottom:0">
+                                                                            <!-- <apex:outputText value="{!displayTargetRecord.juniorHighSchoolWalkTime2}" /> -->
+                                                                            <apex:outputText id="juniorHighSchoolWalkTime2" value="{!displayTargetRecord.displayCalculateFormulas.JuniorHighSchoolWalkTime2__c}" />
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="box ratio-1_1">
+                                                                    <div class="ratio-1_1_txt">中学校2の写真</div>
+                                                                    <!-- ▼ 2022.03.31 No0781 対応で変更 -->
+																	<apex:outputPanel layout="block" styleClass="flex-wrap flex_wrap justify-between align_center" rendered="{!NOT(isOpenError || displayTargetRecord.juniorHighSchoolFilePath2 == '')}">
+																		<div class="img-wrapper-inner">
+																			<apex:image alt="" value="{!displayTargetRecord.juniorHighSchoolFilePath2}" styleClass="img-contain" />
+																		</div>
+																	</apex:outputPanel>
+																	<!-- ▲ 2022.03.31 No0781 対応で変更 -->
+                                                                </div>
+                                                            </apex:outputPanel>
+                                                            
+                                                            <apex:outputPanel id="juniorHighSchool3" styleClass=" mb50_xs30 wd33">
+                                                                <div class="information_title">中学校3</div>
+                                                                <div class="posi_re" style="margin-bottom: 15px;">
+                                                                    <!-- <apex:outputText value="{!displayTargetRecord.juniorHighSchool3Name}" /> -->
+                                                                    <apex:selectList styleClass="form-control" value="{!displayTargetRecord.juniorHighSchool3}" onchange="changejuniorHighSchool3();" size="1" tabindex="38" >
+                                                                        <apex:selectOptions value="{!juniorHighSchool3List}"/>
+                                                                    </apex:selectList>
+                                                                    <apex:commandButton value="詳細情報" styleClass="blue btn-normal-detail ab_right txt-deco-none"
+                                                                                        disabled="{! isOpenError || displayTargetRecord.juniorHighSchool3 == ''}"
+                                                                                        onclick="showPage('GF501002View', '', 'TRUE', 'Id={!displayTargetRecord.juniorHighSchool3}');"
+                                                                                        rerender="messageArea" tabindex="39" />
+                                                                </div>
+                                                                <div class="flex-wrap  flex_wrap justify-between align_center " style="margin-bottom: 15px;">
+                                                                    <div class="wd47">
+                                                                        <div class="information_title">中学校3までの距離(m)</div>
+                                                                        <div>
+                                                                            <!-- <apex:outputText value="{0, Number, ###,###}">
+                                                                                <apex:param value="{!displayTargetRecord.juniorHighSchoolDistance3}"/>
+                                                                            </apex:outputText> -->
+                                                                            <apex:input type="text" styleClass="form-control" value="{!displayTargetRecord.juniorHighSchoolDistance3}" onchange="correctInputRules(this,'number',5,0,'','','0');schoolRecalculateFormula();" tabindex="40" />
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="wd47">
+                                                                        <div class="information_title">中学校3までの徒歩時間(分)</div>
+                                                                        <div class="information_contents" style="margin-bottom:0">
+                                                                            <!-- <apex:outputText value="{!displayTargetRecord.juniorHighSchoolWalkTime3}" /> -->
+                                                                            <apex:outputText id="juniorHighSchoolWalkTime3" value="{!displayTargetRecord.displayCalculateFormulas.JuniorHighSchoolWalkTime3__c}" />
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="box ratio-1_1">
+                                                                    <div class="ratio-1_1_txt">中学校3の写真</div>
+                                                                    <!-- ▼ 2022.03.31 No0781 対応で変更 -->
+																	<apex:outputPanel layout="block" styleClass="flex-wrap flex_wrap justify-between align_center" rendered="{!NOT(isOpenError || displayTargetRecord.juniorHighSchoolFilePath3 == '')}">
+																		<div class="img-wrapper-inner">
+																			<apex:image alt="" value="{!displayTargetRecord.juniorHighSchoolFilePath3}" styleClass="img-contain" />
+																		</div>
+																	</apex:outputPanel>
+																	<!-- ▲ 2022.03.31 No0781 対応で変更 -->
+                                                                </div>
+                                                            </apex:outputPanel>
+                                                            
+                                                            <div class=" mb50_xs30 wd33">
+                                                                <div class="information_title">高等学校</div>
+                                                                <div class="information_contents flex-wrap flex_wrap justify-between">
+                                                                    <div class="wd76">
+                                                                        <apex:outputText value="{!displayTargetRecord.highSchoolName}" />
+                                                                    </div>
+                                                                    <div>
+                                                                        <apex:commandButton value="詳細情報" styleClass="blue btn-normal-detail txt-deco-none"
+                                                                                            disabled="{! isOpenError || displayTargetRecord.highSchool == ''}"
+                                                                                            onclick="showPage('GF502002View', '', 'TRUE', 'surroundingFacilityId={!displayTargetRecord.highSchool}');"
+                                                                                            rerender="messageArea" tabindex="40"/>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="flex-wrap  flex_wrap justify-between align_center ">
+                                                                    <div class="wd47">
+                                                                        <div class="information_title">高等学校までの距離(m)</div>
+                                                                        <div class="information_contents">
+                                                                            <apex:outputText value="{0, Number, ###,###}">
+                                                                                <apex:param value="{!displayTargetRecord.highSchoolDistance}"/>
+                                                                            </apex:outputText>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="wd47">
+                                                                        <div class="information_title">高等学校までの徒歩時間(分)</div>
+                                                                        <div class="information_contents">
+                                                                            <apex:outputText value="{!displayTargetRecord.highSchoolWalkTime}" />
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="box ratio-1_1">
+                                                                    <div class="ratio-1_1_txt">高等学校の写真</div>
+                                                                    <!-- ▼ 2022.03.31 No0781 対応で変更 -->
+																	<apex:outputPanel layout="block" styleClass="flex-wrap flex_wrap justify-between align_center" rendered="{!NOT(isOpenError || displayTargetRecord.highSchoolFilePath == '')}">
+																		<div class="img-wrapper-inner">
+																			<apex:image alt="" value="{!displayTargetRecord.highSchoolFilePath}" styleClass="img-contain" />
+																		</div>
+																	</apex:outputPanel>
+																	<!-- ▲ 2022.03.31 No0781 対応で変更 -->
+                                                                </div>
+                                                            </div>
+                                                            
+                                                            <div class=" mb50_xs30 wd33">
+                                                                <div class="information_title">大学</div>
+                                                                <div class="information_contents flex-wrap flex_wrap justify-between">
+                                                                    <div class="wd76">
+                                                                        <apex:outputText value="{!displayTargetRecord.universityName}" />
+                                                                    </div>
+                                                                    <div>
+                                                                        <apex:commandButton value="詳細情報" styleClass="blue btn-normal-detail txt-deco-none"
+                                                                                            disabled="{! isOpenError || displayTargetRecord.university == ''}"
+                                                                                            onclick="showPage('GF502002View', '', 'TRUE', 'surroundingFacilityId={!displayTargetRecord.university}');"
+                                                                                            rerender="messageArea" tabindex="40"/>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="flex-wrap  flex_wrap justify-between align_center ">
+                                                                    <div class="wd47">
+                                                                        <div class="information_title">大学までの距離(m)</div>
+                                                                        <div class="information_contents">
+                                                                            <apex:outputText value="{0, Number, ###,###}">
+                                                                                <apex:param value="{!displayTargetRecord.universityDistance}"/>
+                                                                            </apex:outputText>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="wd47">
+                                                                        <div class="information_title">大学までの徒歩時間(分)</div>
+                                                                        <div class="information_contents">
+                                                                            <apex:outputText value="{!displayTargetRecord.universityWalkTime}" />
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="box ratio-1_1">
+                                                                    <div class="ratio-1_1_txt">大学の写真</div>
+                                                                    <!-- ▼ 2022.03.31 No0781 対応で変更 -->
+																	<apex:outputPanel layout="block" styleClass="flex-wrap flex_wrap justify-between align_center" rendered="{!NOT(isOpenError || displayTargetRecord.universityFilePath == '')}">
+																		<div class="img-wrapper-inner">
+																			<apex:image alt="" value="{!displayTargetRecord.universityFilePath}" styleClass="img-contain" />
+																		</div>
+																	</apex:outputPanel>
+																	<!-- ▲ 2022.03.31 No0781 対応で変更 -->
+                                                                </div>
+                                                            </div>
+                                                            <div class=" mb50_xs30 wd33">
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        
+                                                        
+                                                    </li>
+                                                    <li>
+                                                        
+                                                    </li>
+                                                </ul>
+                                            </apex:outputPanel>
+                                        </li>
+                                        <li class="default open">
+                                            <div class="link"><i class="fa fa-chevron-up"></i>周辺施設</div>
+                                            <apex:outputPanel id="surroundingFacilities" >
+                                                <ul class="submenu-defalt ensen">
+                                                    <li>
+                                                        <div class="flex-wrap  flex_wrap justify-between align_center ">
+                                                            <div class=" mb50_xs30 wd33">
+                                                                <div class="information_title">コンビニ名</div>
+                                                                <div class="information_contents flex-wrap flex_wrap justify-between">
+                                                                    <div class="wd76">
+                                                                        <apex:outputText value="{!displayTargetRecord.convenienceStoreName}" />
+                                                                    </div>
+                                                                    <div>
+                                                                        <apex:commandButton value="詳細情報" styleClass="blue btn-normal-detail txt-deco-none"
+                                                                                            disabled="{! isOpenError || displayTargetRecord.convenienceStore == ''}"
+                                                                                            onclick="showPage('GF702002View', '', 'TRUE', 'surroundingFacilityId={!displayTargetRecord.convenienceStore}');"
+                                                                                            rerender="messageArea" tabindex="40"/>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="flex-wrap  flex_wrap justify-between align_center ">
+                                                                    <div class="wd47">
+                                                                        <div class="information_title">コンビニまでの距離(m)</div>
+                                                                        <div class="information_contents">
+                                                                            <apex:outputText value="{0, Number, ###,###}">
+                                                                                <apex:param value="{!displayTargetRecord.convenienceStoreDistance}"/>
+                                                                            </apex:outputText>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="wd47">
+                                                                        <div class="information_title">コンビニまでの徒歩時間(分)</div>
+                                                                        <div class="information_contents">
+                                                                            <apex:outputText value="{!displayTargetRecord.convenienceStoreWalkTime}" />
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="box ratio-1_1">
+                                                                    <div class="ratio-1_1_txt">コンビニの写真</div>
+                                                                    <!-- ▼ 2022.03.31 No0781 対応で変更 -->
+																	<apex:outputPanel layout="block" styleClass="flex-wrap flex_wrap justify-between align_center" rendered="{!NOT(isOpenError || displayTargetRecord.convenienceStoreFilePath == '')}">
+																		<div class="img-wrapper-inner">
+																			<apex:image alt="" value="{!displayTargetRecord.convenienceStoreFilePath}" styleClass="img-contain" />
+																		</div>
+																	</apex:outputPanel>
+																	<!-- ▲ 2022.03.31 No0781 対応で変更 -->
+                                                                </div>
+                                                            </div>
+                                                            
+                                                            <div class=" mb50_xs30 wd33">
+                                                                <div class="information_title">スーパー名</div>
+                                                                <div class="information_contents flex-wrap flex_wrap justify-between">
+                                                                    <div class="wd76">
+                                                                        <apex:outputText value="{!displayTargetRecord.supermarketName}" />
+                                                                    </div>
+                                                                    <div>
+                                                                        <apex:commandButton value="詳細情報" styleClass="blue btn-normal-detail txt-deco-none"
+                                                                                            disabled="{! isOpenError || displayTargetRecord.supermarket == ''}"
+                                                                                            onclick="showPage('GF702002View', '', 'TRUE', 'surroundingFacilityId={!displayTargetRecord.supermarket}');"
+                                                                                            rerender="messageArea" tabindex="40"/>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="flex-wrap  flex_wrap justify-between align_center ">
+                                                                    <div class="wd47">
+                                                                        <div class="information_title">スーパーまでの距離(m)</div>
+                                                                        <div class="information_contents">
+                                                                            <apex:outputText value="{0, Number, ###,###}">
+                                                                                <apex:param value="{!displayTargetRecord.supermarketDistance}"/>
+                                                                            </apex:outputText>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="wd47">
+                                                                        <div class="information_title">スーパーまでの徒歩時間(分)</div>
+                                                                        <div class="information_contents">
+                                                                            <apex:outputText value="{!displayTargetRecord.supermarketWalkTime}" />
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="box ratio-1_1">
+                                                                    <div class="ratio-1_1_txt">スーパーの写真</div>
+                                                                    <!-- ▼ 2022.03.31 No0781 対応で変更 -->
+																	<apex:outputPanel layout="block" styleClass="flex-wrap flex_wrap justify-between align_center" rendered="{!NOT(isOpenError || displayTargetRecord.supermarketFilePath == '')}">
+																		<div class="img-wrapper-inner">
+																			<apex:image alt="" value="{!displayTargetRecord.supermarketFilePath}" styleClass="img-contain" />
+																		</div>
+																	</apex:outputPanel>
+																	<!-- ▲ 2022.03.31 No0781 対応で変更 -->
+                                                                </div>
+                                                            </div>
+                                                            
+                                                            <div class=" mb50_xs30 wd33">
+                                                                <div class="information_title">総合病院名</div>
+                                                                <div class="information_contents flex-wrap flex_wrap justify-between">
+                                                                    <div class="wd76">
+                                                                        <apex:outputText value="{!displayTargetRecord.generalHospitalName}" />
+                                                                    </div>
+                                                                    <div>
+                                                                        <apex:commandButton value="詳細情報" styleClass="blue btn-normal-detail txt-deco-none"
+                                                                                            disabled="{! isOpenError || displayTargetRecord.generalHospital == ''}"
+                                                                                            onclick="showPage('GF701002View', '', 'TRUE', 'Id={!displayTargetRecord.generalHospital}');"
+                                                                                            rerender="messageArea" tabIndex="41"/>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="flex-wrap  flex_wrap justify-between align_center ">
+                                                                    <div class="wd47">
+                                                                        <div class="information_title">総合病院までの距離(m)</div>
+                                                                        <div class="information_contents">
+                                                                            <apex:outputText value="{0, Number, ###,###}">
+                                                                                <apex:param value="{!displayTargetRecord.generalHospitalDistance}"/>
+                                                                            </apex:outputText>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="wd47">
+                                                                        <div class="information_title">総合病院までの徒歩時間(分)</div>
+                                                                        <div class="information_contents">
+                                                                            <apex:outputText value="{!displayTargetRecord.generalHospitalWalkTime}" />
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="box ratio-1_1">
+                                                                    <div class="ratio-1_1_txt">総合病院の写真</div>
+                                                                    <!-- ▼ 2022.03.31 No0781 対応で変更 -->
+																	<apex:outputPanel layout="block" styleClass="flex-wrap flex_wrap justify-between align_center" rendered="{!NOT(isOpenError || displayTargetRecord.generalHospitalFilePath == '')}">
+																		<div class="img-wrapper-inner">
+																			<apex:image alt="" value="{!displayTargetRecord.generalHospitalFilePath}" styleClass="img-contain" />
+																		</div>
+																	</apex:outputPanel>
+																	<!-- ▲ 2022.03.31 No0781 対応で変更 -->
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        
+                                                    </li>
+                                                    <li>
+                                                        
+                                                    </li>
+                                                </ul>
+                                            </apex:outputPanel>
+                                        </li>
+                                        
+                                        <li class="default open">
+                                            <div class="link"><i class="fa fa-chevron-up"></i>路線・バス情報</div>
+                                            <apex:outputPanel id="routeBusInformation" >
+                                                <!--<ul class="submenu-defalt ensen">-->
+                                                <ul class="submenu-defalt">    
+                                                    <li>
+                                                        <div class="flex-wrap  flex_wrap justify-between align_center mb30">
+                                                            <!-- ▼ 2022.04.07 No.782 問合せNo0782_建物画面の沿線名と駅名の登録について-->
+                                                            <div class=" mb10 wd30 wd49_md wd100_xs">
+                                                                <div class="information_title">沿線名1</div>
+                                                                <apex:selectList value="{! displayTargetRecord.trainRoute1}" size="1" styleClass="form-control mr5" >
+                                                                    <apex:selectOptions value="{!trainRouteOption}"/>
+                                                                    <apex:actionSupport event="onchange" action="{!changeTrainRoute1}" rerender="routeBusInformation" onsubmit="blockUi();" oncomplete="unblockUi();" />
+                                                                </apex:selectList>
+                                                            </div>
+
+                                                            <div class="mb10 wd30 wd49_md wd100_xs">
+                                                                <div class="information_title">駅名1</div>
+                                                                <div class="textbox-pen ">
+                                                                    <apex:input type="text" html-readonly="readonly" style="width: 95%;" value="{!displayTargetRecord.station1Name}" />
+                                                            
+                                                                    <div class="info" align="right">
+                                                                        <apex:commandButton image="{!URLFOR($Resource.designer_file, 'designer_file/images/pencil.png')}"
+                                                                                            rerender="GA104007Form"
+                                                                                            disabled="{!isOpenError || displayTargetRecord.trainRoute1 == null }" onclick="blockUi();"
+                                                                                            action="{!openStations1Modal}" 
+                                                                                            status="loadComponent" oncomplete="unblockUi(); jQuery('#dialog-modal1').dialog('open');"
+                                                                        />
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+
+                                                            <!-- ▲ 2022.04.07 No.782 問合せNo0782_建物画面の沿線名と駅名の登録について-->
+                                                            <div class=" mb10 wd19 wd49_md wd100_xs">
+                                                                <div class="information_title">駅1までの距離(m)</div>
+                                                                <div>
+                                                                    <apex:input type="text" styleClass="form-control" value="{!displayTargetRecord.stationDistance1}" onchange="correctInputRules(this,'number',5,0,'','','0');routeStationRecalculateFormula();" tabindex="42" />
+                                                                </div>
+                                                            </div>
+                                                            <div class=" mb10 wd19 wd49_md wd100_xs">
+                                                                <div class="information_title">駅1までの徒歩時間</div>
+                                                                <div class="information_contents" style="margin-bottom:0">
+                                                                    <apex:outputText id="StationWalkTime1" value="{!displayTargetRecord.displayCalculateFormulas.StationWalkTime1__c}" />
+                                                                </div>
+                                                            </div>
+                                                            
+                                                            <!-- ▼ 2022.04.07 No.782 問合せNo0782_建物画面の沿線名と駅名の登録について-->
+                                                            <div class=" mb10 wd30 wd49_md wd100_xs">
+                                                                <div class="information_title">沿線名2</div>
+                                                                <apex:selectList value="{! displayTargetRecord.trainRoute2}" size="1" styleClass="form-control mr5">
+                                                                    <apex:selectOptions value="{!trainRouteOption}"/>
+                                                                    <apex:actionSupport event="onchange" action="{!changeTrainRoute2}" rerender="routeBusInformation" onsubmit="blockUi();" oncomplete="unblockUi();" />
+                                                                </apex:selectList>
+                                                            </div>
+
+                                                            <div class=" mb10 wd30 wd49_md wd100_xs">
+                                                                <div class="information_title">駅名2</div>
+                                                                <div class="textbox-pen ">
+                                                                    <apex:input type="text" html-readonly="readonly" style="width: 95%;" value="{!displayTargetRecord.station2Name}" />
+                                                            
+                                                                    <div class="info" align="right">
+                                                                        <apex:commandButton image="{!URLFOR($Resource.designer_file, 'designer_file/images/pencil.png')}"
+                                                                                            rerender="GA104007Form"
+                                                                                            disabled="{!isOpenError || displayTargetRecord.trainRoute2 == null }" onclick="blockUi();"
+                                                                                            action="{!openStations2Modal}" 
+                                                                                            status="loadComponent" oncomplete="unblockUi(); jQuery('#dialog-modal1').dialog('open');"
+                                                                        />
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+
+                                                            <!-- ▲ 2022.04.07 No.782 問合せNo0782_建物画面の沿線名と駅名の登録について-->
+
+                                                            <div class=" mb10 wd19 wd49_md wd100_xs">
+                                                                <div class="information_title">駅2までの距離(m)</div>
+                                                                <div >
+                                                                    <apex:input type="text" styleClass="form-control" value="{!displayTargetRecord.stationDistance2}" onchange="correctInputRules(this,'number',5,0,'','','0');routeStationRecalculateFormula();" tabindex="43" />
+                                                                </div>
+                                                            </div>
+                                                            <div class=" mb10 wd19 wd49_md wd100_xs">
+                                                                <div class="information_title">駅2までの徒歩時間</div>
+                                                                <div class="information_contents"  style="margin-bottom:0">
+                                                                    <apex:outputText id="StationWalkTime2" value="{!displayTargetRecord.displayCalculateFormulas.StationWalkTime2__c}" />
+                                                                </div>
+                                                            </div>
+                                                            <!-- ▼ 2022.04.07 No.782 問合せNo0782_建物画面の沿線名と駅名の登録について-->
+                                                            <div class=" mb10 wd30 wd49_md wd100_xs">
+                                                                <div class="information_title">沿線名3</div>
+                                                                <apex:selectList value="{! displayTargetRecord.trainRoute3}" size="1" styleClass="form-control mr5">
+                                                                    <apex:selectOptions value="{!trainRouteOption}"/>
+                                                                    <apex:actionSupport event="onchange" action="{!changeTrainRoute3}" rerender="routeBusInformation" onsubmit="blockUi();" oncomplete="unblockUi();" />
+                                                                </apex:selectList>
+                                                            </div>
+                                                            
+                                                            <div class=" mb10 wd30 wd49_md wd100_xs">
+                                                                <div class="information_title">駅名3</div>
+                                                                <div class="textbox-pen ">
+                                                                    <apex:input type="text" html-readonly="readonly" style="width: 95%;" value="{!displayTargetRecord.station3Name}" />
+                                                            
+                                                                    <div class="info" align="right">
+                                                                        <apex:commandButton image="{!URLFOR($Resource.designer_file, 'designer_file/images/pencil.png')}"
+                                                                                            rerender="GA104007Form"
+                                                                                            disabled="{!isOpenError || displayTargetRecord.trainRoute3 == null }" onclick="blockUi();"
+                                                                                            action="{!openStations3Modal}" 
+                                                                                            status="loadComponent" oncomplete="unblockUi(); jQuery('#dialog-modal1').dialog('open');"
+                                                                        />
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+
+                                                            <!-- ▲ 2022.04.07 No.782 問合せNo0782_建物画面の沿線名と駅名の登録について-->
+
+                                                            <div class=" mb10 wd19 wd49_md wd100_xs">
+                                                                <div class="information_title">駅3までの距離(m)</div>
+                                                                <div >
+                                                                    <apex:input type="text" styleClass="form-control" value="{!displayTargetRecord.stationDistance3}" onchange="correctInputRules(this,'number',5,0,'','','0');routeStationRecalculateFormula();" tabindex="44" />
+                                                                </div>
+                                                            </div>
+                                                            <div class=" mb10 wd19 wd49_md wd100_xs">
+                                                                <div class="information_title">駅3までの徒歩時間</div>
+                                                                <div class="information_contents" style="margin-bottom:0">
+                                                                    <apex:outputText id="StationWalkTime3" value="{!displayTargetRecord.displayCalculateFormulas.StationWalkTime3__c}" />
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        
+                                                        <div class="flex-wrap  flex_wrap justify-between align_center mb30">
+                                                            <div class=" mb10 wd30 wd49_md wd100_xs">
+                                                                <div class="information_title">バス路線名1</div>
+                                                                <div>
+                                                                    <apex:input type="text" styleClass="form-control" value="{!displayTargetRecord.busRoute1}" disabled="{!displayTargetRecord.station1 == ''}" onchange="correctInputRules(this,'text',30);" tabindex="45" />
+                                                                </div>
+                                                            </div>
+                                                            <div class=" mb10 wd30 wd49_md wd100_xs">
+                                                                <div class="information_title">バス停名1</div>
+                                                                <div>
+                                                                    <apex:input type="text" styleClass="form-control" value="{!displayTargetRecord.busStop1}" disabled="{!displayTargetRecord.station1 == ''}" onchange="correctInputRules(this,'text',60);" tabindex="46" />
+                                                                </div>
+                                                            </div>
+                                                            <div class=" mb10 wd19 wd49_md wd100_xs">
+                                                                <div class="information_title">物件からバス停1までの距離(m)</div>
+                                                                <div>
+                                                                    <apex:input type="text" styleClass="form-control" value="{!displayTargetRecord.busStopDistance1}" disabled="{!displayTargetRecord.station1 == ''}" onchange="correctInputRules(this,'number',5,0); routeBusRecalculateFormula();" tabindex="47" />
+                                                                </div>
+                                                            </div>
+                                                            <div class=" mb10 wd19 wd49_md wd100_xs">
+                                                                <div class="information_title">物件からバス停1までの徒歩時間(分)</div>
+                                                                <div class="information_contents" style="margin-bottom:0">
+                                                                    <apex:outputText id="busStopWalkTime1" value="{!displayTargetRecord.displayCalculateFormulas.BusStopWalkTime1__c	}" />
+                                                                </div>
+                                                            </div>
+                                                            <div class=" mb10 wd30 wd49_md wd100_xs">
+                                                                <div class="information_title">バス乗車時間1(分)</div>
+                                                                <div>
+                                                                    <apex:input type="text" styleClass="form-control" value="{!displayTargetRecord.busRideTime1}" disabled="{!displayTargetRecord.station1 == ''}" onchange="correctInputRules(this,'number',3,0);" tabindex="48" />
+                                                                </div>
+                                                            </div>
+                                                            <div class=" mb10 wd30 wd49_md wd100_xs">
+                                                                <div class="information_title">バス停1から駅までの距離(m)</div>
+                                                                <div>
+                                                                    <apex:input type="text" styleClass="form-control" value="{!displayTargetRecord.busStopToStationDistance1}" disabled="{!displayTargetRecord.station1 == ''}" onchange="correctInputRules(this,'number',5,0); routeBusRecalculateFormula();" tabindex="49" />
+                                                                </div>
+                                                            </div>
+                                                            <div class=" mb10 wd19 wd49_md wd100_xs">
+                                                                <div class="information_title">バス停1から駅までの徒歩時間(分)</div>
+                                                                <div class="information_contents" style="margin-bottom:0">
+                                                                    <apex:outputText id="busStopToStationWalkTime1" value="{!displayTargetRecord.displayCalculateFormulas.BusStopToStationWalkTime1__c}" />
+                                                                </div>
+                                                            </div>
+                                                            
+                                                            <div class=" mb10 wd19 wd49_md wd100_xs">
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        <div class="flex-wrap  flex_wrap justify-between align_center mb30">
+                                                            
+                                                            <div class=" mb10 wd30 wd49_md wd100_xs">
+                                                                <div class="information_title">バス路線名2</div>
+                                                                <div>
+                                                                    <apex:input type="text" styleClass="form-control" value="{!displayTargetRecord.busRoute2}" disabled="{!displayTargetRecord.station2 == ''}" onchange="correctInputRules(this,'text',30);" tabindex="50" />
+                                                                </div>
+                                                            </div>
+                                                            <div class=" mb10 wd30 wd49_md wd100_xs">
+                                                                <div class="information_title">バス停名2</div>
+                                                                <div>
+                                                                    <apex:input type="text" styleClass="form-control" value="{!displayTargetRecord.busStop2}" disabled="{!displayTargetRecord.station2 == ''}" onchange="correctInputRules(this,'text',60);" tabindex="51" />
+                                                                </div>
+                                                            </div>
+                                                            <div class=" mb10 wd19 wd49_md wd100_xs">
+                                                                <div class="information_title">物件からバス停2までの距離(m)</div>
+                                                                <div>
+                                                                    <apex:input type="text" styleClass="form-control" value="{!displayTargetRecord.busStopDistance2}" disabled="{!displayTargetRecord.station2 == ''}" onchange="correctInputRules(this,'number',5,0); routeBusRecalculateFormula();" tabindex="52" />
+                                                                </div>
+                                                            </div>
+                                                            <div class=" mb10 wd19 wd49_md wd100_xs">
+                                                                <div class="information_title">物件からバス停2までの徒歩時間(分)</div>
+                                                                <div class="information_contents" style="margin-bottom:0">
+                                                                    <apex:outputText id="busStopWalkTime2" value="{!displayTargetRecord.displayCalculateFormulas.BusStopWalkTime2__c}" />
+                                                                </div>
+                                                            </div>
+                                                            <div class=" mb10 wd30 wd49_md wd100_xs">
+                                                                <div class="information_title">バス乗車時間2(分)</div>
+                                                                <div>
+                                                                    <apex:input type="text" styleClass="form-control" value="{!displayTargetRecord.busRideTime2}" disabled="{!displayTargetRecord.station2 == ''}" onchange="correctInputRules(this,'number',3,0);" tabindex="53" />
+                                                                </div>
+                                                            </div>
+                                                            <div class=" mb10 wd30 wd49_md wd100_xs">
+                                                                <div class="information_title">バス停2から駅までの距離(m)</div>
+                                                                <div>
+                                                                    <apex:input type="text" styleClass="form-control" value="{!displayTargetRecord.busStopToStationDistance2}" disabled="{!displayTargetRecord.station2 == ''}" onchange="correctInputRules(this,'number',5,0); routeBusRecalculateFormula();" tabindex="54" />
+                                                                </div>
+                                                            </div>
+                                                            <div class=" mb10 wd19 wd49_md wd100_xs">
+                                                                <div class="information_title">バス停2から駅までの徒歩時間(分)</div>
+                                                                <div class="information_contents" style="margin-bottom:0">
+                                                                    <apex:outputText id="busStopToStationWalkTime2" value="{!displayTargetRecord.displayCalculateFormulas.BusStopToStationWalkTime2__c}" />
+                                                                </div>
+                                                            </div>
+                                                            
+                                                            <div class=" mb10 wd19 wd49_md wd100_xs">
+                                                            </div>
+                                                            
+                                                        </div>
+                                                        
+                                                        <div class="flex-wrap  flex_wrap justify-between align_center mb30">
+                                                            
+                                                            <div class=" mb10 wd30 wd49_md wd100_xs">
+                                                                <div class="information_title">バス路線名3</div>
+                                                                <div>
+                                                                    <apex:input type="text" styleClass="form-control" value="{!displayTargetRecord.busRoute3}" disabled="{!displayTargetRecord.station3 == ''}" onchange="correctInputRules(this,'text',30);" tabindex="55" />
+                                                                </div>
+                                                            </div>
+                                                            <div class=" mb10 wd30 wd49_md wd100_xs">
+                                                                <div class="information_title">バス停名3</div>
+                                                                <div>
+                                                                    <apex:input type="text" styleClass="form-control" value="{!displayTargetRecord.busStop3}" disabled="{!displayTargetRecord.station3 == ''}" onchange="correctInputRules(this,'text',60);" tabindex="56" />
+                                                                </div>
+                                                            </div>
+                                                            <div class=" mb10 wd19 wd49_md wd100_xs">
+                                                                <div class="information_title">物件からバス停3までの距離(m)</div>
+                                                                <div>
+                                                                    <apex:input type="text" styleClass="form-control" value="{!displayTargetRecord.busStopDistance3}" disabled="{!displayTargetRecord.station3 == ''}" onchange="correctInputRules(this,'number',5,0); routeBusRecalculateFormula();" tabindex="57" />
+                                                                </div>
+                                                            </div>
+                                                            <div class=" mb10 wd19 wd49_md wd100_xs">
+                                                                <div class="information_title">物件からバス停3までの徒歩時間(分)</div>
+                                                                <div class="information_contents" style="margin-bottom:0">
+                                                                    <apex:outputText id="busStopWalkTime3" value="{!displayTargetRecord.displayCalculateFormulas.BusStopWalkTime3__c}" />
+                                                                </div>
+                                                            </div>
+                                                            <div class=" mb10 wd30 wd49_md wd100_xs">
+                                                                <div class="information_title">バス乗車時間3(分)</div>
+                                                                <div>
+                                                                    <apex:input type="text" styleClass="form-control" value="{!displayTargetRecord.busRideTime3}" disabled="{!displayTargetRecord.station3 == ''}" onchange="correctInputRules(this,'number',3,0);" tabindex="58" />
+                                                                </div>
+                                                            </div>
+                                                            <div class=" mb10 wd30 wd49_md wd100_xs">
+                                                                <div class="information_title">バス停3から駅までの距離(m)</div>
+                                                                <div>
+                                                                    <apex:input type="text" styleClass="form-control" value="{!displayTargetRecord.busStopToStationDistance3}" disabled="{!displayTargetRecord.station3 == ''}" onchange="correctInputRules(this,'number',5,0); routeBusRecalculateFormula();" tabindex="59" />
+                                                                </div>
+                                                            </div>
+                                                            <div class=" mb10 wd19 wd49_md wd100_xs">
+                                                                <div class="information_title">バス停3から駅までの徒歩時間(分)</div>
+                                                                <div class="information_contents" style="margin-bottom:0">
+                                                                    <apex:outputText id="busStopToStationWalkTime3" value="{!displayTargetRecord.displayCalculateFormulas.BusStopToStationWalkTime3__c}" />
+                                                                </div>
+                                                            </div>
+                                                            
+                                                            <div class=" mb10 wd19 wd49_md wd100_xs">
+                                                            </div>
+                                                            
+                                                        </div>
+                                                    </li>
+                                                </ul>
+                                            </apex:outputPanel>
+                                        </li>
+                                        
+                                        <li class="default open">
+                                            <div class="link posi_re">
+                                                <i class="fa fa-chevron-up"></i>写真
+                                                <div class="ab_btn">
+                                                    <apex:inputCheckbox id="isUnnecessaryMosaic" value="{!isUnnecessaryMosaic}" rendered="{! !isNew}"/>
+                                                    <apex:outputlabel styleClass="serach_check" for="isUnnecessaryMosaic" value="モザイク処理不要" tabindex="60" rendered="{! !isNew}">
+                                                        <apex:actionSupport event="onclick" action="{!changeIsUnnecessaryMosaic}" rerender="isUnnecessaryMosaic, anyPhotoBlock, surroundingPhotoUploadBlock"/>
+                                                    </apex:outputlabel>
+                                                    <!-- ▼問合せNo0345で追加 -->
+                                                    <apex:commandButton id="bulkDeleteButon" value="一括削除" styleclass="btn-w-2 btn-w-2_normal blue"
+                                                        disabled="{!OR(isOpenError,isNew, !isImageUploadFlg)}"
+                                                        onclick="checkDeleteImageAll()"
+                                                        reRender="dummy" />
+                                                    <!-- ▲問合せNo0345で追加 -->
+                                                </div>
+                                            </div>
+                                            
+                                            <ul class="submenu-defalt">
+                                                <li>
+                                                    <apex:outputPanel id="anyPhotoBlock" layout="block" styleClass="flex-wrap flex_wrap justify-between align_center">
+                                                        <apex:inputHidden id="uploadPhotoType" value="{!uploadPhotoType}" />　<!-- アップロード写真種別のapex連携用隠し項目 -->
+                                                        <apex:repeat value="{!anyPhotoData}" var="anyPhoto">
+                                                            <div class=" mb50_xs30 wd33">
+                                                                <div class="posi_re mb10">
+                                                                    {!anyPhoto.photoData.tag}
+                                                                    <div class="ab_right flex-wrap">
+                                                                        <div class="download_icon">
+                                                                            <a href="{!anyPhoto.photoData.filePath}" style="{!IF(anyPhoto.isNone,'pointer-events: none;','')}">
+                                                                                <apex:image alt="" url="{!URLFOR($Resource.designer_file, 'designer_file/images/download.png')}" />
+                                                                            </a>
+                                                                        </div>
+                                                                        <div class="dustbox_icon ml10">
+                                                                            <a href="#">
+                                                                                <apex:commandLink onclick="checkDelete('anyPhoto', {!anyPhoto.photoData.index})"
+                                                                                                  rerender="dummy"
+                                                                                                  style="{!IF(anyPhoto.isNone,'pointer-events: none;','')}" >
+                                                                                    <apex:image alt="" url="{!URLFOR($Resource.designer_file, 'designer_file/images/dustbox.png')}" />
+                                                                                </apex:commandLink>
+                                                                            </a>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                
+                                                                <apex:outputPanel layout="block" styleClass="img-wrapper" rendered="{!NOT(isNew || isOpenError || !anyPhoto.isNone)}">
+                                                                    <div class="img-wrapper-inner">
+                                                                        <apex:pageBlock >
+                                                                            <div class="ab_center" style="height: 100%">
+                                                                                <c:GD901001View ParameterClass="{!anyPhoto.GD901001Parameter}" />
+                                                                            </div>
+                                                                        </apex:pageBlock>
+                                                                    </div>
+                                                                </apex:outputPanel>
+                                                                <apex:outputPanel layout="block" styleClass="img-wrapper md10" rendered="{!NOT(isNew || isOpenError || anyPhoto.isNone)}">
+                                                                    <div class="img-wrapper-inner">
+                                                                        <apex:image alt="" value="{!anyPhoto.photoData.filePath}" styleClass="img-contain" />
+                                                                    </div>
+                                                                </apex:outputPanel>
+                                                                <div class="information_title">コメント</div>
+                                                                <div>
+                                                                    <apex:inputTextarea value="{!anyPhoto.photoData.comment}" styleClass="form-control"
+                                                                                        readonly="{!anyPhoto.isNone}"
+                                                                                        onchange="correctInputRules(this,'text',255);" />
+                                                                </div>
+                                                            </div>
+                                                        </apex:repeat>
+                                                        <!-- 3で割って2余る場合、1つ分の領域を作る。これがないと表示が左右にばらける -->
+                                                        <apex:outputPanel layout="block" rendered="{! MOD(anyPhotoData.size, 3) = 2}" styleClass="mb50_xs30 wd33">
+                                                        </apex:outputPanel>
+                                                    </apex:outputPanel>
+                                                    <div><apex:outputText value="周辺写真" rendered="{!NOT(isNew || isOpenError || surroundingPhotoData.photoDataList.size==MAXINDEX_SURROUNDINGPHOTO)}" /></div>
+                                                    <apex:outputPanel id="surroundingPhotoUploadBlock" layout="block" styleClass="mb40">
+                                                        <apex:outputPanel layout="block" styleClass="text-center" rendered="{!NOT(isNew || isOpenError || surroundingPhotoData.photoDataList.size==MAXINDEX_SURROUNDINGPHOTO)}">
+                                                            <c:GD901001View ParameterClass="{!surroundingPhotoData.GD901001Parameter}" />
+                                                        </apex:outputPanel>
+                                                    </apex:outputPanel>
+                                                    <apex:outputPanel id="surroundingPhotoBlock" layout="block" styleClass="flex-wrap flex_wrap justify-between align_center">
+                                                        <apex:repeat value="{!surroundingPhotoData.photoDataList}" var="surroundingPhoto">
+                                                            <div class=" mb50_xs30 wd33">
+                                                                <div class="posi_re mb10" style="height:1.5em">
+                                                                    <div class="ab_right flex-wrap">
+                                                                        <div class="download_icon">
+                                                                            <a href="{!surroundingPhoto.filePath}">
+                                                                                <apex:image alt="" url="{!URLFOR($Resource.designer_file, 'designer_file/images/download.png')}" />
+                                                                            </a>
+                                                                        </div>
+                                                                        <div class="dustbox_icon ml10">
+                                                                            <a href="#">
+                                                                                <apex:commandLink onclick="checkDelete('surroundingPhoto', {!surroundingPhoto.index})"
+                                                                                                  rerender="dummy" >
+                                                                                    <apex:image alt="" url="{!URLFOR($Resource.designer_file, 'designer_file/images/dustbox.png')}" />
+                                                                                </apex:commandLink>
+                                                                                
+                                                                            </a>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="img-wrapper md10">
+                                                                    <div class="img-wrapper-inner">
+                                                                        <apex:image alt="" value="{!surroundingPhoto.filePath}" styleClass="img-contain" />
+                                                                    </div>
+                                                                </div>
+                                                                <div class="information_title">周辺写真タグ</div>
+                                                                <div>
+                                                                    <apex:selectList styleClass="form-control" value="{!surroundingPhoto.tag}" size="1">
+                                                                        <apex:selectOptions value="{!surroundingEnvironmentOption}"/>
+                                                                    </apex:selectList>
+                                                                </div>
+                                                                <div class="flex-wrap  flex_wrap justify-between">
+                                                                    <div class="wd47">
+                                                                        <div class="information_title">周辺写真名</div>
+                                                                        <div>
+                                                                            <apex:input type="text" value="{!surroundingPhoto.photoName}" styleClass="form-control" onchange="correctInputRules(this,'text',255);" />
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="wd47">
+                                                                        <div class="information_title">周辺写真までの距離(m)</div>
+                                                                        <div>
+                                                                            <apex:input type="text" value="{!surroundingPhoto.distance}" styleClass="form-control" onchange="correctInputRules(this,'number',5,0);" />
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="information_title">コメント</div>
+                                                                <div>
+                                                                    <apex:inputTextarea value="{!surroundingPhoto.comment}" styleClass="form-control"
+                                                                                        onchange="correctInputRules(this,'text',255);" />
+                                                                </div>
+                                                            </div>
+                                                        </apex:repeat>
+                                                        <!-- 3で割って2余る場合、1つ分の領域を作る。これがないと表示が左右にばらける -->
+                                                        <apex:outputPanel layout="block" rendered="{! MOD(surroundingPhotoData.photoDataList.size, 3) = 2}" styleClass="mb50_xs30 wd33">
+                                                        </apex:outputPanel>
+                                                    </apex:outputPanel>
+                                                </li>
+                                            </ul>
+                                        </li>
+                                        
+                                        <li class="default open">
+                                            <div class="link"><i class="fa fa-chevron-up"></i>建物メンテナンスコメント</div>
+                                            <apex:outputPanel id="buildingMaintenanceComments" >
+                                                <ul class="submenu-defalt ensen">
+                                                    <li>
+                                                        <div class="flex-wrap  flex_wrap justify-between align_center ">
+                                                            <div class=" mb50_xs30 wd100">
+                                                                <div class="information_title">メンテナンスコメント</div>
+                                                                <div>
+                                                                    <apex:input type="text" styleClass="form-control" value="{!displayTargetRecord.maintenanceComment}" onchange="correctInputRules(this,'text',255);" tabindex="93" />
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </li>
+                                                </ul>
+                                            </apex:outputPanel>
+                                        </li>
+                                        <li class="default open">
+                                            <div class="link"><i class="fa fa-chevron-up"></i>建物メンテナンス履歴</div>
+                                            <apex:outputPanel id="buildingMaintenanceHistory" >
+                                                <ul class="submenu-defalt ensen">
+                                                    <li>
+                                                        <table class="gray mb30" style="height:352px;">
+                                                            <tbody>
+                                                                <tr>
+                                                                    <th class="wd0"></th>
+                                                                    <th style="width:10%; min-width:200px;">メンテナンス日</th>
+                                                                    <th class="wd3">区分</th>
+                                                                    <th class="wd5">入力者</th>
+                                                                    <th class="wdlast">メンテナンスコメント</th>
+                                                                </tr>
+                                                                <apex:variable var="num" value="1" />
+                                                                <apex:repeat value="{!targetBuildingMaintenanceHistoryList}" var="histry">
+                                                                    <tr>
+                                                                        <td class="text-center">{!VALUE(num)}</td>
+                                                                        <td><apex:outputField value="{!histry.CreatedDate}"/></td>
+                                                                        <td><apex:outputtext value="{!histry.MaintenanceType__c}" /></td>
+                                                                        <td><apex:outputtext value="{!histry.MaintenanceStaff__r.Name}" /></td>
+                                                                        <td><apex:outputtext value="{!histry.MaintenanceComment__c}" /></td>
+                                                                    </tr>
+                                                                    <apex:variable var="num" value="{!VALUE(num) + 1}" />
+                                                                </apex:repeat>
+                                                            </tbody>
+                                                        </table>
+                                                    </li>
+                                                </ul>
+                                            </apex:outputPanel>
+                                        </li>
+                                        <div class="flex-wrap justify-center flex-xs-xolumn  mt60">
+                                            <div>
+                                                <apex:commandButton styleClass="modal btn btn-cancel text-center mauto_xs" disabled="{! isOpenError}"
+                                                                    value="キャンセル" onclick="closePage();" tabindex="94" />
+                                            </div>
+                                            <div>
+                                                <apex:commandButton styleClass="modal btn btn-submit btn-primary text-center mauto_xs" 
+                                                                    value="保存"  disabled="{! isOpenError}" onclick="checkSave()"
+                                                                    rerender="dummy" tabindex="95" />
+                                                <apex:actionFunction name="saveBuilding" action="{! saveBuilding}"
+                                                                     oncomplete="unblockUi();if(!{! hasErrorMessage}){alertSaveFinish();}else{gotoTop()}"
+                                                                     rerender="accordionScript, messageArea"/>
+                                            </div>
+                                        </div>
+                                    </ul>
+                                    
+                                </div>
+                                <div class="tab_content" id="programming_content">
+                                    
+                                    <div class="text-right mt30 mb20">
+                                        <apex:commandButton value="新規" styleClass="text-right mt30 mb20 btn btn btn-sm btn-normal"
+                                                            disabled="{! isNew || isOpenError}"
+                                                            onclick=" showPage('GA104006View', '', 'TRUE', 'buildingId={! displayTargetRecord.buildId}');"
+                                                            rerender="messageArea" tabindex="96" />
+                                    </div>
+                                    <table class="gray mb30" style="height:452px;">
+                                        <tbody>
+                                            <tr>
+                                                <th class="wd0 border-r-none"></th>
+                                                <th class="wd4">部屋番号</th>
+                                                <th class="wd3">現状</th>
+                                                <th class="wd3">間取り</th>
+                                                <th class="wd5">専有面積</th>
+                                                <th class="wd5">賃料</th>
+                                                <th class="wd5">写真枚数</th>
+                                            </tr>
+                                            <apex:variable var="num" value="1" />
+                                            <apex:repeat value="{!targetPropertyList}" var="property">
+                                                <tr>
+                                                    <td>{!VALUE(num)}</td>
+                                                    <td><apex:commandLink value="{!property.Name}" onclick=" showPage('GA104004View', '', 'TRUE', 'Id={!property.ID}&accountId={!accountId}');" rerender="dummy" tabindex="98" /> </td>
+                                                    <td>{!property.LiveStatus__c}</td>
+                                                    <td>{!property.RoomLayout__c}</td>
+                                                    <td>
+                                                        
+                                                        <apex:outputText value="{0, Number, ###,###.00}">
+                                                            <apex:param value="{! property.RoomArea__c}" />
+                                                        </apex:outputText>
+                                                    </td>
+                                                    <td>
+                                                        <apex:outputText value="{0, Number, ###,###}">
+                                                            <apex:param value="{!property.RentFee__c}" />
+                                                        </apex:outputText> 
+                                                    </td>
+                                                    <td>{!property.PropertyPhotoCount__c}</td>
+                                                </tr>
+                                                <apex:variable var="num" value="{!VALUE(num) + 1}" />
+                                            </apex:repeat>
+                                            
+                                        </tbody>
+                                    </table>
+                                    
+                                </div>
+                                
+                            </div>
+                        </div>
+                        
+                        
+                    </section>
+                    
+                    <script>
+                    // 写真アップロード後処理
+                    function finishS3Upload(parameter) {
+                        // 画像アップロード完了後に実行する処理
+                        blockUi();
+                        // 周辺写真
+                        if (parameter == "{!BUILDINGPHOTOTYPE_SURROUNDING}") {
+                            updateSurroundingPhoto();
+                            return;
+                        }
+                        // 周辺写真以外
+                        var uploadPhotoType = document.getElementById("{!$Component.uploadPhotoType}");
+                        uploadPhotoType.value = parameter;
+                        if (uploadPhotoType.value != '') {
+                            updateAnyPhoto();
+                        }
+                    }
+                    </script>
+                </apex:form>
+            </article>
+        </main>
+        <script>
+        function AllChecked(){
+            var all = document.stationform.all.checked;
+            for (var i=0; i<document.stationform.station_name.length; i++){
+                document.stationform.station_name[i].checked = all;
+            }
+        }
+        
+        function DisChecked(){
+            var checks = document.stationform.station_name;
+            var checksCount = 0;
+            for (var i=0; i<checks.length; i++){
+                if(checks[i].checked == false){
+                    document.stationform.all.checked = false;
+                }else{
+                    checksCount += 1;
+                    if(checksCount == checks.length){
+                        document.stationform.all.checked = true;
+                    }
+                }
+            }
+        }
+        </script>
+    </body>
+    
+    <apex:outputPanel id="accordionScript" >
+        <script>
+        $(function() {
+            var Accordion = function(el, multiple) {
+                this.el = el || {};
+                this.multiple = multiple || false;
+                
+                // Variables privadas
+                var links = this.el.find('.link');
+                // Evento
+                links.off('click');//重複登録を防ぐ
+                links.on('click', {el: this.el, multiple: this.multiple}, this.dropdown)
+                // モザイク処理チェックでは効かないようにしておく
+                var btns = links.find('.ab_btn');
+                btns.on('click', function(e){return false;})
+                
+            }
+            
+            Accordion.prototype.dropdown = function(e) {
+                var $el = e.data.el;
+                $this = $(this),
+                    $next = $this.next();
+                
+                $next.slideToggle();
+                $this.parent().toggleClass('open');
+                
+                if (!e.data.multiple) {
+                };
+            }
+            
+            var accordion = new Accordion($('#accordion'), false);
+        });
+        
+        $(function() {
+            $('#btn').on('click', function(e) {
+                var textList = document.getElementById('accordion');
+                let elements = textList.getElementsByTagName('li');
+                Array.prototype.forEach.call(elements, function(element) {
+                    element.classList.remove('open','default');
+                    $('.submenu-defalt').fadeOut()
+                });
+            });
+        });
+        </script>
+    </apex:outputPanel>
+    
+    <!-- 【モーダルダイアログ】 -->
+    <div id="dialog-GA102006Form" title="">
+        <apex:outputPanel id="GA102006DialogPanel">
+            <c:GA102006View ParameterClass="{!GA102006Parameter}" />
+        </apex:outputPanel>
+    </div>
+    <!-- 【モーダルダイアログ】 -->
+    <div id="dialog-modal1" title="">
+        <apex:outputPanel id="dialogPanel1">
+            <c:GA104007View ParameterClass="{!GA104007Parameter}" />
+        </apex:outputPanel>
+    </div>
+    
+    <!-- 【JAVASCRIPT】 --> 
+    <script language="javascript" type="text/javascript">
+        //▼　2022.04.08 No.782 問合せNo0782_建物画面の沿線名と駅名の登録について
+        // モーダル幅の設定用
+        var clientWidth = 0; 
+
+        //路線ダイアログを表示
+        if(document.body.clientWidth > 800){
+            clientWidth = 800;
+        }else{
+            clientWidth = document.body.clientWidth;
+        }
+        jQuery(function () {
+                //路線ダイアログを表示
+                jQuery("#dialog-modal1").dialog({
+                    modal: true,
+                    autoOpen: false,
+                    width: clientWidth,
+                });
+            });
+        //路線モーダルを閉じる際の処理
+        function closeGA104007View() {
+            unblockUi();
+            jQuery("#dialog-modal1").dialog("close");
+            closeModal();
+        }
+        //▲　2022.04.08 No.782 問合せNo0782_建物画面の沿線名と駅名の登録について
+        jQuery(function() {
+
+            //郵便番号ダイアログを表示
+            if(document.body.clientWidth > 800){
+                clientWidth = 800;
+            }else{
+                clientWidth = document.body.clientWidth;
+            }
+            //ダイアログを表示
+            jQuery( "#dialog-GA102006Form" ).dialog({
+                modal: true,
+                autoOpen: false,
+                width: clientWidth,
+            });
+        });
+        
+        function closeGA102006View(){
+            
+            jQuery( "#dialog-GA102006Form" ).dialog( "close" );
+            GA102006FormClose();
+        }
+
+        /**
+        * メンテナンス建物コード履歴の削除処理
+        */
+        async function delBuildingCdHistProcess(){
+            let count = $('[id$=selectedBuildingCdHist]:checked').length;
+
+            // 未選択チェック
+            if (count == 0){
+                await showAlert("{! MSG_NO_SELECTED_BUILDING_CD_HIST_ROW }");
+                return false;
+            }
+
+            // 削除確認
+            if (! await showConfirm("{! MSG_COM_V_DELETE }")) {
+                return false;
+            }
+                            
+            // 削除処理
+            delBuildingCdHist();
+            blockUi();
+                            
+            return true;
+        }
+
+        /**
+        * メンテナンス物件コードの存在チェック処理
+        * @param {Element} selectedImportType 取込先選択値 
+        */
+        async function chkExistsMaintPropCdProcess(selectedImportType){
+
+            // 編集モードチェック
+            if ({! isNew }) {
+                return;
+            }
+
+            // 自動メンテナンス連携対象チェック
+            // ※"--なし--"もメンテナンス物件コードが存在する為、連携対象とする
+            if ('{! displayTargetRecord.initImportType }' == '{! MANUAL }') {
+                return;
+            }
+
+            // 手動への変更チェック
+            if ($(selectedImportType).val() != '{! MANUAL }') {
+                return;
+            }
+
+            // メンテナンス物件コードの存在チェック
+            blockUi();
+            chkExistsMaintPropCd();
+        }
+    </script>
+    
+    
+</apex:page>

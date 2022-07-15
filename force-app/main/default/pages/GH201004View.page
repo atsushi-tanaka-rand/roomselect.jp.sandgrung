@@ -1,0 +1,81 @@
+<!-- 利用店舗選択 -->
+<apex:page controller="GH201004Controller" docType="html-5.0" standardStylesheets="false" title="利用店舗選択画面">
+    <script type="text/javascript">
+    //保存完了メッセージ
+    async function alertSaveFinish() {
+        //完了メッセージ
+        await showAlert("{! MSG_COM_I_SAVE}");
+    }
+    </script>
+    
+    <apex:form id="form" html-novalidate="novalidate">
+        <head>
+            <meta charset="utf-8" />
+            <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+            <meta name="format-detection" content="telephone=no" />
+            <meta name="robots" content="noindex" />
+            <title>利用店舗選択</title>
+            
+            <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/reset.min.css')}" />
+            <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/foundation.css')}" />
+            <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/modaal.css')}" />
+            <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/style.css')}" />
+            <apex:stylesheet value="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+            <apex:stylesheet value="{!URLFOR($Resource.external_file, 'external_file/common_style.css')}" />
+            <apex:stylesheet value="{!URLFOR($Resource.jQuery,'jQuery/jQueryUI/jquery-ui.css')}" />
+            
+            <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery-3.6.0.min.js')}" />
+            <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery.blockUI.js')}" />
+            <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jQueryUI/jquery-ui.min.js')}" />
+            <apex:includeScript value="{!URLFOR($Resource.designer_file, 'designer_file/js/modaal.js')}" />
+            <apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/common_screen_util.js')}" />
+            <apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/input_rules.js')}" />
+        </head>
+        
+        <body style="background-color:#ffffff;">
+            <!-- ※参考:GA101001View -->
+            <main id="ga102003">
+                <article>
+                    <section>
+                        <apex:pagemessages />
+                        <section style="display:flex">
+                            <div class="flex-wrap justify-between align_center mb10">
+                                <h1 class="fontb font2rem">利用店舗選択</h1>
+                            </div>
+                            <apex:commandButton style=" visibility:hidden;" rerender="dummy"/> 
+                        </section>
+                        <div class="border-g-3 mb60">
+                            <div class="flex-wrap  flex_wrap align_center mb30">
+                                <div class="mr20 mb10" style="min-width:300px;">
+                                    <div>変更前</div>
+                                    <div class="information_contents" style="margin-bottom:0; padding:8px 12px; font-size: 1.4rem;">
+                                        <apex:outputText value="{! nowUserShopName}"/>
+                                    </div>
+                                </div>
+                                
+                                <div class="mr20 mb10">
+                                    <apex:image url="{!URLFOR($Resource.designer_file,'designer_file/images/arrow_right.png')}" style="margin-top:30px;"/>
+                                </div>
+                                
+                                
+                                <div class="mr20 mb10" style="min-width:300px;">
+                                    <div>変更後
+                                        <apex:image style="margin-left:10px;" url="/img/msg_icons/info16.png" title="ユーザ異動登録画面で登録した店舗を選択できます。" />
+                                    </div>
+                                    <apex:selectList styleClass="form-control" size="1" value="{!nowUserShop}" tabIndex="1">
+                                        <apex:selectOptions value="{!usrShopSelectList}"></apex:selectOptions>
+                                    </apex:selectList>
+                                </div>
+                            </div>
+                            <apex:outputText value="※この機能は、他の画面を閉じてご使用ください。" />
+                            <div class="text-center ">
+                                <apex:commandButton styleClass="btn btn-submit btn-primary text-center mauto_xs" value="設定" disabled="{! isOpenError || usrShopSelectList.size = 0}" action="{! shopSetting}"
+                                                    oncomplete="unblockUi();if(!{! hasErrorMessage}){alertSaveFinish()}else{gotoTop()}" rerender="form" tabIndex="2" />
+                            </div>
+                        </div>
+                    </section>
+                </article>
+            </main>
+        </body>
+    </apex:form>
+</apex:page>

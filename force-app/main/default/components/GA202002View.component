@@ -1,0 +1,63 @@
+<!--学区選択画面-->
+<apex:component controller="GA202002Controller" >
+    <apex:attribute name="ParameterClass" type="GA202002ParameterClass" assignTo="{!Parameter}" description="key"/>
+    <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery-3.6.0.min.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery.blockUI.js')}"/>    
+    <apex:includeScript value="{!URLFOR($Resource.designer_file, 'designer_file/js/modaal.js')}"/>   
+    <apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/common_screen_util.js')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/reset.min.css')}"/> 
+    <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/foundation.css')}"/>
+    <apex:stylesheet value="https://use.fontawesome.com/releases/v5.0.6/css/all.css"/>   
+    <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/style.css')}"/> 
+    <body style="background-color:#ffffff;" id="ga202002Controller">
+        <main>
+            <article>
+                <apex:form id="GA202002Form" >
+                    <apex:pageBlock rendered="{!Parameter.noFirst}">
+                        <apex:outputText rendered="{!init}" />
+                        <apex:pageMessages />
+                        <section class="post-pop">
+                            <section style="display:flex">
+                                <h1 class="fontb font2rem">学校検索</h1>
+                                <apex:commandButton style=" visibility:hidden;" rerender="dummy"/> 
+                            </section>
+                           
+                            <section>
+                                <table class="gray">
+                                    <tbody>
+                                        <tr>
+                                            <th class="">
+                                                <apex:inputCheckbox id="sc" value="{!isSchoolDistrictChecked}" styleClass="schoolHeadCheck" onchange="listCheckBoxAllChange(this, '.schoolHeadCheck',  '.schoolCheck');" />
+                                                <apex:outputlabel styleClass="serach_check" style="width: 200px;" for="sc" value="{!Parameter.juniorHighSchoolArea}" rendered="{!IF(Parameter.modalMode==6, true, false)}" /> 
+                                                <apex:outputlabel styleClass="serach_check" style="width: 200px;" for="sc" value="{!Parameter.elementarySchoolArea}" rendered="{!IF(Parameter.modalMode==7, true, false)}" /> 
+                                            </th>
+                                        </tr>
+                                    </tbody>
+                                    <tbody style="height:200px; overflow-y:scroll; display:block;" >
+                                        <tr>
+                                            <td>
+                                                <apex:repeat value="{!DisplaySchoolList}" var="D" >
+                                                    <apex:inputCheckbox id="sc" value="{!D.isSelected}" styleClass="schoolCheck"  onchange="headCheckBoxChange(this, '.schoolHeadCheck',  '.schoolCheck');"/>
+                                                    <apex:outputlabel styleClass="serach_check" style="width: 200px;" for="sc" value="{!D.schoolName}" /> 
+                                                </apex:repeat>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <div class="btn btn-submit btn-primary text-center " style="margin-top: 20px;">
+                                    <apex:commandButton disabled="{! isOpenError}" onclick="blockUi();" action="{!settingSelect}" oncomplete=" if(!{!hasErrorMessage}){closeGA202002View();} unblockUi();" rerender="renderedGA202002, GA202002Form" value="設定" styleClass="btn btn-submit btn-primary modal mb10" />  
+                                </div>
+                                
+                            </section>
+                        </section>       
+                    </apex:pageBlock>
+                </apex:form>
+            </article>
+        </main>
+    </body>
+    <script>
+    function AllChecked(){
+        changeAllChecked();
+    }
+    </script>
+</apex:component>

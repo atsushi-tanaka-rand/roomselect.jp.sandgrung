@@ -1,0 +1,105 @@
+<!--モーダル予約物件条件-->
+<apex:component controller="GA102001Modal10Controller" allowDML="true">
+    <apex:attribute name="ParameterClass" type="GA102001Modal10ParameterClass" assignTo="{!Parameter}" description="key" />
+    <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery-3.6.0.min.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery.blockUI.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/common_screen_util.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.designer_file, 'designer_file/js/modaal.js')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/reset.min.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/foundation.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/style.css')}"/>
+    <apex:stylesheet value="https://use.fontawesome.com/releases/v5.0.6/css/all.css"/>
+    <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery-3.6.0.min.js')}" />
+    <body style="background-color:#ffffff;">
+        <apex:form id="GA102001Modal10" >
+            <apex:pageBlock rendered="{!parameter.noFirst}">
+                <apex:outputText rendered="{!init}" />
+                <apex:pageMessages />
+                <div class="modal-header">
+                    <h4 class="modal-title fontb">物件条件</h4>
+                </div>
+
+                <div class="modal-body">
+                    <table class="gray" style="margin-top: 20px; max-height:500px;">
+                        <tr>
+                            <th style="width: 40px; text-align: center;">
+                                <apex:inputCheckbox id="sc" value="{!Parameter.allSpcReserved}" styleClass="spcReservedAllCheck" disabled="{!isOpenError}"
+                                onchange="listCheckBoxAllChange(this, '.spcReservedAllCheck',  '.spcReservedCheck');updateAllCheck(this.checked);" />
+                                <apex:outputlabel styleClass="serach_check5" for="sc"/> 
+                                
+                            </th>
+                            <th>物件条件名</th>
+                        </tr>
+                        <apex:repeat value="{!parameter.spcIndexList}" var="index">
+                            <tr>
+                                <td style="text-align: center;">
+                                    <apex:inputCheckbox id="sc"  value="{!parameter.spcReservedList[index]}" disabled="{!isOpenError}" styleClass="spcReservedCheck"
+                                    onchange="headCheckBoxChange(this, '.spcReservedAllCheck',  '.spcReservedCheck');updateCheck({!index}, this.checked);"/>
+                                    <apex:outputLabel for="sc" styleClass="serach_check5"></apex:outputLabel>
+                                </td>
+                                <td><apex:outputText value="{!parameter.spcNameList[index]}" /></td>
+                            </tr>
+                        </apex:repeat>
+                    </table>
+                </div>
+
+                <div class="modal-footer" style="margin-top: 15px;">
+                    <div class="flex-wrap justify-around flex_wrap">
+                        <div class="mb10">
+                            <apex:commandButton styleClass="btn btn-submit btn-primary text-center mauto_xs" id="GA102001Modal10ok" value="OK"
+                                    disabled="{!isOpenError}" onclick="blockUi();clickOkJs();closeGA102001_10View();"
+                            />
+                        </div>
+                    </div>
+                </div>
+                <apex:actionFunction action="{!clickOk}" name="clickOk" reRender="dummy" oncomplete="unblockUi();">
+                    <apex:param value="" name="checkList"/>
+                </apex:actionFunction>
+                <apex:outputPanel id="js" layout="none">
+                    <script language="javascript" type="text/javascript">
+                        let checkList = [];
+
+                        $(function () {
+                            var initControl = function(el) {
+                                this.el = el || {};
+
+                                // ボタン・リストボックスのクリックイベントの停止
+                                var btns = el.find('input[type="submit"], select');
+                                // 初期表示時にフォーカスを外す
+                                btns.blur();
+                                btns.on('click', function(e){return false;})
+                            }
+
+                            initControl($('form[id$="GA102001Modal10"]'));
+                            
+                            //チェックボックスの値を持っておく
+                            let befListString = '{!parameter.spcReservedList}';
+                            befListString = befListString.replaceAll('[', '');
+                            befListString = befListString.replaceAll(']', '');
+                            befListString = befListString.replaceAll(' ', '');
+                            checkList = befListString.split(',');
+                        });
+
+                        function updateCheck(index, value){
+                            //チェックボックスの値を更新する
+                            checkList.splice(index, 1, value.toString());
+                        }
+
+                        function updateAllCheck(value){
+                            //全てのチェックボックスの値を更新する
+                            for (var i in checkList) {
+                                checkList.splice(i, 1, value.toString());
+                            }
+                        }
+
+                        function clickOkJs(){
+                            //チェックボックスの値をApexに送信する
+                            clickOk(checkList.join(','));
+                        }
+                        //# sourceURL=GA102001Modal10View.js
+                    </script>
+                </apex:outputPanel>
+            </apex:pageBlock>
+        </apex:form>
+    </body>
+</apex:component>

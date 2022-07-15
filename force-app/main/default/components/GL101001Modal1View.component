@@ -1,0 +1,94 @@
+<!-- 定型文選択 -->
+<apex:component controller="GL101001Modal1Controller" allowDML="true">
+	<apex:attribute name="ParameterClass" type="GL101001Modal1ParameterClass" assignTo="{!parameter}" description="key" />
+
+	<apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/reset.min.css')}" />
+	<apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/foundation.css')}" />
+	<apex:stylesheet value="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+	<apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/modaal.css')}" />
+	<apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/style.css')}" />
+	<apex:stylesheet value="{!URLFOR($Resource.external_file, 'external_file/common_style.css')}" />
+	<apex:stylesheet value="{!URLFOR($Resource.jQuery,'jQuery/jQueryUI/jquery-ui.css')}" />
+
+	<apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery-3.6.0.min.js')}" />
+	<apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery.blockUI.js')}" />
+	<apex:includeScript value="{!URLFOR($Resource.designer_file, 'designer_file/js/modaal.js')}" />
+	<apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/common_screen_util.js')}" />
+	<apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/input_rules.js')}" />
+	<apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jQueryUI/jquery-ui.min.js')}" />
+
+	<apex:form >
+		<apex:pageBlock rendered="{! parameter.noFirst }">
+			<apex:outputText rendered="{! init }" />
+			<apex:pageMessages id="messageArea" />
+			<div>
+				<ul class="accordion">
+					<apex:repeat value="{! screenFixedPhrase.fixedPhraseMap }" var="folder">
+						<li>
+							<div class="link">
+								<apex:outputText value="{! folder }" />
+								<i class="fa fa-chevron-down"></i>
+							</div>
+							<ul class="submenu">
+								<apex:repeat value="{! screenFixedPhrase.fixedPhraseMap[folder] }" var="fixedPhrase">
+									<li>
+										<apex:commandLink onclick="blockUi();"
+											action="{! clickFixedPhrase }"
+											value="{! fixedPhrase.fixedPhraseName }"
+											oncomplete="unblockUi(); if({! hasErrorMessage }){return false;} closeDialogModal1('{! screenFixedPhrase.replaceVal }');"
+											reRender="messageArea"
+										>
+											<apex:param name="fixedPhraseFolder"
+												value="{! folder }"
+												assignTo="{! screenFixedPhrase.selectedKey }"
+											/>
+											<apex:param name="fixedPhraseIndex"
+												value="{! fixedPhrase.rowNo }"
+												assignTo="{! screenFixedPhrase.selectedValueIdx }"
+											/>
+										</apex:commandLink>
+									</li>
+								</apex:repeat>
+							</ul>
+						</li>
+					</apex:repeat>
+				</ul>
+			</div>
+
+			<script>
+				$(function () {
+					/**
+					 * クリックイベントの重複回避
+					 */
+					let Accordion = function (el, multiple) {
+						this.el = el || {};
+						this.multiple = multiple || false;
+
+						let links = this.el.find(".link");
+						links.off("click");
+						links.on("click", { el: this.el, multiple: this.multiple }, this.dropdown);
+					};
+
+					/**
+					 * セクションの開閉
+					 */
+					Accordion.prototype.dropdown = function (e) {
+						let $el = e.data.el;
+						let $this = $(this);
+						let $next = $this.next();
+
+						$next.slideToggle();
+						$this.parent().toggleClass("open");
+
+						if (!e.data.multiple) {
+							$el.find(".submenu").not($next).slideUp().parent().removeClass("open");
+						}
+					};
+
+					// セクション開閉イベントの設定
+					new Accordion($(".accordion"), false);
+				});
+			</script>
+		</apex:pageBlock>
+	</apex:form>
+</apex:component>

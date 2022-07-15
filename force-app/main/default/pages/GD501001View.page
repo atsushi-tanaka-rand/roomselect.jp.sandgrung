@@ -1,0 +1,466 @@
+<!-- ポータル掲載設定 -->
+<apex:page controller="GD501001Controller" standardStylesheets="false" title="ポータル掲載設定">
+    <script type="text/javascript">
+    //保存確認メッセージ
+    async function checkSave1(){
+        var message = "{! MSG_COM_V_SAVE}";
+        var retVal = await showConfirm(message);
+        if (retVal) {
+            blockUi();
+            registerPostingMeans();
+        }          
+    }
+    
+    //保存確認メッセージ
+    async function checkSave2(){
+        var message = "{! MSG_COM_V_SAVE}";
+        var retVal = await showConfirm(message);
+        if (retVal) {
+            blockUi();
+            registerPostingDistricts();
+        }          
+    }
+    
+    //保存完了メッセージ
+    async function alertSaveFinish() {
+        //完了メッセージ
+        await showAlert("{! MSG_COM_I_SAVE}");
+    }
+    </script>
+    
+    <apex:form id="form">
+        <html lang="ja">
+            
+            <head>
+                <meta charset="utf-8" />
+                <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+                <meta name="format-detection" content="telephone=no" />
+                <meta name="robots" content="noindex" />
+                <title>ポータル掲載設定</title>
+                <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/reset.min.css')}" />
+                <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/foundation.css')}" />
+                <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/modaal.css')}" />
+                <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/style.css')}" />
+                <apex:stylesheet value="https://use.fontawesome.com/releases/v5.0.6/css/all.css" />
+                <apex:stylesheet value="{!URLFOR($Resource.external_file, 'external_file/common_style.css')}" />
+                <apex:stylesheet value="{!URLFOR($Resource.jQuery,'jQuery/jQueryUI/jquery-ui.css')}" />
+                
+                <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery-3.6.0.min.js')}" />
+                <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery.blockUI.js')}" />
+                <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jQueryUI/jquery-ui.min.js')}" />
+                <apex:includeScript value="{!URLFOR($Resource.designer_file, 'designer_file/js/modaal.js')}" />
+                <apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/common_screen_util.js')}" />
+                <apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/input_rules.js')}" />
+
+                
+            </head>
+            
+        </html>
+            
+        <!-- ｃｓｓ -->
+        <style type="text/css">
+            
+            /** テーブルのセル固定対応 */
+            .fixed-cell {
+                position: sticky !important;
+                top: 0;
+                z-index: 1;
+            }
+            
+            th.fixed-cell:nth-child(-n+2) {
+                z-index: 2;
+            }
+            
+            th:first-child.fixed-cell
+            , td:first-child.fixed-cell {
+                left: 0;
+                min-width: 220px;
+                max-width: 220px;
+            }
+            
+            th:nth-child(2).fixed-cell
+            , td:nth-child(2).fixed-cell{
+                left: 220px;
+                max-width: 90px;
+                overflow:hidden;
+            }
+            
+            #postingDistrictsSectionTable {
+                border-collapse: separate !important;
+            }
+            
+            #postingDistrictsSectionTable th {
+                border-left: 0px;
+                border-bottom: 0px;
+            }
+            
+            #postingDistrictsSectionTable th:first-child {
+                border-left: 1px solid #d2d2d2;
+            }
+            
+            #postingDistrictsSectionTable tr:nth-child(odd) td {
+                background: #eeeeee;
+            }
+            
+            #postingDistrictsSectionTable tr:nth-child(even) td {
+                background: white;
+            }
+
+            #postingDistrictsSectionTable tr:last-child td{
+                border-bottom: 1px solid #d2d2d2;
+            }
+
+            #postingDistrictsSectionTable td {
+                border-top: 1px solid #d2d2d2;
+                border-bottom: 0px;
+            }
+        </style>
+            
+            
+        
+        
+        <body id="gd501001">
+            
+            <!-- actionFunction -->
+            <apex:actionFunction action="{! registerPostingMeans}"   name="registerPostingMeans"
+                                 oncomplete="unblockUi();if(!{! hasErrorMessage}){alertSaveFinish()}else{gotoTop()}" reRender="postingMeansSection, postingDistrictsSection, messageArea" />
+            
+            <apex:actionFunction action="{! registerPostingDistricts }"  name="registerPostingDistricts"
+                                 oncomplete="unblockUi();if(!{! hasErrorMessage}){alertSaveFinish()}else{gotoTop()}" reRender="postingMeansSection, postingDistrictsSection, messageArea" />
+            
+            <main>
+                
+                <article>
+                    
+                    <section class="">
+                        <apex:pageMessages id="messageArea" />
+                        <section>
+                            
+                            <section style="display:flex">
+                                <h1 class="fontb font2rem" style="margin-bottom: 10px">ポータル掲載設定</h1>
+                                <apex:commandButton style=" visibility:hidden;" rerender="dummy"/> 
+                            </section>
+                            <div class="border-g pd20">
+                                <apex:outputPanel id="postingMeansSection">
+                                    <div class="back_graydark posi_re mb30 pd3">掲載方法
+                                        
+                                        <div class="ab_btn">
+                                            
+                                            <apex:commandButton value="登録" styleClass="modal btn-w-2 blue" disabled="{! isOpenError}" onclick="checkSave1();"
+                                                                reRender="dummy" tabIndex="1" />
+                                            
+                                        </div>
+                                        
+                                    </div>
+                                    
+                                    <table class="gray mb30 nowrap td_none" style="height:550px;">
+                                        
+                                        <tbody>
+                                            
+                                            <tr>
+                                                
+                                                <th class="wd3">店舗</th>
+                                                
+                                                <th class="wd2">所在区</th>
+                                                
+                                                <th class="text-center wd3">SUUMO<br/>(物件名表示)</th>
+                                                
+                                                <th class="text-center wd3">SUUMO<br/>(非表示)</th>
+                                                
+                                                <th class="text-center wd3">HOME’S<br/>(物件名表示)</th>
+                                                
+                                                <th class="text-center wd3">HOME’S<br/>(非表示)</th>
+                                                
+                                                <th class="text-center wd3">at home<br/>(物件名表示)</th>
+                                                
+                                                <th class="text-center wd3">at home<br/>(非表示)</th>
+
+												<!-- ▼ 2022.03.16 CHINTAI本対応 CHINTAI列を追加-->
+												<th class="text-center wd3">CHINTAI<br/>(物件名表示)</th>
+
+												<th class="text-center wd3">CHINTAI<br/>(非表示)</th>
+												<!--  ▲ 2022.03.16 CHINTAI本対応 -->
+
+                                                <th class=""></th>
+                                                
+                                            </tr>
+
+                                            <apex:variable var="num" value="0" />
+                                            <apex:repeat value="{! postingMeansRecordList}" var="p">
+                                                <tr class= "{! if((MOD(VALUE(num)+1, 2) = 0), 'back_gray', '')}">
+                                                    
+                                                    <!-- 店舗 -->
+                                                    <td class= "left-border">
+                                                        <apex:commandLink value="{! p.shopsRecord.Name }" onclick="showPage('GH201002View', '', 'true', 'Id={! p.shopsRecord.Id }')" rerender="dummy"/>                                           
+                                                    </td>
+                                                    
+                                                    <!-- 所在区 -->
+                                                    <td class= "">
+                                                        <apex:outputText value="{! p.shopsRecord.District__c }" />
+                                                    </td>
+                                                    
+                                                    <!-- SUUMO(物件名表示) -->
+                                                    <td class= "text-center">  
+                                                        <apex:inputCheckbox id="suumo1" disabled="false" value="{! p.isSuumoPropertyShow}" />
+                                                        <apex:outputLabel for="suumo1" styleclass="serach_check" style="cursor:default;"></apex:outputLabel>              
+                                                    </td>
+                                                    
+                                                    <!-- SUUMO(非表示) -->
+                                                    <td class= "text-center">
+                                                        <apex:inputCheckbox id="suumo2" disabled="false" value="{! p.isNotSuumoPropertyShow}" />
+                                                        <apex:outputLabel for="suumo2" styleclass="serach_check" style="cursor:default;"></apex:outputLabel>
+                                                    </td>
+                                                    
+                                                    <!-- HOME'S(物件名表示) -->
+                                                    <td class= "text-center">
+                                                        <apex:inputCheckbox id="homes1" disabled="false" value="{! p.isHomesPropertyShow}" />
+                                                        <apex:outputLabel for="homes1" styleclass="serach_check" style="cursor:default;"></apex:outputLabel>
+                                                    </td>
+                                                    
+                                                    <!-- HOME'S(非表示) -->
+                                                    <td class= "text-center">
+                                                        <apex:inputCheckbox id="homes2" disabled="false" value="{! p.isNotHomesPropertyShow}" />
+                                                        <apex:outputLabel for="homes2" styleclass="serach_check" style="cursor:default;"></apex:outputLabel>
+                                                    </td>
+                                                    
+                                                    <!-- at home(物件名表示) -->
+                                                    <td class= "text-center">
+                                                        <apex:inputCheckbox id="athome1" disabled="false" value="{! p.isAtHomePropertyShow}" />
+                                                        <apex:outputLabel for="athome1" styleclass="serach_check" style="cursor:default;"></apex:outputLabel>
+                                                    </td>
+                                                    
+                                                    <!-- at home(非表示) -->
+                                                    <td class= "text-center">
+                                                        <apex:inputCheckbox id="athome2" disabled="false" value="{! p.isNotAtHomePropertyShow}" />
+                                                        <apex:outputLabel for="athome2" styleclass="serach_check" style="cursor:default;"></apex:outputLabel>
+                                                    </td>
+
+													<!-- ▼ 2022.03.16 CHINTAI本対応 CHINTAI行を追加-->
+													<!-- CHINTAI(物件名表示) -->
+													<td class= "text-center">
+														<apex:inputCheckbox id="chintai1" disabled="false" value="{! p.isChintaiPropertyShow}" />
+														<apex:outputLabel for="chintai1" styleclass="serach_check" style="cursor:default;"></apex:outputLabel>
+													</td>
+                                                    
+													<!-- CHINTAI(非表示) -->
+													<td class= "text-center">
+														<apex:inputCheckbox id="chintai2" disabled="false" value="{! p.isNotChintaiPropertyShow}" />
+														<apex:outputLabel for="chintai2" styleclass="serach_check" style="cursor:default;"></apex:outputLabel>
+													</td>
+                                                    <!-- ▲ 2022.03.16 CHINTAI本対応--> 
+
+                                                    <td class= "right-border"></td>
+                                                    
+                                                </tr>   
+                                                <apex:variable var="num" value="{!VALUE(num) + 1}" />
+                                            </apex:repeat>
+                                            
+                                        </tbody>
+                                        
+                                    </table>
+                                </apex:outputPanel>
+                                
+                                <apex:outputPanel id="postingDistrictsSection">
+                                <div class="back_graydark posi_re mb30 pd3">掲載地区
+                                    
+                                    <div class="ab_btn">
+                                        
+                                        <apex:commandButton value="登録" styleClass="modal btn-w-2 blue"
+                                                            disabled="{! isOpenError || !isChangeDistrict }"
+                                                            onclick="checkSave2();"
+                                                            reRender="dummy" tabIndex="2" />
+                                        
+                                    </div>
+                                    
+                                </div>
+                                
+                                <table id="postingDistrictsSectionTable" class="gray mb30 nowrap td_none" style="height:550px;">
+                                    <tbody>
+                                    
+                                        <tr>
+                                            
+                                            <th class="fixed-cell">店舗</th>
+                                            
+                                            <th class="fixed-cell">所在区</th>
+                                            
+                                            <apex:repeat value="{! districtStringList}" var="d">
+                                                
+                                                <th class="width_district text-center fixed-cell">
+                                                    <apex:outputText value="{! d }" />
+                                                </th>
+                                                
+                                            </apex:repeat>
+                                            
+                                        </tr>
+    
+                                         <apex:variable var="num" value="0" />
+                                        <apex:repeat value="{! postingDistrictsRecordList}" var="p">
+                                            <tr class= "">
+                                                
+                                                <!-- 店舗 -->
+                                                <td class= "left-border wd6 fixed-cell">
+                                                    <apex:commandLink value="{! p.shopsRecordForDistrict.Name }"
+                                                                      onclick="showPage('GH201002View', '', 'true', 'Id={! p.shopsRecordForDistrict.Id }')"
+                                                                      rerender="dummy"/>                                            
+                                                </td>
+                                                
+                                                <!-- 所在区 -->
+                                                <td class= "wd2 fixed-cell">
+                                                    <apex:outputText value="{! p.shopsRecordForDistrict.District__c }" />
+                                                </td>
+                   
+                                                <!-- 掲載地区のチェックボックス -->
+                                                <apex:repeat value="{! districtIndexList}" var="index">
+                                                    
+                                                    <td class= "text-center">
+                                                        <apex:inputCheckbox id="sc186" value="{! p.checkBoxList[index].check}"
+                                                                            disabled="{! (isChangeDistrict || isProcessing) && ( VALUE(num) != changeShopIndex || index != changeDistrictIndex)}">
+                                                            <apex:actionSupport event="onchange" reRender="postingDistrictsSection"
+                                                                                onsubmit="blockUi();"
+                                                                                action="{! decideCheckBox }"
+                                                                                oncomplete="unblockUi();">
+                                                                <apex:param value="{!VALUE(num)}" name="changeShopIndex"     assignTo="{!changeShopIndex}"/>
+                                                                <apex:param value="{!index     }" name="changeDistrictIndex" assignTo="{!changeDistrictIndex}"/>
+                                                            </apex:actionSupport>
+                                                        </apex:inputCheckbox>
+                                                        <apex:outputLabel for="sc186" styleclass="serach_check" style="cursor:default;"></apex:outputLabel>
+                                                    </td>
+                                                </apex:repeat>
+                                                
+                                            </tr>
+                                            <apex:variable var="num" value="{!VALUE(num) + 1}" />             
+                                        </apex:repeat>                                                             
+                                        
+                                    </tbody>
+                                    
+                                </table>
+                                </apex:outputPanel>
+                                
+                            </div>
+                            
+                            
+                            
+                        </section>
+                        
+                    </section>
+                    
+                </article>
+                
+            </main>
+            
+            
+            
+            <script>
+            
+            /* $(function() {
+    
+            $('table').resizableColumns();
+    
+        }); */
+            
+            $(function() {
+                
+                var Accordion = function(el, multiple) {
+                    
+                    this.el = el || {};
+                    
+                    this.multiple = multiple || false;
+                    
+                    
+                    
+                    // Variables privadas
+                    
+                    var links = this.el.find('.link');
+                    
+                    // Evento
+                    
+                    links.on('click', {el: this.el, multiple: this.multiple}, this.dropdown)
+                    
+                }
+                
+                
+                
+                Accordion.prototype.dropdown = function(e) {
+                    
+                    var $el = e.data.el;
+                    
+                    $this = $(this),
+                        
+                        $next = $this.next();
+                    
+                    
+                    
+                    $next.slideToggle();
+                    
+                    $this.parent().toggleClass('open');
+                    
+                    
+                    
+                    if (!e.data.multiple) {
+                        
+                        // $el.find('.submenu-defalt').not($next).slideUp().parent().removeClass('open');
+                        
+                    };
+                    
+                }
+                
+                
+                
+                var accordion = new Accordion($('#accordion'), false);
+                
+            });
+            
+            
+            
+            $(function() {
+                
+                $('#btn').on('click', function(e) {
+                    
+                    //document.getElementById("accordion").removeClass('open');
+                    
+                    //document.getElementById("accordion").classList.remove("open")
+                    
+                    //$el.find('.submenu-defalt').not($next).slideUp().parent().removeClass('open');
+                    
+                    
+                    
+                    
+                    
+                    var textList = document.getElementById('accordion');
+                    
+                    //li02 = textList.getElementsByTagName('li');
+                    
+                    let elements = textList.getElementsByTagName('li');
+                    
+                    Array.prototype.forEach.call(elements, function(element) {
+                        
+                        element.classList.remove('open','default');
+                        
+                        $('.submenu-defalt').fadeOut()
+                        
+                    });
+                    
+                    
+                    
+                    
+                    
+                    //for (var j = 0; li02.length; j++) {
+                    
+                    //console.log(li02[j].textContent);
+                    
+                    // li02[j].removeClass("open")
+                    
+                    //}
+                    
+                });
+                
+            });
+            
+            </script>
+
+            
+      </body>
+      
+      
+    </apex:form>
+</apex:page>

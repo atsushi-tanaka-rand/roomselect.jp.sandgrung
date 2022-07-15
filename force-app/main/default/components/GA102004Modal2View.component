@@ -1,0 +1,81 @@
+<!--定型文選択-->
+<apex:component controller="GA102004Modal2Controller" allowDML="true">
+    <apex:attribute name="ParameterClass" type="GA102004Modal2ParameterClass" assignTo="{!parameter}" description="key" />
+
+    <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/reset.min.css')}" />
+    <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/foundation.css')}" />
+    <apex:stylesheet value="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+    <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/modaal.css')}" />
+    <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/style.css')}" />
+    <apex:stylesheet value="{!URLFOR($Resource.external_file, 'external_file/common_style.css')}" />
+    <apex:stylesheet value="{!URLFOR($Resource.jQuery,'jQuery/jQueryUI/jquery-ui.css')}" />
+
+    <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery-3.6.0.min.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery.blockUI.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.designer_file, 'designer_file/js/modaal.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/common_screen_util.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/input_rules.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jQueryUI/jquery-ui.min.js')}" />
+
+    <apex:form id="GA102004Modal2Form">
+        <apex:pageBlock rendered="{!parameter.noFirst}">
+            <apex:pageMessages id="modal2messageArea" />
+            <apex:outputText rendered="{!init}" />
+            <div id="moda2">
+                <!-- 定型文-->
+                <ul id="accordionModal2" class="accordion">
+                    <apex:repeat value="{!screenFixedPhrase.folder}" var="folder">
+                        <li>
+                            <div class="link">
+                                <apex:outputText value="{!folder}" />
+                                <i class="fa fa-chevron-down"></i>
+                            </div>
+                            <ul class="submenu">
+                                <apex:variable var="fixedPhraseIndex" value="0" />
+                                <apex:repeat value="{!screenFixedPhrase.fixedPhraseMap[folder]}" var="fixedPhrase">
+                                    <li>
+                                        <apex:commandLink action="{!clickFixedPhrase}" value="{!fixedPhrase.Name}" oncomplete="if({!hasErrorMessage}){gotoTop();}else{closeDialogModal2();}" reRender="modal2messageArea">
+                                            <apex:param name="fixedPhraseIndex" value="{!VALUE(fixedPhraseIndex)}" assignTo="{!selectFixedPhraseIndex}" />
+                                            <apex:param name="fixedPhraseFolder" value="{!folder}" assignTo="{!selectFixedPhraseFolder}" />
+                                        </apex:commandLink>
+                                    </li>
+                                    <apex:variable var="fixedPhraseIndex" value="{!VALUE(fixedPhraseIndex)+1}" />
+                                </apex:repeat>
+                            </ul>
+                        </li>
+                    </apex:repeat>
+                </ul>
+            </div>
+
+            <script type="text/javascript">
+                $(function () {
+                    var Accordion = function (el, multiple) {
+                        this.el = el || {};
+                        this.multiple = multiple || false;
+
+                        var links = this.el.find('.link');
+                        links.off('click');
+                        links.on('click', { el: this.el, multiple: this.multiple }, this.dropdown);
+                    }
+
+                    Accordion.prototype.dropdown = function (e) {
+                        var $el = e.data.el;
+                        $this = $(this),
+                        $next = $this.next();
+
+                        $next.slideToggle();
+                        $this.parent().toggleClass('open');
+
+                        if (!e.data.multiple) {
+                            $el.find('.submenu').not($next).slideUp().parent().removeClass('open');
+                        };
+                    }
+                    var accordion = new Accordion($('#accordionModal2'), false);
+
+                });
+            </script>
+
+        </apex:pageBlock>
+    </apex:form>
+
+</apex:component>

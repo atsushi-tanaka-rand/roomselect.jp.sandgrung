@@ -1,0 +1,231 @@
+<!--メール確認-->
+<apex:component controller="GA102004Modal1Controller" allowDML="true">
+    <apex:attribute name="ParameterClass" type="GA102004Modal1ParameterClass" assignTo="{!parameter}" description="key" />
+
+    <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/reset.min.css')}" />
+    <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/foundation.css')}" />
+    <apex:stylesheet value="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+    <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/modaal.css')}" />
+    <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/style.css')}" />
+    <apex:stylesheet value="{!URLFOR($Resource.external_file, 'external_file/common_style.css')}" />
+    <apex:stylesheet value="{!URLFOR($Resource.jQuery,'jQuery/jQueryUI/jquery-ui.css')}" />
+
+    <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery-3.6.0.min.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery.blockUI.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.designer_file, 'designer_file/js/modaal.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/common_screen_util.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/input_rules.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jQueryUI/jquery-ui.min.js')}" />
+
+    <apex:form id="GA102004Modal1Form">
+
+        <apex:pageBlock rendered="{!parameter.noFirst}">
+            <apex:pageMessages id="modal1messageArea" />
+            <apex:outputText rendered="{!init}" />
+            <div id="modal">
+                <section style="display:flex">
+                    <div class="modal-header">
+                        <h4 class="modal-title fontb mb20">メール確認</h4>
+                    </div>
+                    <apex:commandButton style=" visibility:hidden;" rerender="dummy"/> 
+                </section>
+                <div class="modal-body">
+                    <table class="table table-hstriped">
+                        <col width="20%" />
+                        <col width="80%" />
+                        <tr>
+                            <th>予約</th>
+                            <td>
+                                <apex:outputText value="{!screenMailInfo.sendingDateTime}" />
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>送信者</th>
+                            <td>
+                                <apex:outputText value="{!screenMailInfo.sendFrom}" />
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>宛先</th>
+                            <td>
+                                <apex:outputText value="{!screenMailInfo.sendTo}" />
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>CC</th>
+                            <td>
+                                <div id="confirm_cc">
+                                    <apex:outputText value="{!screenMailInfo.cc}" />
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>添付ファイル</th>
+                            <td>
+                                <div id="confirm_file">
+                                    <apex:outputText value="{!screenMailInfo.attachmentFileNames}" />
+                                </div>
+                            </td>
+                        </tr>
+                        <!-- ▼ 2021.12.3 LINE連携対応より、LINEともだち紹介を追加 -->
+                        <tr>
+                            <th>LINEともだち紹介</th>
+                            <td>
+                                <div>
+                                    <apex:outputText value="{! screenMailInfo.lineFriendIntroduction }" />
+                                </div>
+                            </td>
+                        </tr>
+                        <!-- ▲ 2021.12.3 -->
+                        <tr>
+                            <th>件名</th>
+                            <td>
+                                <div id="confirm_subject">
+                                    <apex:outputText value="{!screenMailInfo.subject}" />
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>本文</th>
+                            <td>
+                                <div id="confirm_content">
+                                    <apex:inputTextarea cols="40" rows="15" styleClass="form-control" style="border: 0px;" value="{!screenMailInfo.body}" id="bodyInput" readonly="true" />
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    <div class="flex-wrap justify-around flex_wrap">
+                        <apex:inputHidden id="tempAttachmentParentId" value="{!tempAttachmentParentId}" />
+                        <apex:commandButton value="送信する" styleClass="mb20 message btn btn-primary btn-submit text-center"
+                                            onclick="checkSend()"
+                                            reRender="modal1messageArea"/>
+                    </div>
+                </div>
+            </div>
+
+            <!-- actionfunction -->
+            <apex:actionFunction name="clickSend" action="{!clickSend}" oncomplete="unblockUi();if({!hasErrorMessage}){gotoTop();}else{alertSendFinish();}" reRender="GA102004Modal1Form" />
+
+            <script src="/soap/ajax/47.0/connection.js" type="text/javascript"></script>
+            <script>
+                sforce.connection.sessionId = '{!$Api.Session_ID}';
+
+                //送信確認メッセージ
+                async function checkSend() {
+                    var sendingDateTime = "{!screenMailInfo.sendingDateTime}";
+                    var message = '';
+                    if (sendingDateTime == "") {
+                        // 送信確認
+                        message = "{!MSG_COM_V_SENDMAIL}";
+                    } else {
+                        // 時間指定送信確認
+                        message = "{!MSG_COM_V_SENDMAIL_SCHEDULE}";
+                        message = message.replace('{0}', sendingDateTime);
+                    }
+                    if (await showConfirm(message)) {
+                        blockUi();
+                        uploadAttachmentFromModal();
+                    }
+                }
+
+                //送信完了メッセージ
+                async function alertSendFinish() {
+                    //完了メッセージ
+                    var sendingDateTime = "{!screenMailInfo.sendingDateTime}";
+                    var message = '';
+                    if (sendingDateTime == "") {
+                        // 送信
+                        message = "{!MSG_COM_I_SENDMAIL}";
+                    } else {
+                        // 時間指定送信保存
+                        message = "{!MSG_COM_I_SAVE}";
+                    }
+                    //完了メッセージ
+                    await showAlert(message);
+                    
+                    //画面を閉じる
+                    closePage();
+                }
+
+                // 添付ファイルのアップロード処理
+                function uploadAttachmentFromModal() {
+                    try {
+                        // ファイル追加がない場合、処理終了
+                        if (addAttachmentFiles.length == 0) {
+                            // 送信処理（actionFunctionを実行）
+                            clickSend();
+                            return true;
+                        }
+
+                        // 追加添付ファイル数取得
+                        var attachmentfileCount = addAttachmentFiles.length;
+
+                        // 添付ファイル一時保存用の親オブジェクト作成
+                        var parentId = createTemprecordFromModal();
+                        // IdをApex返却用の項目へセット
+                        document.getElementById("{!$Component.tempAttachmentParentId}").value = parentId;
+
+                        var addAttachmentObjects = [];
+                        var fileName;
+                        var fileBody;
+                        var fileContent;
+                        // 添付ファイルを一時的に登録（最終的にapex側の処理で削除する）
+                        for (var i = 0; i < addAttachmentFiles.length; i++) {
+                            // ファイルの読み込み処理を作成する
+                            var reader = new FileReader();
+                            reader.onload = function(event) {
+                                // ファイル名取得
+                                fileName = addAttachmentFiles[addAttachmentObjects.length].name;
+                                // ファイル内容取得
+                                fileBody = event.target.result;
+                                fileContent = String(fileBody);
+                                fileContent = fileContent.substr(fileContent.indexOf(',') + 1);
+                                // 添付ファイル情報作成
+                                var att = new sforce.SObject('Attachment');
+                                att.ParentId    = parentId;
+                                att.Name        = fileName;
+                                att.Body        = fileContent;
+                                addAttachmentObjects.push(att);
+
+                                if (addAttachmentObjects.length == addAttachmentFiles.length) {
+                                    // 最後のファイルまで読み込んだ場合
+                                    // 添付ファイルを一時登録
+                                    var saveResult = sforce.connection.create(addAttachmentObjects);
+                                    // 送信処理（actionFunctionを実行）
+                                    clickSend();
+                                }
+                            }
+                            // ファイルの読み込みを実行
+                            reader.readAsDataURL(addAttachmentFiles[i]);
+                        }
+                        return true;
+
+                    } catch(e) {
+                        alert('添付ファイルのアップロードに失敗しました。');
+                        alert(e);
+                        unblockUi();
+                        return false;
+
+                    }
+                }
+
+                // 一時的な添付ファイルオブジェクトの親データ作成（Id返却）
+                function createTemprecordFromModal() {
+                    var att = new sforce.SObject('MailDraft__c');
+                    att.Name       = 'Temporary of Attachment';
+                    var saveResult = sforce.connection.create([att]);
+                    if (saveResult[0].success) {
+                        return saveResult[0].id;
+                    } else {
+                        console.log(saveResult[0].errors);
+                        return null;
+                    }
+                }
+            </script>
+
+        </apex:pageBlock>
+    </apex:form>
+
+</apex:component>

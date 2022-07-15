@@ -1,0 +1,244 @@
+<!--業者名寄せ画面-->
+
+<apex:page docType="html-5.0" standardStylesheets="false" controller="GD101005controller" title="業者名寄せ">
+    
+    
+    <head>
+        
+        <meta charset="utf-8" />
+        
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        
+        <meta name="format-detection" content="telephone=no" />
+        
+        <meta name="robots" content="noindex" />
+        
+        <title>業者名寄せ</title>
+        
+        <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/reset.min.css')}"/>
+        <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/foundation.css')}"/>
+        <apex:stylesheet value="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css"/>    
+        <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/modaal.css')}"/>
+        <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/style.css')}"/>
+        <apex:stylesheet value="{!URLFOR($Resource.external_file, 'external_file/common_style.css')}"/>  
+        <apex:stylesheet value="{!URLFOR($Resource.jQuery,'jQuery/jQueryUI/jquery-ui.css')}" />
+        
+        <apex:includeScript value="{!URLFOR($Resource.jQuery, 'jQuery/jquery-3.6.0.min.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.jQuery, 'jQuery/jquery.blockUI.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.jQuery, 'jQuery/jQueryUI/jquery-ui.min.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.designer_file, 'designer_file/js/modaal.js')}"/> 
+        <apex:includeScript value="{!URLFOR($Resource.external_file, 'external_file/common_screen_util.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.external_file, 'external_file/input_rules.js')}"/>
+        
+        
+        <script type="text/javascript">
+        
+        //名寄せ不要確認メッセージ
+        async function checkMerge() {
+            var message = "{!MSG_COM_V_EXECUTE_NON_MERGE}";
+            var retVal = await showConfirm(message);
+            if ( retVal ) {
+                blockUi();
+                margeCompleted();
+            }
+            
+        }
+        
+        //名寄せ不要完了メッセージ
+        async function alertMerge() {
+            
+            //完了メッセージ
+            await showAlert("{!MSG_COM_I_NON_MERGE_END}");
+            
+            //画面を閉じる
+            closePage();
+            
+        }
+        
+        </script>
+        
+    </head>
+    
+    <body style="background-color:#ffffff;">
+        
+        <!--id="ga102003"でスタイルクラス適用-->
+        <main id="ga102003">
+            
+            <article>
+                <apex:form id="form">
+                    
+                    
+                    <!-- actionFunction -->
+                    <apex:actionFunction action="{! margeCompleted}" name="margeCompleted"
+                                         oncomplete="unblockUi();if(!{! hasErrorMessage}){alertMerge()}else{gotoTop()}" reRender="messageArea"/>
+                    
+                    
+                    <apex:pageMessages id="messageArea"/>
+                    
+                    <section>
+                        <section style="display:flex">
+                            <h1 class="fontb font3rem" style="margin-bottom: 10px">業者名寄せ</h1>
+                            <apex:commandButton style=" visibility:hidden;" rerender="dummy"/> 
+                        </section>
+                        <div class="flex-wrap justify-between align_center mb10">
+                            
+                            <h1 class="fontb font2rem">業者情報</h1>
+                            <apex:commandButton value="名寄せ不要" onclick="if(!checkMerge()){return false}" disabled="{!isOpenError}"
+                                                styleClass="btn btn btn-sm btn-normal" tabIndex="2" reRender="dummy" />                            
+                        </div>
+                        
+                        <div class="border-g-3 mb60">
+                            
+                            <div class="flex-wrap flex_wrap flex-xs-xolumn justify-between">
+                                
+                                <div class="wd33 wd49_md wd100_xs mb10">
+                                    
+                                    <div class="information_title">業者名</div>
+                                    
+                                    <div class="information_contents">
+                                        <apex:commandLink value="{!targetRecord.Name}"
+                                                          onclick="showPage('GD101002View', '', 'true', 'id={! targetRecord.Id}')" tabIndex="1"
+                                                          rerender="dummy"
+                                                          />
+                                    </div>
+                                    
+                                </div>
+                                
+                                <div class="wd33 wd49_md wd100_xs mb10">
+                                    
+                                    <div class="information_title">郵便番号</div>
+                                    
+                                    <div class="information_contents">
+                                        <apex:outputText value="{!targetRecord.PostalCode__c}" />
+                                    </div>
+                                    
+                                </div>
+                                
+                                <div class="wd33 wd49_md wd100_xs mb10">
+                                    
+                                    <div class="information_title">住所</div>
+                                    
+                                    <div class="information_contents">
+                                        <apex:outputText value="{!targetRecord.Address__c}" />
+                                    </div>
+                                    
+                                </div>
+                                
+                                <div class="wd33 wd49_md wd100_xs mb10">
+                                    
+                                    <div class="information_title">業者種別</div>
+                                    
+                                    <div class="information_contents">
+                                        <apex:outputText value="{!targetRecord.SupplierType__c}" />
+                                    </div>
+                                    
+                                </div>
+                                
+                                <div class="wd33 wd49_md wd100_xs mb10">
+                                    
+                                    <div class="information_title">電話番号</div>
+                                    
+                                    <div class="information_contents">
+                                        <apex:outputText value="{!targetRecord.Phone}" />
+                                    </div>
+                                    
+                                </div>
+                                
+                                <div class="wd33 wd49_md wd100_xs mb10">
+                                    
+                                    <div class="information_title">メール</div>
+                                    
+                                    <div class="information_contents">
+                                        <apex:outputText value="{!targetRecord.Email__c}" />
+                                    </div>
+                                    
+                                </div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </section>
+                    
+                    <section>
+                        
+                        <h2 class="fontb font2rem">名寄せ対象一覧
+                            <apex:image url="/img/msg_icons/info16.png" title="名寄対象となる条件に合致する業者を検索します。条件：業者名または電話番号または「都道府県＋住所1＋住所2」のうち、最低一項目が一致する。"
+                                        />
+                        </h2>
+                        
+                        <table class="gray" >
+                            <tbody>
+                                <tr>
+                                    <th class="wd1"></th>
+                                    <th class="wd6">
+                                        業者名
+                                    </th>
+                                    <th class="wd3">
+                                        種別
+                                        
+                                    </th>
+                                    <th class="wd5">
+                                        電話番号
+                                        
+                                    </th>
+                                    <th class="wd4">
+                                        メール
+                                        
+                                    </th>
+                                    <th class="wd5">
+                                        郵便番号
+                                        
+                                    </th>
+                                    <th class="wdlast">
+                                        住所
+                                        
+                                    </th>
+                                </tr>
+                                <apex:repeat value="{!displayCandidateResult}" var="D">
+                                    <tr>
+                                        <td class="text-center wd1">
+                                            <apex:commandLink value="選択" styleClass="blue"
+                                                                onclick="showPage('GD101006View', '_self', 'true', 'id1={! D.candidateResult.Id}&id2={! targetRecord.Id}')"
+                                                                rerender="dummy"/>
+                                        </td>
+                                        <td  class="wd6">
+                                            <apex:commandLink value="{!D.candidateResult.name}"
+                                                                onclick="showPage('GD101002View', '', 'true', 'id={! D.candidateResult.Id}')"
+                                                                rerender="dummy"/>
+                                        </td>
+                                        <td class="wd3">
+                                            <apex:outputText value="{!D.candidateResult.SupplierType__c}" />
+                                        </td>
+                                        <td class="wd5">
+                                            <apex:outputText value="{!D.candidateResult.Phone}" />
+                                        </td>
+                                        <td class="wd4">
+                                            <apex:outputText value="{!D.candidateResult.Email__c}" />
+                                        </td>
+                                        <td class="wd5">
+                                            <apex:outputText value="{!D.candidateResult.PostalCode__c}" />
+                                        </td>
+                                        <td  class="wdlast">
+                                            <apex:outputText value="{!D.candidateResult.Address__c}" />
+                                        </td>
+                                    </tr>
+                                </apex:repeat>
+                                
+                            </tbody>
+                            
+                        </table>
+                        
+                        
+                        
+                    </section>
+                </apex:form>
+            </article>
+            
+        </main>
+        
+    </body>
+    
+    
+    
+</apex:page>

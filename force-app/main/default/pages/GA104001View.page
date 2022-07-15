@@ -1,0 +1,1266 @@
+<!--物件検索画面-->
+<apex:page standardStylesheets="false" docType="html-5.0" controller="GA104001Controller" title="物件検索">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="format-detection" content="telephone=no" />
+        <meta name="robots" content="noindex" />
+        <title>物件検索</title>
+    </head>
+    
+    <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery-3.6.0.min.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery.blockUI.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jQueryUI/jquery-ui.min.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/common_screen_util.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/input_rules.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.designer_file, 'designer_file/js/modaal.js')}" />
+    <apex:stylesheet value="{!URLFOR($Resource.jQuery,'jQuery/jQueryUI/jquery-ui.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/reset.min.css')}"/> 
+    <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/foundation.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/modaal.css')}" />
+    <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/style.css')}"/> 
+    <apex:stylesheet value="https://use.fontawesome.com/releases/v5.0.6/css/all.css"/>
+    <apex:stylesheet value="{!URLFOR($Resource.external_file, 'external_file/common_style.css')}"/>  
+
+    <!-- 画面分割用 -->
+    <apex:includeScript value="{!URLFOR($Resource.CollabCMS, 'CollabCMS/Client/Splitter/Splitter.js')}" />
+
+    <!-- Zip圧縮用 -->
+    <apex:includeScript value="{!URLFOR($Resource.jQuery, 'jQuery/JSZip/dist/jszip.min.js')}"/>
+
+    <style>
+        .small_placeholder::placeholder {
+        font-size: 0.7em;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* 画面分割 */
+        .area{
+            position: absolute;
+            overflow: scroll;
+        }
+        /* 画面分割余白 */
+        .area_padding{
+            padding: 10px 20px;
+        }
+
+        /* 検索結果表示領域 */
+        table.search_result {
+            width         : 100%;
+            overflow-wrap : break-word;
+            table-layout  : fixed;
+            border        : none;
+        }
+        table.search_result th {
+            border : none;
+        }
+        table.search_result td {
+            border      : none;
+            border-left : 1px #d2d2d2 solid;
+            border-top  : 1px #d2d2d2 solid;
+            height      : 50px;
+
+        }
+    </style>
+    <script type="text/javascript" class="script">
+
+        //お気に入り登録確認
+        async function checkSaveFavorite() {
+            var message = '{!MSG_COM_V_FAVORITE}';
+            if (await showConfirm(message)) {
+                blockUi();
+                saveFavorite();
+            }
+        }
+        // お気に入り登録完了
+        async function alertSaveFavoriteFinish() {
+            //完了メッセージ
+            await showAlert('{!MSG_COM_I_FAVORITE}');
+        }
+    </script>
+
+    <apex:form id="form">
+        <body id="ga104001">
+            <apex:actionFunction name="closeModal"    action="{!closeModal}"          rerender="walkingTime, script,SchoolArea" />
+            <apex:actionFunction name="saveFavorite"  action="{!saveFavorite}"        rerender="messages"
+                                 oncomplete="unblockUi();if({!hasErrorMessage}){scrollToTop()}else{scrollToTop();alertSaveFavoriteFinish()};" />
+            <main>
+                <article>
+                    <section>
+                        <!-- ▼ 画面分割上部 -->
+                        <div id="area-a" class="area">
+                            <apex:outputPanel id="messages">
+                                <apex:pageMessages />
+                            </apex:outputPanel>
+                            <div class="area_padding">
+                                <section class="">
+                                    <div class="flex-wrap justify-between align_center mb10">
+                                        <h1 class="fontb font2rem" >物件検索</h1>
+                                        <apex:commandButton value="検索(非表示)"
+                                                            disabled="{!isOpenError}"
+                                                            onclick="blockUi()"
+                                                            action="{!searchProperty}"
+                                                            reRender="detailArea, hitCount, mapButton, messages, script"
+                                                            oncomplete="tableSetting(); unblockUi(); if({!hasErrorMessage}){scrollToTop()};"
+                                                            style="visibility:hidden;"
+                                                            />
+
+                                        <apex:commandButton styleClass="btn btn btn-sm btn-normal"
+                                                            value="退去予定一覧"
+                                                            disabled="{!isOpenError}"
+                                                            rerender="dummy"
+                                                            onclick="showPage('TD301002View', '_self', 'false', '')"
+                                                            />
+                                        </div>
+                                </section>
+                                <!-- ▼ 検索セクション -->
+                                <section class="border-g-3 mb60">
+                                    <div class="flex-wrap justify-between flex_wrap align_center mb10">
+                                        <apex:input type="text" html-placeholder="物件名（カナ検索可）" styleClass="small_placeholder  form-control wd19 mb10 " value="{!dispCondition.propertyName}" tabindex="1"/>
+                                        <apex:input type="text" html-placeholder="住所（スペースで複数検索可）" styleClass="small_placeholder  form-control wd19 mb10 " value="{!dispCondition.address}" tabindex="2"/>
+                                        <apex:input type="text" html-placeholder="元付業者" styleClass="small_placeholder form-control wd19 mb10" value="{!dispCondition.formerSupplierName}" tabindex="3"/>
+                                        <apex:input type="text" html-placeholder="ID（最優先検索）" styleClass="small_placeholder form-control wd19 mb10" value="{!dispCondition.propertyCode}" tabindex="4"/>
+                                        <apex:input type="text" html-placeholder="フリーワード" styleClass="small_placeholder form-control wd19 mb10" value="{!dispCondition.freeWord}" tabindex="5"/>
+                                    </div>
+                                    <ul id="accordion" class="accordion-defalt">
+                                        <!-- ▼ 駅セクション -->
+                                        <li class="default open">
+                                            <div class="link  posi_re"><i class="fa fa-chevron-up"></i>路線</div>
+                                            <ul class="submenu-defalt">
+                                                <apex:outputPanel id="walkingTime">
+                                                    <div class="flex-wrap  justify-between align-items_end">
+                                                            <!-- 路線１-->
+                                                            <div class="mb10 wd45  wd100_xs">
+                                                                <div class="information_title">路線名①</div>
+                                                                <div class="flex-wrap align_center">
+                                                                    <apex:selectList value="{! dispCondition.trainRoute1}" size="1" styleClass="form-control mr5" tabIndex="6">
+                                                                        <apex:selectOptions value="{!trainRouteOption}"/>
+                                                                        <apex:actionSupport event="onchange" action="{!changeTrainRoute1}" rerender="walkingTime, script" />
+                                                                    </apex:selectList>線
+                                                                </div>
+                                                            </div>
+
+                                                            <div class="mb10">
+                                                                <apex:image url="{!URLFOR($Resource.designer_file,'designer_file/images/arrow_right.png')}"/>
+                                                                
+                                                            </div>
+
+                                                            <!-- 駅１-->
+                                                            <div class="mb10 wd45 wd100_xs">
+                                                                <div class="information_title">駅名①(複数選択可能)</div>
+                                                                <div class="flex-wrap align_center">
+                                                                    <apex:input type="text" html-readonly="readonly" value="{!dispCondition.stationsChar1}" styleClass="form-control mr5"/>駅
+                                                                    <div class="pencil ml5">
+                                                                        <apex:commandButton image="{!URLFOR($Resource.designer_file, 'designer_file/images/pencil.png')}"
+                                                                                            rerender="GA104007Form, messages, script"
+                                                                                            disabled="{!isOpenError || dispCondition.trainRoute1 == null}" onclick="blockUi();"
+                                                                                            action="{!openStations1Modal}" 
+                                                                                            status="loadComponent" oncomplete="unblockUi();if(!{! hasErrorMessage}){jQuery('#dialog-modal1').dialog('open');}else{scrollToTop()}" tabIndex="7"
+                                                                                            />
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="flex-wrap  justify-between align-items_end ">
+                                                            <!-- 路線２-->
+                                                            <div class="mb10 wd45  wd100_xs">
+                                                                <div class="information_title">路線名②</div>
+                                                                <div class="flex-wrap align_center">
+                                                                    <apex:selectList value="{! dispCondition.trainRoute2}" size="1" styleClass="form-control mr5" tabIndex="8">
+                                                                        <apex:selectOptions value="{!trainRouteOption}"/>
+                                                                        <apex:actionSupport event="onchange" action="{!changeTrainRoute2}" rerender="walkingTime, script" />
+                                                                    </apex:selectList>線
+                                                                </div>
+                                                            </div>
+
+                                                            <div class="mb10">
+                                                                <apex:image url="{!URLFOR($Resource.designer_file,'designer_file/images/arrow_right.png')}"/>
+                                                            </div>
+
+                                                            <!-- 駅２-->
+                                                            <div class="mb10 wd45 wd100_xs">
+                                                                <div class="information_title">駅名②(複数選択可能)</div>
+                                                                <div class="flex-wrap align_center">
+                                                                    <apex:input type="text" html-readonly="readonly" value="{!dispCondition.stationsChar2}" styleClass="form-control mr5"/>駅
+                                                                    <div class="pencil ml5">
+                                                                        <apex:commandButton image="{!URLFOR($Resource.designer_file, 'designer_file/images/pencil.png')}"
+                                                                                            rerender="GA104007Form, messages, script"
+                                                                                            disabled="{!isOpenError || dispCondition.trainRoute2 == null}" onclick="blockUi();"
+                                                                                            action="{!openStations2Modal}" 
+                                                                                            status="loadComponent" oncomplete="unblockUi();if(!{! hasErrorMessage}){jQuery('#dialog-modal1').dialog('open');}else{scrollToTop()}" tabIndex="9"
+                                                                                            />
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="flex-wrap  justify-between align-items_end ">
+                                                            <!-- 路線３-->
+                                                            <div class="mb10 wd45  wd100_xs">
+                                                                <div class="information_title">路線名③</div>
+                                                                <div class="flex-wrap align_center">
+                                                                    <apex:selectList value="{! dispCondition.trainRoute3}" size="1" styleClass="form-control mr5" tabIndex="10">
+                                                                        <apex:selectOptions value="{!trainRouteOption}"/>
+                                                                        <apex:actionSupport event="onchange" action="{!changeTrainRoute3}" rerender="walkingTime, script" />
+                                                                    </apex:selectList>線
+                                                                </div>
+                                                            </div>
+
+                                                            <div class="mb10">
+                                                                <apex:image url="{!URLFOR($Resource.designer_file,'designer_file/images/arrow_right.png')}"/>
+                                                                
+                                                            </div>
+
+                                                            <!-- 駅３-->
+                                                            <div class="mb10 wd45 wd100_xs">
+                                                                <div class="information_title">駅名③(複数選択可能)</div>
+                                                                <div class="flex-wrap align_center">
+                                                                    <apex:input type="text" html-readonly="readonly" value="{!dispCondition.stationsChar3}" styleClass="form-control mr5"/>駅
+                                                                    <div class="pencil ml5">
+                                                                        <apex:commandButton image="{!URLFOR($Resource.designer_file, 'designer_file/images/pencil.png')}"
+                                                                                            rerender="GA104007Form, messages, script"
+                                                                                            disabled="{!isOpenError || dispCondition.trainRoute3 == null}" onclick="blockUi();"
+                                                                                            action="{!openStations3Modal}" 
+                                                                                            status="loadComponent" oncomplete="unblockUi();if(!{! hasErrorMessage}){jQuery('#dialog-modal1').dialog('open');}else{scrollToTop()}" tabIndex="11"
+                                                                                            />
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="information_title">駅までの徒歩時間</div>
+                                                        <div class="wd30 flex-wrap nowrap align_center">
+                                                            <apex:selectList value="{!dispCondition.walkingTime}" size="1"  styleClass="form-control" tabIndex="12">
+                                                                <apex:selectOptions value="{!walkingTimeOption}"/>
+                                                            </apex:selectList>  
+                                                    </div>
+                                                </apex:outputPanel>
+                                            </ul>
+                                        </li>
+                                        <!-- ▲ 駅セクション -->
+
+                                        <!-- ▼ 学校セクション -->
+                                        <li class="default open">
+                                            <div class="link  posi_re"><i class="fa fa-chevron-up"></i>校区</div>
+                                            <ul class="submenu-defalt">
+                                                <apex:outputPanel id="SchoolArea">
+                                                    <div class="flex-wrap  justify-between align-items_end ">
+                                                                
+                                                        <div class="mb10 wd45  wd100_xs">
+                                                            
+                                                            <div class="information_title">中学校区</div>
+                                                            
+                                                            <div class="flex-wrap align_center">
+                                                                
+                                                                <apex:selectList value="{! dispCondition.juniorHighSchoolArea}" size="1" styleClass="form-control mr5" tabIndex="36">
+                                                                    <apex:selectOptions value="{! districtOption}"/>
+                                                                    <apex:actionSupport event="onchange" action="{!changeJuniorHighSchool}" rerender="SchoolArea" />
+                                                                </apex:selectList>
+                                                                <apex:outputLabel value="線" Style="visibility:hidden"/><!--表示幅調整のために線をhiddenで入力  -->
+                                                            </div>
+                                                            
+                                                        </div>
+                                                        
+                                                        <div class="mb10">
+                                                            <apex:image url="{!URLFOR($Resource.designer_file,'designer_file/images/arrow_right.png')}"/>
+                                                            
+                                                        </div>
+                                                        
+                                                        <div class="mb10 wd45 wd100_xs">
+                                                            
+                                                            <div class="information_title">中学校(複数選択可能)</div>
+                                                            
+                                                            <div class="flex-wrap align_center">
+                                                                
+                                                                
+                                                                <apex:input type="text" html-readonly="readonly" value="{!dispCondition.juniorHighSchool}" styleClass="form-control mr5"/>
+                                                                <div class="pencil ml5">
+                                                                    <apex:commandButton image="{!URLFOR($Resource.designer_file, 'designer_file/images/pencil.png')}"
+                                                                                        rerender="GA202002Form, messages"
+                                                                                        disabled="{!isOpenError || dispCondition.juniorHighSchoolArea == null}" onclick="blockUi();"
+                                                                                        action="{!openJuniorHighSchoolDistrictModal}" 
+                                                                                        status="loadComponent" oncomplete="unblockUi();if(!{! hasErrorMessage}){jQuery('#dialog-modal2').dialog('open');}else{gotoTop()}"  tabIndex="37"
+                                                                                        />
+                                                                    
+                                                                </div>
+                                                                
+                                                            </div>
+                                                            
+                                                        </div>
+                                                        
+                                                    </div>
+                                                    <div class="flex-wrap  justify-between align-items_end ">
+                                                        
+                                                        <div class="mb10 wd45  wd100_xs">
+                                                            
+                                                            <div class="information_title">小学校区</div>
+                                                            
+                                                            <div class="flex-wrap align_center">
+                                                                
+                                                                
+                                                                <apex:selectList value="{! dispCondition.elementarySchoolArea}" size="1" styleClass="form-control mr5" tabIndex="38">
+                                                                    <apex:selectOptions value="{! districtOption}"/>
+                                                                    <apex:actionSupport event="onchange" action="{!changeElementarySchool}" rerender="SchoolArea" />
+                                                                    
+                                                                </apex:selectList>
+                                                                <apex:outputLabel value="線" Style="visibility:hidden"/><!--表示幅調整のために線をhiddenで入力  -->
+                                                                
+                                                            </div>
+                                                            
+                                                        </div>
+                                                        
+                                                        <div class="mb10">
+                                                            <apex:image url="{!URLFOR($Resource.designer_file,'designer_file/images/arrow_right.png')}"/>    
+                                                            
+                                                        </div>
+                                                        
+                                                        <div class="mb10 wd45 wd100_xs">
+                                                            
+                                                            <div class="information_title">小学校(複数選択可能)</div>
+                                                            
+                                                            <div class="flex-wrap align_center">
+                                                                
+                                                                <apex:input type="text" html-readonly="readonly" value="{!dispCondition.elementarySchool}" styleClass="form-control mr5" /><div class="pencil ml5">
+                                                                <apex:commandButton image="{!URLFOR($Resource.designer_file, 'designer_file/images/pencil.png')}"
+                                                                                    rerender="GA202002Form, messages"
+                                                                                    disabled="{!isOpenError || dispCondition.elementarySchoolArea == null}" onclick="blockUi();"
+                                                                                    action="{!openElementarySchoolDistrictModal}" 
+                                                                                    status="loadComponent" oncomplete="unblockUi();if(!{! hasErrorMessage}){jQuery('#dialog-modal2').dialog('open');}else{gotoTop()}" tabIndex="39"
+                                                                                    />
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        
+                                                    </div>
+                                                </apex:outputPanel>
+                                            </ul>
+                                        </li>
+                                        <!-- ▲ 学校セクション -->
+
+                                        <!-- ▼ 住居条件セクション -->
+                                        <li class="default open">
+                                            <div class="link posi_re"><i class="fa fa-chevron-up"></i>住居条件</div>
+                                            <ul class="submenu-defalt">
+                                                <apex:outputPanel id="housingConditions">
+                                                    <li class="mb20">
+                                                        <table class="gray-search wd120">
+                                                            <tr>
+                                                                <th>現況</th>
+                                                                <td>
+                                                                    <apex:inputCheckbox id="sc1" value="{!dispCondition.isLiveStatusLive}" tabindex="13"/>
+                                                                    <apex:outputlabel for="sc1" value="居住中" styleClass="serach_check" />
+
+                                                                    <apex:inputCheckbox id="sc2" value="{!dispCondition.isLiveStatusEmpty}" tabindex="13"/>
+                                                                    <apex:outputlabel for="sc2" value="空室" styleClass="serach_check" />
+
+                                                                    <apex:inputCheckbox id="sc3" value="{!dispCondition.IsLiveStatusLeaveSchedule}" tabindex="13"/>
+                                                                    <apex:outputlabel for="sc3" value="退去予定" styleClass="serach_check" />
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <th>間取り</th>
+                                                                <td>
+                                                                    <apex:inputCheckbox id="sc6" value="{!dispCondition.isOneRoom}" tabindex="13"/>
+                                                                    <apex:outputlabel for="sc6" value="ワンルーム" styleClass="serach_check" />
+                                                                    
+                                                                    <apex:inputCheckbox id="sc7" value="{!dispCondition.is1K}" tabindex="14"/>
+                                                                    <apex:outputlabel for="sc7" value="1K" styleClass="serach_check" />
+                                                                    
+                                                                    <apex:inputCheckbox id="sc8" value="{!dispCondition.is1DK}" tabindex="15"  />
+                                                                    <apex:outputlabel for="sc8" value="1DK" styleClass="serach_check" />
+                                                                    
+                                                                    <apex:inputCheckbox id="sc9" value="{!dispCondition.is1LDK1SLDK}" tabindex="16" />
+                                                                    <apex:outputlabel for="sc9" value="1LDK/SLDK" styleClass="serach_check" />
+                                                                    
+                                                                    <apex:inputCheckbox id="sc10" value="{!dispCondition.is2K2DK}" tabindex="17" />
+                                                                    <apex:outputlabel for="sc10" value="2K/DK" styleClass="serach_check" />
+                                                                    
+                                                                    <apex:inputCheckbox id="sc11" value="{!dispCondition.is2LDK2SLDK}" tabindex="18" />
+                                                                    <apex:outputlabel for="sc11" value="2LDK/SLDK" styleClass="serach_check" />
+                                                                    
+                                                                    <apex:inputCheckbox id="sc12" value="{!dispCondition.is3K3DK}" tabindex="19" />
+                                                                    <apex:outputlabel for="sc12" value="3K/DK" styleClass="serach_check" />
+                                                                    
+                                                                    <apex:inputCheckbox id="sc13" value="{!dispCondition.is3LDK3SLDK}" tabindex="20" />
+                                                                    <apex:outputlabel for="sc13" value="3LDK/SLDK" styleClass="serach_check" />
+                                                                    
+                                                                    <apex:inputCheckbox id="sc14" value="{!dispCondition.is4K4DK4LDKFrom}" tabindex="21" />
+                                                                    <apex:outputlabel for="sc14" value="4K/DK/LDK~" styleClass="serach_check" />
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <th>構造</th>
+                                                                <td>
+                                                                    <apex:inputCheckbox id="sc15" value="{!dispCondition.isWooden}" tabindex="22" />
+                                                                    <apex:outputlabel for="sc15" value="木造" styleClass="serach_check" />
+                                                                    
+                                                                    <apex:inputCheckbox id="sc23" value="{!dispCondition.isLightweightSteel}" tabindex="23" />
+                                                                    <apex:outputlabel for="sc23" value="軽量鉄骨" styleClass="serach_check" />
+                                                                    
+                                                                    <apex:inputCheckbox id="sc17" value="{!dispCondition.isSteel}" tabindex="24" />
+                                                                    <apex:outputlabel for="sc17" value="鉄骨造" styleClass="serach_check" />
+                                                                    
+                                                                    <apex:inputCheckbox id="sc18" value="{!dispCondition.isRC}" tabindex="25" />
+                                                                    <apex:outputlabel for="sc18" value="RC" styleClass="serach_check" />
+                                                                    
+                                                                    <apex:inputCheckbox id="sc19" value="{!dispCondition.isSRC}" tabindex="26" />
+                                                                    <apex:outputlabel for="sc19" value="SRC" styleClass="serach_check" />
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <th>方角</th>
+                                                                <td>
+                                                                    <apex:inputCheckbox id="sc34" value="{!dispCondition.isNorth}" tabindex="27" />
+                                                                    <apex:outputlabel for="sc34" value="北" styleClass="serach_check" />
+                                                                    
+                                                                    <apex:inputCheckbox id="sc35" value="{!dispCondition.isNorthEast}" tabindex="28" />
+                                                                    <apex:outputlabel for="sc35" value="北東" styleClass="serach_check" />
+                                                                    
+                                                                    <apex:inputCheckbox id="sc36" value="{!dispCondition.isEast}" tabindex="29" />
+                                                                    <apex:outputlabel for="sc36" value="東" styleClass="serach_check" />
+                                                                    
+                                                                    <apex:inputCheckbox id="sc37" value="{!dispCondition.isSouthEast}" tabindex="30" />
+                                                                    <apex:outputlabel for="sc37" value="南東" styleClass="serach_check" />
+                                                                    
+                                                                    <apex:inputCheckbox id="sc38" value="{!dispCondition.isSouth}" tabindex="31" />
+                                                                    <apex:outputlabel for="sc38" value="南" styleClass="serach_check" />
+                                                                    
+                                                                    <apex:inputCheckbox id="sc39" value="{!dispCondition.isSouthWest}" tabindex="32" />
+                                                                    <apex:outputlabel for="sc39" value="南西" styleClass="serach_check" />
+                                                                    
+                                                                    <apex:inputCheckbox id="sc40" value="{!dispCondition.isWest}" tabindex="33" />
+                                                                    <apex:outputlabel for="sc40" value="西" styleClass="serach_check" />
+                                                                    
+                                                                    <apex:inputCheckbox id="sc41" value="{!dispCondition.isNorthWest}" tabindex="34" />
+                                                                    <apex:outputlabel for="sc41" value="北西" styleClass="serach_check" />
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <th>敷礼・更新料</th>
+                                                                <td>
+                                                                    <apex:inputCheckbox id="sc42" value="{!dispCondition.isNonDeposit}" tabindex="35" />
+                                                                    <apex:outputlabel for="sc42" value="敷金/保証金なし" styleClass="serach_check" />
+                                                                    
+                                                                    <apex:inputCheckbox id="sc43" value="{!dispCondition.isNonKeyMoney}" tabindex="36" />
+                                                                    <apex:outputlabel for="sc43" value="礼金なし" styleClass="serach_check" />
+                                                                    
+                                                                    <apex:inputCheckbox id="sc192" value="{!dispCondition.isNonCleaningFee}" tabindex="37" />
+                                                                    <apex:outputlabel for="sc192" value="定額修繕費なし" styleClass="serach_check" />
+                                                                    
+                                                                    <apex:inputCheckbox id="sc195" value="{!dispCondition.isNonRenewalFee}" tabindex="38" />
+                                                                    <apex:outputlabel for="sc195" value="更新料なし" styleClass="serach_check" />
+                                                                </td>
+                                                            </tr>
+                                                        </table>
+                                                    </li>
+                                                    <li>
+                                                        <div class="flex-wrap justify-between flex-md-xolumn mb20">
+                                                            <div class=" wd100_xs md_mb10" style="width:100%">
+                                                                <div>賃料</div>
+                                                                <div class="flex-wrap align_center">
+                                                                    <div style="width:45%">
+                                                                    <!-- <div class="wd40 "> -->
+                                                                        <apex:input type="text" html-placeholder="下限" styleClass="form-control" value="{!dispCondition.rentFeeFrom}"  onchange="correctInputRules(this,'currency', 7, 0)" tabIndex="39"/>
+                                                                    <!-- </div> -->
+                                                                    </div>　
+                                                                    &nbsp;～&nbsp;
+                                                                    <div style="width:45%">
+                                                                    <!-- <div class="wd40"> -->
+                                                                        <apex:input type="text" html-placeholder="上限" styleClass="form-control" value="{!dispCondition.rentFeeTo}"  onchange="correctInputRules(this,'currency', 7, 0)" tabIndex="40"/>
+                                                                    <!-- </div> -->
+                                                                    </div>
+                                                                </div>
+                                                                <apex:inputCheckbox id="sc45" value="{!dispCondition.isIncludeManagementFee}" tabindex="41"/>
+                                                                <apex:outputlabel for="sc45" value="管理費込み" styleClass="serach_check" />
+                                                                <br/> <apex:inputCheckbox id="sc46" value="{!dispCondition.isIncludeParkingFee}" tabindex="42"/>
+                                                                <apex:outputlabel for="sc46" value="駐車場代込み" styleClass="serach_check" />     
+                                                                <br/><p style="font-size:13px;"> ※敷地内空有り検索は下記設備内の「駐車場空きあり」を選択</p>
+
+                                                            </div>
+                                                            <!-- <div class=" wd100_xs md_mb10"> -->
+                                                            <div class=" wd100_xs md_mb10" style="width:100%">
+                                                                <div>占有面積</div>
+                                                                <div class="flex-wrap align_center">
+                                                                    <div style="width:45%">
+                                                                        <!-- <div class="wd50"> -->
+                                                                        <apex:selectList value="{! dispCondition.occupancyAreaLowerLimit}" size="1" styleClass="form-control"  tabIndex="73">
+                                                                            <apex:selectOptions value="{! occupancyAreaLowerLimitOption}"/>
+                                                                        </apex:selectList>
+                                                                    <!-- </div> -->
+                                                                    </div>
+                                                                <!-- <div> -->
+                                                                    &nbsp;～&nbsp;
+                                                                <!-- </div> -->
+                                                                    <!-- <div class="wd50"> -->
+                                                                    <div style="width:45%">
+                                                                        <apex:selectList value="{! dispCondition.occupancyAreaUpperLimit}" size="1" styleClass="form-control"  tabIndex="74">
+                                                                            <apex:selectOptions value="{! occupancyAreaUpperLimitOption}"/>
+                                                                        </apex:selectList>
+                                                                    </div>
+                                                                <!-- </div> -->
+                                                                </div>
+                                                                
+                                                            <!-- </div> -->
+                                                            </div>
+                                                            <!-- <div class=" wd100_xs"> -->
+
+                                                            <!-- <div class="wd40 wd100_xs md_mb10" style="width: 50%"> -->
+                                                                <div class="wd40 wd100_xs md_mb10" style="width: 50%">
+                                                                <div>築年数</div>
+                                                                <div class="">
+                                                                    <apex:selectList value="{!dispCondition.buildingAge}" size="1" styleClass="form-control"  tabIndex="45">
+                                                                        <apex:selectOptions value="{! buildingAgeOption}"/>
+                                                                    </apex:selectList>
+                                                                </div>
+                                                            <!-- </div> -->
+                                                            </div>
+                                                        </div>
+                                                    </li>
+                                                    <li>
+                                                        <div class="mb20">
+                                                            <apex:inputCheckbox id="sc47" value="{!dispCondition.isScore34Less}" tabindex="38" />
+                                                            <apex:outputlabel for="sc47" value="34点未満" styleClass="serach_check" />
+
+                                                            <apex:inputCheckbox id="sc48" value="{!dispCondition.isScore34to35}" tabindex="38" />
+                                                            <apex:outputlabel for="sc48" value="34～35点" styleClass="serach_check" />
+
+                                                            <apex:inputCheckbox id="sc49" value="{!dispCondition.isScore36More}" tabindex="38" />
+                                                            <apex:outputlabel for="sc49" value="36点以上" styleClass="serach_check" />
+
+                                                            <apex:inputCheckbox id="sc50" value="{!dispCondition.isScoreAll}" tabindex="38" />
+                                                            <apex:outputlabel for="sc50" value="全て" styleClass="serach_check" />
+                                                          </div>
+                                                    </li>
+                                                </apex:outputPanel>
+                                            </ul>
+                                        </li>
+                                        <!-- ▲ 住居条件セクション -->
+
+                                        <!-- ▼ 設備・条件セクション -->
+                                        <li class="default open">
+                                            <div class="link posi_re"><i class="fa fa-chevron-up"></i>設備・条件 詳細</div>
+                                            <ul class="submenu-defalt">
+                                                <apex:outputPanel id="equipmentConditionDetails">
+                                                    <li>
+                                                        <table class="gray-search wd120">
+                                                            <tr>
+                                                                <th>構造・工法</th>
+                                                                <td>
+                                                                    <apex:inputCheckbox id="sc194" value="{!dispCondition.isDetachedHouse}" tabindex="48"/>
+                                                                    <apex:outputlabel for="sc194" value="戸建て" styleClass="serach_check2" />
+                                                                    
+                                                                    <apex:inputCheckbox id="sc193" value="{!dispCondition.isMaisonette}" tabindex="49"/>
+                                                                    <apex:outputlabel for="sc193" value="メゾネット" styleClass="serach_check2" />
+                                                                    
+                                                                    <apex:inputCheckbox id="sc200" value="{!dispCondition.isLoft}" tabindex="50"/>
+                                                                    <apex:outputlabel for="sc200" value="ロフト" styleClass="serach_check2" />
+                                                                    
+                                                                    <apex:inputCheckbox id="sc58" value="{!dispCondition.isDesigners}" tabindex="51"/>
+                                                                    <apex:outputlabel for="sc58" value="デザイナーズ" styleClass="serach_check2" />
+                                                                    
+                                                                    <apex:inputCheckbox id="sc160" value="{!dispCondition.isRenovation}" tabindex="52"/>
+                                                                    <apex:outputlabel for="sc160" value="リノベーション" styleClass="serach_check2" />
+                                                                    
+                                                                    <apex:inputCheckbox id="sc61" value="{!dispCondition.isCondominiumRental}" tabindex="53"/>
+                                                                    <apex:outputlabel for="sc61" value="分譲賃貸" styleClass="serach_check2" />
+                                                                    
+                                                                    <apex:inputCheckbox id="sc191" value="{!dispCondition.isAllWestern}" tabindex="54"/>
+                                                                    <apex:outputlabel for="sc191" value="オール洋間" styleClass="serach_check2" />
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <th>フロア・庭<br/>バルコニー</th>
+                                                                <td>
+                                                                    <apex:inputCheckbox id="sc65" value="{!dispCondition.isFirstFloor}" tabindex="55"/>
+                                                                    <apex:outputlabel for="sc65" value="1階" styleClass="serach_check2" />
+                                                                    
+                                                                    <apex:inputCheckbox id="sc66" value="{!dispCondition.isSecondFloorOver}" tabindex="56"/>
+                                                                    <apex:outputlabel for="sc66" value="2階以上" styleClass="serach_check2" />
+                                                                    
+                                                                    <apex:inputCheckbox id="sc67" value="{!dispCondition.isTopFloor}" tabindex="57"/>
+                                                                    <apex:outputlabel for="sc67" value="最上階" styleClass="serach_check2" />
+                                                                    
+                                                                    <apex:inputCheckbox id="sc85" value="{!dispCondition.isCornerRoom}" tabindex="58"/>
+                                                                    <apex:outputlabel for="sc85" value="角部屋" styleClass="serach_check2" />
+                                                                    
+                                                                    <apex:inputCheckbox id="sc131" value="{!dispCondition.isBalcony}" tabindex="59"/>
+                                                                    <apex:outputlabel for="sc131" value="バルコニー" styleClass="serach_check2" />
+                                                                    
+                                                                    <apex:inputCheckbox id="sc132" value="{!dispCondition.isRoofBalcony}" tabindex="60"/>
+                                                                    <apex:outputlabel for="sc132" value="ルーフバルコニー" styleClass="serach_check2" />
+                                                                    
+                                                                    <apex:inputCheckbox id="sc88" value="{!dispCondition.isPrivateGarden}" tabindex="61"/>
+                                                                    <apex:outputlabel for="sc88" value="専用庭" styleClass="serach_check2" />
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <th>駐車・駐輪<br/>共用部</th>
+                                                                <td>
+                                                                    <apex:inputCheckbox id="sc77" value="{!dispCondition.isParking}" tabindex="62"/>
+                                                                    <apex:outputlabel for="sc77" value="駐車場空きあり" styleClass="serach_check2" />
+                                                                    
+                                                                    <apex:inputCheckbox id="sc78" value="{!dispCondition.isInSiteParking}" tabindex="63"/>
+                                                                    <apex:outputlabel for="sc78" value="敷地内駐車場" styleClass="serach_check2" />
+                                                                    
+                                                                    <apex:inputCheckbox id="sc79" value="{!dispCondition.isPluralCarParking}" tabindex="64"/>
+                                                                    <apex:outputlabel for="sc79" value="駐車場2台可" styleClass="serach_check2" />
+                                                                    
+                                                                    <apex:inputCheckbox id="sc201" value="{!dispCondition.isBuiltInGarage}" tabindex="65"/>
+                                                                    <apex:outputlabel for="sc201" value="ビルトインガレージ" styleClass="serach_check2" />
+                                                                    
+                                                                    <apex:inputCheckbox id="sc196" value="{!dispCondition.isCarport}" tabindex="66"/>
+                                                                    <apex:outputlabel for="sc196" value="カーポート" styleClass="serach_check2" />
+                                                                    
+                                                                    <apex:inputCheckbox id="sc80" value="{!dispCondition.isBicycleParking}" tabindex="67"/>
+                                                                    <apex:outputlabel for="sc80" value="駐輪場" styleClass="serach_check2" />
+                                                                    
+                                                                    <apex:inputCheckbox id="sc81" value="{!dispCondition.isBikeStorage}" tabindex="68"/>
+                                                                    <apex:outputlabel for="sc81" value="バイク可" styleClass="serach_check2" />
+                                                                    
+                                                                    <apex:inputCheckbox id="sc82" value="{!dispCondition.isSmallBike}" tabindex="69"/>
+                                                                    <apex:outputlabel for="sc82" value="小型バイク" styleClass="serach_check2" />
+                                                                    
+                                                                    <apex:inputCheckbox id="sc83" value="{!dispCondition.isMediumBike}" tabindex="70"/>
+                                                                    <apex:outputlabel for="sc83" value="中型バイク" styleClass="serach_check2" />
+                                                                    
+                                                                    <apex:inputCheckbox id="sc84" value="{!dispCondition.isLargeBike}" tabindex="71"/>
+                                                                    <apex:outputlabel for="sc84" value="大型バイク" styleClass="serach_check2" />
+                                                                    
+                                                                    <apex:inputCheckbox id="sc68" value="{!dispCondition.isElevator}" tabindex="72"/>
+                                                                    <apex:outputlabel for="sc68" value="エレベーター" styleClass="serach_check2" />
+                                                                    
+                                                                    <apex:inputCheckbox id="sc71" value="{!dispCondition.isDeliveryBox}" tabindex="73"/>
+                                                                    <apex:outputlabel for="sc71" value="宅配ボックス" styleClass="serach_check2" />
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <th>キッチン</th>
+                                                                <td>
+                                                                    <apex:inputCheckbox id="sc106" value="{!dispCondition.isCounterKitchen}" tabindex="74"/>
+                                                                    <apex:outputlabel for="sc106" value="カウンターキッチン" styleClass="serach_check2" />
+                                                                    
+                                                                    <apex:inputCheckbox id="sc107" value="{!dispCondition.isSystemKitchen}" tabindex="75"/>
+                                                                    <apex:outputlabel for="sc107" value="システムキッチン" styleClass="serach_check2" />
+                                                                    
+                                                                    <apex:inputCheckbox id="sc99" value="{!dispCondition.isGasStove}" tabindex="76"/>
+                                                                    <apex:outputlabel for="sc99" value="ガスコンロ" styleClass="serach_check2" />
+                                                                    
+                                                                    <apex:inputCheckbox id="sc103" value="{!dispCondition.isElectricStove}" tabindex="77"/>
+                                                                    <apex:outputlabel for="sc103" value="電気コンロ" styleClass="serach_check2" />
+                                                                    
+                                                                    <apex:inputCheckbox id="sc102" value="{!dispCondition.isInductionHeating}" tabindex="78"/>
+                                                                    <apex:outputlabel for="sc102" value="IHコンロ" styleClass="serach_check2" />
+                                                                    
+                                                                    <apex:inputCheckbox id="sc100" value="{!dispCondition.isTwoGasStove}" tabindex="79"/>
+                                                                    <apex:outputlabel for="sc100" value="コンロ2口" styleClass="serach_check2" />
+                                                                    
+                                                                    <apex:inputCheckbox id="sc101" value="{!dispCondition.isMoreGasStove}" tabindex="80"/>
+                                                                    <apex:outputlabel for="sc101" value="コンロ3口以上" styleClass="serach_check2" />
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <th>バス・トイレ<br/>洗面所</th>
+                                                                <td>
+                                                                    <apex:inputCheckbox id="sc111" value="{!dispCondition.isSepalateBathAndRestroom}" tabindex="81"/>
+                                                                    <apex:outputlabel for="sc111" value="バス・トイレ別" styleClass="serach_check2" />
+                                                                    
+                                                                    <apex:inputCheckbox id="sc115" value="{!dispCondition.isAditionalBoiling}" tabindex="82"/>
+                                                                    <apex:outputlabel for="sc115" value="追焚機能" styleClass="serach_check2" />
+                                                                    
+                                                                    <apex:inputCheckbox id="sc117" value="{!dispCondition.isDehumidifierForBathroom}" tabindex="83"/>
+                                                                    <apex:outputlabel for="sc117" value="浴室乾燥機" styleClass="serach_check2" />
+                                                                    
+                                                                    
+                                                                    <apex:inputCheckbox id="sc119" value="{!dispCondition.isWashlet}" tabindex="84"/>
+                                                                    <apex:outputlabel for="sc119" value="温水洗浄便座" styleClass="serach_check2" />
+                                                                    
+                                                                    <apex:inputCheckbox id="sc121" value="{!dispCondition.isShowerWashBasin}" tabindex="85"/>
+                                                                    <apex:outputlabel for="sc121" value="シャワー付き洗面台" styleClass="serach_check2" />
+                                                                    
+                                                                    <apex:inputCheckbox id="sc122" value="{!dispCondition.isRegalLavatory}" tabindex="86"/>
+                                                                    <apex:outputlabel for="sc122" value="洗面所独立" styleClass="serach_check2" />
+                                                                    
+                                                                    <apex:inputCheckbox id="sc137" value="{!dispCondition.isInnerLandry}" tabindex="87"/>
+                                                                    <apex:outputlabel for="sc137" value="室内洗濯機置場" styleClass="serach_check2" />
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <th>光熱設備・空調</th>
+                                                                <td>
+                                                                    <apex:inputCheckbox id="sc104" value="{!dispCondition.isTownGas}" tabindex="88"/>
+                                                                    <apex:outputlabel for="sc104" value="都市ガス" styleClass="serach_check2" />
+                                                                    
+                                                                    <apex:inputCheckbox id="sc105" value="{!dispCondition.isPropaneGas}" tabindex="89"/>
+                                                                    <apex:outputlabel for="sc105" value="プロパンガス" styleClass="serach_check2" />
+                                                                    
+                                                                    <apex:inputCheckbox id="sc126" value="{!dispCondition.isAllElectric}" tabindex="90"/>
+                                                                    <apex:outputlabel for="sc126" value="オール電化" styleClass="serach_check2" />
+                                                                    
+                                                                    <apex:inputCheckbox id="sc127" value="{!dispCondition.isAirConditioner}" tabindex="91"/>
+                                                                    <apex:outputlabel for="sc127" value="エアコン" styleClass="serach_check2" />
+                                                                    
+                                                                    <apex:inputCheckbox id="sc123" value="{!dispCondition.isFloorHeating}" tabindex="92"/>
+                                                                    <apex:outputlabel for="sc123" value="床暖房" styleClass="serach_check2" />
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <th>収納</th>
+                                                                <td>
+                                                                    <apex:inputCheckbox id="sc144" value="{!dispCondition.isShoesBox}" tabindex="93"/>
+                                                                    <apex:outputlabel for="sc144" value="シューズボックス" styleClass="serach_check2" />
+                                                                    
+                                                                    <apex:inputCheckbox id="sc197" value="{!dispCondition.isShoeCloak}" tabindex="94"/>
+                                                                    <apex:outputlabel for="sc197" value="シューズクローク" styleClass="serach_check2" />
+                                                                    
+                                                                    <apex:inputCheckbox id="sc147" value="{!dispCondition.isWalkInCloset}" tabindex="95"/>
+                                                                    <apex:outputlabel for="sc147" value="ウォークインクローゼット" styleClass="serach_check2" />
+                                                                    
+                                                                    <apex:inputCheckbox id="sc145" value="{!dispCondition.isTrunkRoom}" tabindex="96"/>
+                                                                    <apex:outputlabel for="sc145" value="トランクルーム" styleClass="serach_check2" />
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <th>通信設備</th>
+                                                                <td>
+                                                                    <apex:inputCheckbox id="sc148" value="{!dispCondition.isBSAntenna}" tabindex="97"/>
+                                                                    <apex:outputlabel for="sc148" value="BSアンテナ" styleClass="serach_check2" />
+                                                                    
+                                                                    <apex:inputCheckbox id="sc149" value="{!dispCondition.isCSAntenna}" tabindex="98"/>
+                                                                    <apex:outputlabel for="sc149" value="CSアンテナ" styleClass="serach_check2" />
+                                                                    
+                                                                    <apex:inputCheckbox id="sc150" value="{!dispCondition.isCATV}" tabindex="99"/>
+                                                                    <apex:outputlabel for="sc150" value="CATV" styleClass="serach_check2" />
+                                                                    
+                                                                    <apex:inputCheckbox id="sc154" value="{!dispCondition.isInternetFree}" tabindex="100"/>
+                                                                    <apex:outputlabel for="sc154" value="ネット使用料無料" styleClass="serach_check2" />
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <th>セキュリティ</th>
+                                                                <td>
+                                                                    <apex:inputCheckbox id="sc155" value="{!dispCondition.isMonitorIntercom}" tabindex="111"/>
+                                                                    <apex:outputlabel for="sc155" value="モニター付きインターホン" styleClass="serach_check2" />
+                                                                    
+                                                                    <apex:inputCheckbox id="sc89" value="{!dispCondition.isAutoLock}" tabindex="112"/>
+                                                                    <apex:outputlabel for="sc89" value="オートロック" styleClass="serach_check2" />
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <th>家具・家電</th>
+                                                                <td>
+                                                                    <apex:inputCheckbox id="sc128" value="{!dispCondition.isFurniture}" tabindex="113"/>
+                                                                    <apex:outputlabel for="sc128" value="家具付き" styleClass="serach_check2" />
+                                                                    
+                                                                    <apex:inputCheckbox id="sc129" value="{!dispCondition.isHomeAppliance}" tabindex="114"/>
+                                                                    <apex:outputlabel for="sc129" value="家電付き" styleClass="serach_check2" />
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <th>入居条件<br/>支払方法</th>
+                                                                <td>
+                                                                    <apex:inputCheckbox id="sc165" value="{!dispCondition.isNoGuarantor}" tabindex="115"/>
+                                                                    <apex:outputlabel for="sc165" value="保証人不要" styleClass="serach_check2" />
+                                                                    
+                                                                    <apex:inputCheckbox id="sc180" value="{!dispCondition.isNonGuaranteeidCompany}" tabindex="116"/>
+                                                                    <apex:outputlabel for="sc180" value="保証会社不要" styleClass="serach_check2" />
+                                                                    
+                                                                    <apex:inputCheckbox id="sc168" value="{!dispCondition.isMusicalInstruments}" tabindex="117"/>
+                                                                    <apex:outputlabel for="sc168" value="楽器相談可" styleClass="serach_check2" />
+                                                                    
+                                                                    <apex:inputCheckbox id="sc185" value="{!dispCondition.isForeigner}" tabindex="118"/>
+                                                                    <apex:outputlabel for="sc185" value="外国人契約可" styleClass="serach_check2" />
+                                                                    
+                                                                    <apex:inputCheckbox id="sc188" value="{!dispCondition.isWelfareAvailable}" tabindex="119"/>
+                                                                    <apex:outputlabel for="sc188" value="生活保護契約可" styleClass="serach_check2" />
+                                                                    
+                                                                    <apex:inputCheckbox id="sc181" value="{!dispCondition.isOfficeAvailable}" tabindex="120"/>
+                                                                    <apex:outputlabel for="sc181" value="事務所利用可" styleClass="serach_check2" />
+                                                                    
+                                                                    <apex:inputCheckbox id="sc169" value="{!dispCondition.isPet}" tabindex="121"/>
+                                                                    <apex:outputlabel for="sc169" value="ペット可" styleClass="serach_check2" />
+                                                                    
+                                                                    <apex:inputCheckbox id="sc172" value="{!dispCondition.isSmallPet}" tabindex="122"/>
+                                                                    <apex:outputlabel for="sc172" value="ペット(小型犬)" styleClass="serach_check2" />
+
+                                                                    <apex:inputCheckbox id="sc171" value="{!dispCondition.isMiddlePet}" tabindex="123"/>
+                                                                    <apex:outputlabel for="sc171" value="ペット(中型犬)" styleClass="serach_check2" />
+                                                                    
+                                                                    <apex:inputCheckbox id="sc170" value="{!dispCondition.isLargePet}" tabindex="124"/>
+                                                                    <apex:outputlabel for="sc170" value="ペット(大型犬)" styleClass="serach_check2" />
+                                                                    
+                                                                    <apex:inputCheckbox id="sc173" value="{!dispCondition.isCat}" tabindex="125"/>
+                                                                    <apex:outputlabel for="sc173" value="ペット(猫)" styleClass="serach_check2" />
+                                                                    
+                                                                    <apex:inputCheckbox id="sc174" value="{!dispCondition.isOtherPet}" tabindex="126"/>
+                                                                    <apex:outputlabel for="sc174" value="ペット(その他)" styleClass="serach_check2" />
+                                                                    
+                                                                    <apex:inputCheckbox id="sc175" value="{!dispCondition.isTwoTenant}" tabindex="127"/>
+                                                                    <apex:outputlabel for="sc175" value="2人入居可" styleClass="serach_check2" />
+                                                                    
+                                                                    <apex:inputCheckbox id="sc179" value="{!dispCondition.isRoomShare}" tabindex="128"/>
+                                                                    <apex:outputlabel for="sc179" value="ルームシェア可" styleClass="serach_check2" />
+                                                                    
+                                                                    <apex:inputCheckbox id="sc202" value="{!dispCondition.isIppambutsu}" tabindex="129"/>
+                                                                    <apex:outputlabel for="sc202" value="一般物" styleClass="serach_check2" />
+                                                                    
+                                                                    <apex:inputCheckbox id="sc178" value="{!dispCondition.isElderly}" tabindex="130"/>
+                                                                    <apex:outputlabel for="sc178" value="高齢者歓迎" styleClass="serach_check2" />
+                                                                    
+                                                                    <apex:inputCheckbox id="sc176" value="{!dispCondition.isWoman}" tabindex="131"/>
+                                                                    <apex:outputlabel for="sc176" value="女性限定" styleClass="serach_check2" />
+                                                                    
+                                                                    <apex:inputCheckbox id="sc186" value="{!dispCondition.isStudent}" tabindex="132"/>
+                                                                    <apex:outputlabel for="sc186" value="学生限定マンション" styleClass="serach_check2" />
+                                                                </td>
+                                                            </tr>
+                                                        </table>
+                                                    </li>
+                                                </apex:outputPanel>
+                                            </ul>
+                                        </li>
+                                        <!-- ▲ 設備・条件セクション -->
+                                    </ul>
+                                    <!-- ▼ 検索ボタン部分 -->
+                                    <div class="flex-wrap justify-between flex-xs-xolumn  mb10">
+                                        
+                                        <div class="wd33  mb10">
+                                            <apex:outputPanel id="hitCount">
+                                                <div class=" fontb font18 mb10">該当件数{!dispSerachCount.hitCount}件</div>
+                                                    <div>追焚機能除外：該当件数{!dispSerachCount.nonReheatingCount}件
+                                                    <br/>エアコン除外：該当件数{!dispSerachCount.nonAirConditionerCount}件
+                                                    <br/>浴室乾燥除外：該当件数{!dispSerachCount.nonBathroomDryerCount}件
+                                                    <br/>オートロック除外：該当件数{!dispSerachCount.nonAutoLockCount}件
+                                                    <br/>カウンターキッチン除外：該当件数{!dispSerachCount.CounterKitchenCount}件
+                                                </div>
+                                            </apex:outputPanel>
+                                        </div>
+
+                                        <div class="wd33 mb10 text-center">
+                                            <apex:commandButton styleClass="btn btn-submit btn-primary" 
+                                                                value="検索"
+                                                                disabled="{!isOpenError}"
+                                                                onclick="blockUi()"
+                                                                action="{!searchProperty}"
+                                                                rerender="detailArea, hitCount, mapButton, messages, script"
+                                                                oncomplete="tableSetting(); unblockUi(); if({!hasErrorMessage}){scrollToTop()};"
+                                                                status="loadComponent"
+                                                                tabIndex="4"
+                                                                />
+                                        </div>
+                                        <div class="wd33 mb10">
+                                            <apex:commandButton styleClass="btn btn btn-sm btn-normal mr0 mt10 block"
+                                                                value="折りたたむ"
+                                                                disabled="{!isOpenError}"
+                                                                onclick="closeSection();scrollToTop();"
+                                                                rerender="dummy"/>
+
+                                        </div>
+                                    </div>
+                                    <!-- ▲ 検索ボタン部分 -->
+                                </section>
+                                <!-- ▲ 検索セクション -->
+                            </div>
+                        </div>
+                        <!-- ▲ 画面分割上部 -->
+                        <!-- ▼ 画面分割下部 -->
+                        <div id="area-b" class="area">
+                            <div class="area_padding">
+                                <!-- ▼ 検索結果セクション -->
+                                <section>
+                                    <!-- ▼ 検索結果ヘッダ部 -->
+                                    <div class="flex-wrap flex_wrap justify-between flex-md-xolumn mb10">
+                                        <h2 class="fontb font2rem mb10">検索結果</h2>
+                                        <div class="flex-wrap flex_wrap ">
+                                            <apex:commandButton styleClass="btn btn btn-sm btn-normal mr10 mb10"
+                                                                value="建物新規登録"
+                                                                disabled="{!isOpenError}"
+                                                                rerender="dummy"
+                                                                onclick="showPage('GA104003View', '', 'true', '')"
+                                                                />
+                                            <apex:commandButton styleClass="btn btn btn-sm btn-normal mr10 mb10"
+                                                                value="お気に入り登録"
+                                                                disabled="{!isOpenError}"
+                                                                onclick="checkSaveFavorite()"
+                                                                rerender="dummy"
+                                                                rendered="{!isVisitor}"
+                                                                status="loadComponent"
+                                                                />
+                                            <apex:commandButton id="mapButton" styleClass="btn btn btn-sm btn-normal mb10"
+                                                                value="地図を表示"
+                                                                disabled="{! isOpenError || searchResultIndexList.size == 0 }"
+                                                                onclick="blockUi();"
+                                                                action="{!createPropertyMapParameter}"
+                                                                rerender="messages"
+                                                                oncomplete="unblockUi();if({!hasErrorMessage}){scrollToTop()}else{showPage('GA104002View', '', 'true', '{!GA104002Parameter}')}"
+                                                                />
+                                        </div>
+                                    </div>
+                                    <!-- ▲ 検索結果ヘッダ部 -->
+                                    <apex:outputPanel id="detailArea">
+                                        <!-- 外枠 -->
+                                        <div class="x_data_area" style="display: inline-flex;">
+                                            <!-- ロック部分 -->
+                                            <div id="searchResultHeaderBlock" class="lock_box">
+                                                <!-- <table id="searchResultHeaderTable" class="search_result width300 data gray" data-sortLinkTableIds="searchResultTable" -->
+                                                        <!-- style="height:400px;" onscroll="linkScrollY(this, 'searchResultTable');"> -->
+                                                <table id="searchResultHeaderTable" class="search_result width300 data gray no_y_scroll" data-sortLinkTableIds="searchResultTable">
+                                                    <col style="width: 10%;" />
+                                                    <col style="width: 45%;" />
+                                                    <col style="width: 45%;" />
+                                                    <tr>
+                                                        <th class="text-center" data-colSortable="false">
+                                                            <apex:inputCheckbox id="sc4" value="{!allSelected}" styleClass="propertyItemHeadCheck"
+                                                                                onchange="listCheckBoxAllChange(this, '.propertyItemHeadCheck',  '.propertyItemCheck');"
+                                                                                />
+                                                            <apex:outputLabel for="sc4" styleClass="serach_check5"></apex:outputLabel>
+                                                        </th>
+                                                        <th data-initSort="1" data-initSortOrderImageKey="1">建物
+                                                            <img url="" class="sort sortOrderImage" />
+                                                        </th>
+                                                        <th>号室
+                                                            <img url="" class="sort sortOrderImage" />
+                                                        </th>
+                                                        <th data-colSortable="false">資料
+                                                        </th>
+                                                        <th class="r_none" data-colSortable="false">登記
+                                                        </th>
+                                                    </tr>
+
+                                                    <apex:variable var="num" value="0"/>
+
+                                                    <apex:repeat value="{!searchResultIndexList}" var="parentIndex" >
+                                                        <apex:repeat value="{!parentIndex}" var="index" >
+                                                            <tr>
+                                                                <td class="right-border text-center">
+                                                                    <apex:inputCheckbox id="ck5" value="{!detailCheck[index].isCheck}" styleClass="propertyItemCheck"
+                                                                                        onchange="headCheckBoxChange(this, '.propertyItemHeadCheck',  '.propertyItemCheck');"
+                                                                                        />
+                                                                    <apex:outputLabel for="ck5" styleClass="serach_check5"></apex:outputLabel>
+                                                                </td>
+                                                                <td>
+                                                                    <!-- 建物 -->
+                                                                    <p>
+                                                                        <apex:commandLink value="{!searchResultList[index].buildingName}"
+                                                                                        onclick="showPage('GA104003View', '', 'true', 'id={!searchResultList[index].buildingId}&accountId={!dispCondition.accountId}')"
+                                                                                        rerender="dummy"
+                                                                                        />
+                                                                    </p>
+                                                                </td>
+                                                                <td>
+                                                                    <!-- 物件 -->
+                                                                    <p>
+                                                                        <apex:commandLink value="{!searchResultList[index].propertyName}"
+                                                                                        onclick="showPage('GA104006View', '', 'true', 'propertyId={!searchResultList[index].propertyId}&buildingId={!searchResultList[index].buildingId}')"
+                                                                                        rerender="dummy"
+                                                                                        />
+                                                                    </p>
+                                                                </td>
+                                                                <td>
+                                                                    <apex:commandLink value="資料"
+                                                                                    onclick="showPage('GA104004View', '', 'true', 'id={!searchResultList[index].propertyId}&accountId={!dispCondition.accountId}')"
+                                                                                    rerender="dummy"
+                                                                                    />
+                                                                </td>
+                                                                <td class="r_none">
+                                                                    <apex:commandLink value="DL"
+                                                                                    onclick="blockUi();"
+                                                                                    action="{!downloadRegistry}"
+                                                                                    rerender="messages"
+                                                                                    oncomplete="unblockUi();if({!hasErrorMessage}){scrollToTop()}else{downloadAttachment('{!attachmentIdList}')}"
+                                                                                    >
+                                                                        <apex:param value="{!index}" name="" assignTo="{!detailIndex}" />
+                                                                    </apex:commandLink>
+                                                                </td>
+                                                            </tr>
+                                                            <apex:variable var="num" value="{!VALUE(num)+1}" />
+                                                        </apex:repeat>
+                                                    </apex:repeat>
+                                                </table>
+                                            </div>
+                                            <!-- /ロック部分 -->
+                                            <!-- 横スクロール部分 -->
+                                            <div class="x_scroll_box " style="overflow-x: hidden;">
+                                                <table id="searchResultTable" class="search_result data gray nowrap" data-sortLinkTableIds="searchResultHeaderTable">
+                                                        <!-- style="height:400px;" onscroll="linkScrollY(this, 'searchResultHeaderTable');"> -->
+                                                    <tr>
+                                                        <th class="wd3">更新日
+                                                            <img class="sort sortOrderImage" />
+                                                        </th>
+                                                        <th class="wd1">現況
+                                                            <img class="sort sortOrderImage" />
+                                                        </th>
+                                                        <th class="wd3">引き渡し年月
+                                                            <img class="sort sortOrderImage" />
+                                                        </th>
+                                                        <th class="wd2" data-sortType="number">写真枚数
+                                                            <img class="sort sortOrderImage" />
+                                                        </th>
+                                                        <th class="wd3">建物構造
+                                                            <img class="sort sortOrderImage" />
+                                                        </th>
+                                                        <th class="wd7">住所
+                                                            <img class="sort sortOrderImage" />
+                                                        </th>
+                                                        <th class="wd3" data-sortType="format-number">賃料
+                                                            <img class="sort sortOrderImage" />
+                                                        </th>
+                                                        <th class="wd3" data-sortType="format-number">管理費
+                                                            <img class="sort sortOrderImage" />
+                                                        </th>
+                                                        <th class="wd3">敷金/保証金
+                                                            <img class="sort sortOrderImage" />
+                                                        </th>
+                                                        <th class="wd3" data-sortType="format-number">礼金
+                                                            <img class="sort sortOrderImage" />
+                                                        </th>
+                                                        <th class="wd3" data-sortType="format-number">定額修繕費
+                                                            <img class="sort sortOrderImage" />
+                                                        </th>
+                                                        <th class="wd3">最寄駅
+                                                            <img class="sort sortOrderImage" />
+                                                        </th>
+                                                        <th class="wd3">築年
+                                                            <img class="sort sortOrderImage" />
+                                                        </th>
+                                                        <th class="wd3">駐車場
+                                                            <img class="sort sortOrderImage" />
+                                                        </th>
+                                                        <th class="wd3">間取り
+                                                            <img class="sort sortOrderImage" />
+                                                        </th>
+                                                        <th class="wd3" data-sortType="number">占有面積
+                                                            <img class="sort sortOrderImage" />
+                                                        </th>
+                                                        <th class="wd3">方角
+                                                            <img class="sort sortOrderImage" />
+                                                        </th>
+                                                        <th class="wd6">元付業者名
+                                                            <img class="sort sortOrderImage" />
+                                                        </th>
+                                                        <th class="wd3">元付業者TEL
+                                                            <img class="sort sortOrderImage" />
+                                                        </th>
+                                                        <th class="wd3">掲載
+                                                            <img class="sort sortOrderImage" />
+                                                        </th>
+                                                        <th class="wd3">AD
+                                                            <img class="sort sortOrderImage" />
+                                                        </th>
+                                                    </tr>
+                                                    <apex:variable var="num" value="0"/>
+                                                    <apex:repeat value="{!searchResultIndexList}" var="parentIndex" >
+                                                        <apex:repeat value="{!parentIndex}" var="index" >
+                                                            <tr>
+                                                                <td class="wd3"><apex:outputText value="{!searchResultList[index].updateDate}" /></td>
+                                                                <td class="wd1"><apex:outputText value="{!searchResultList[index].liveStatus}" /></td>
+                                                                <td class="wd3"><apex:outputText value="{!searchResultList[index].deliveryYM}" /></td>
+                                                                <td class="wd2"><apex:outputText value="{!searchResultList[index].photoCount}" /></td>
+                                                                <td class="wd3"><apex:outputText value="{!searchResultList[index].structure}" /></td>
+                                                                <td class="wd7"><apex:outputText value="{!searchResultList[index].address}" /></td>
+                                                                <td class="wd3"><apex:outputText value="{!searchResultList[index].RentFee}" /></td>
+                                                                <td class="wd3"><apex:outputText value="{!searchResultList[index].managementFee}" /></td>
+                                                                <td class="wd3"><apex:outputText value="{!searchResultList[index].deposit}" /></td>
+                                                                <td class="wd3"><apex:outputText value="{!searchResultList[index].keyMoney}" /></td>
+                                                                <td class="wd3"><apex:outputText value="{!searchResultList[index].cleaningFee}" /></td>
+                                                                <td class="wd3"><apex:outputText value="{!searchResultList[index].nearestStation}" /></td>
+                                                                <td class="wd3"><apex:outputText value="{!searchResultList[index].buildingYear}" /></td>
+                                                                <td class="wd3"><apex:outputText value="{!searchResultList[index].carParking}" /></td>
+                                                                <td class="wd3"><apex:outputText value="{!searchResultList[index].roomLayout}" /></td>
+                                                                <td class="wd3"><apex:outputText value="{!searchResultList[index].occupiedArea}" /></td>
+                                                                <td class="wd3"><apex:outputText value="{!searchResultList[index].direction}" /></td>
+                                                                <td class="wd6"><apex:outputText value="{!searchResultList[index].formerSupplierName}" /></td>
+                                                                <td class="wd3"><apex:outputText value="{!searchResultList[index].formerSupplierPhone}" /></td>
+                                                                <td class="wd3"><apex:outputText value="{!searchResultList[index].posting}" /></td>
+                                                                <td class="wd3"><apex:outputText value="{!searchResultList[index].ad}" /></td>
+                                                            </tr>
+                                                            <apex:variable var="num" value="{!VALUE(num)+1}" />
+                                                        </apex:repeat>
+                                                    </apex:repeat>
+                                                </table>
+                                            </div>
+                                            <!-- /横スクロール部分 -->
+                                        </div>
+                                        <!-- /外枠 -->
+                                    </apex:outputPanel>
+                                </section>
+                                <!-- ▲ 検索結果セクション -->
+                            </div>
+                        </div>
+                        <!-- ▲ 画面分割下部 -->
+                    </section>
+                </article>
+            </main>
+        </body>
+
+        <script src="/soap/ajax/47.0/connection.js" type="text/javascript"></script>
+        <script>sforce.connection.sessionId = '{!$Api.Session_ID}';</script>
+        <script>
+            // 画面分割用
+            var areaA = document.getElementById("area-a");
+            var areaB = document.getElementById("area-b");
+            var splitter = new Splitter(Splitter.Direction.Horizontal, areaA, areaB, { percent: 80});   // 上下に分割
+        </script>
+        <script>
+            $(function() {
+                var Accordion = function(el, multiple) {
+                    this.el = el || {};
+                    this.multiple = multiple || false;
+                    // Variables privadas
+                    var links = this.el.find('.link');
+                    // Evento
+                    links.on('click', {el: this.el, multiple: this.multiple}, this.dropdown)
+                }
+
+                // セクション開閉
+                Accordion.prototype.dropdown = function(e) {
+                    var $el = e.data.el;
+                    $this = $(this),
+                    $next = $this.next();
+                    $next.slideToggle();
+                    $this.parent().toggleClass('open');
+                    if (!e.data.multiple) {
+                        // $el.find('.submenu-defalt').not($next).slideUp().parent().removeClass('open');
+                    };
+                }
+                var accordion = new Accordion($('#accordion'), false);
+            });
+            // セクション折りたたみ
+            function closeSection() {
+                var textList = document.getElementById('accordion');
+                let elements = textList.getElementsByTagName('li');
+                Array.prototype.forEach.call(elements, function(element) {
+                    element.classList.remove('open','default');
+                    // element.classList.remove('open');
+                    $('.submenu-defalt').fadeOut();
+                });
+            }
+
+            // 画面上部へ移動
+            function scrollToTop() {
+                $('#area-a').scrollTop(0);
+            }
+
+            // 画面起動時
+            window.addEventListener('load', function(){
+                // 列移動イベント設定
+                setDraggableTable('searchResultTable');
+                // ソート用矢印画像の設定
+                sortOrderImageSrc = new Map([
+                    [-1,"{!URLFOR($Resource.designer_file, 'designer_file/images/arrow_down.png')}"]
+                    ,[0,"{!URLFOR($Resource.designer_file, 'designer_file/images/arrow_none.png')}"]
+                    ,[1,"{!URLFOR($Resource.designer_file, 'designer_file/images/arrow_up.png')}"]
+                ]);
+                // ソートイベント設定
+                sortSetting();
+            },false);
+
+            // テーブル設定
+            function tableSetting() {
+                tableColResize('searchResultTable');
+                tableColResize('searchResultHeaderTable');
+                setDraggableTable('searchResultTable');
+                sortSetting();
+            }
+
+            // ソートイベント設定
+            function sortSetting() {
+                setSortableTable('searchResultTable', '-1');
+                setSortableTable('searchResultHeaderTable', '-1');
+            }
+
+            // 添付ファイル（登記簿）ダウンロード
+            function downloadAttachment(ids) {
+                var idList = ids.split(',');
+                downloadAttachmentZip(idList);
+            }
+
+            // 添付ファイルn件をZip化＆ダウンロード
+            function downloadAttachmentZip(idList) {
+                var zip = new JSZip();
+                for (var i=0; i < idList.length; i++) { // Attachment.Body は 複数件同時にquery取得不可の為 1件ずつ取得
+                    // 添付ファイルをSELECT
+                    var sql = "SELECT Id, Name, Body FROM Attachment WHERE Id = '" + idList[i] + "'";
+                    var result = sforce.connection.query(sql);
+                    var records = result.getArray("records");
+                    // Zipに追加
+                    zip.file(records[0].Name, records[0].Body, {base64: true});
+                }
+                // Zipファイル作成
+                zip.generateAsync({type: 'blob'}).then(function(blob) {
+                    // Url作成
+                    var dlUrl = URL.createObjectURL(blob);
+                    // ダウンロード実行
+                    downloadAction(dlUrl, 'tokibo.zip');
+                });
+            }
+
+            // 指定Urlのダウンロード実行（aタグでクリックイベント実行）
+            function downloadAction(url, fileName) {
+                var link = document.createElement('a');
+                link.download = fileName;
+                link.href = url;
+                link.click();
+                link.remove();
+            }
+
+        </script>
+    </apex:form>
+    <!-- 【JAVASCRIPT】 -->
+    <apex:outputPanel id="js">
+        <script language="javascript" type="text/javascript">
+            // モーダル幅の設定用
+            var clientWidth = 0; 
+
+            //路線ダイアログを表示
+            if(document.body.clientWidth > 800){
+                clientWidth = 800;
+            }else{
+                clientWidth = document.body.clientWidth;
+            }
+            jQuery(function () {
+                //路線ダイアログを表示
+                jQuery("#dialog-modal1").dialog({
+                    modal: true,
+                    autoOpen: false,
+                    width: clientWidth,
+                });
+            });
+            //路線モーダルを閉じる際の処理
+            function closeGA104007View() {
+                unblockUi();
+                jQuery("#dialog-modal1").dialog("close");
+                closeModal();
+            }
+
+            jQuery(function () {
+            //学区ダイアログを表示
+                jQuery("#dialog-modal2").dialog({
+                    modal: true,
+                    autoOpen: false,
+                    width: clientWidth,
+                });
+            });
+        
+            //学区モーダルを閉じる際の処理
+            function closeGA202002View() {
+                jQuery("#dialog-modal2").dialog("close");
+                closeModal();
+            }      
+        </script>
+    </apex:outputPanel>
+    <!-- 【モーダルダイアログ】 -->
+    <div id="dialog-modal1" title="">
+        <apex:outputPanel id="dialogPanel1">
+            <c:GA104007View ParameterClass="{!GA104007Parameter}" />
+        </apex:outputPanel>
+    </div>
+    <!-- 【モーダルダイアログ学区】 -->
+    <div id="dialog-modal2" title="">
+        <apex:outputPanel id="dialogPanel2">
+            <c:GA202002View ParameterClass="{!GA202002Parameter}" />
+        </apex:outputPanel>
+    </div>
+</apex:page>

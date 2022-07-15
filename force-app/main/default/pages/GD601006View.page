@@ -1,0 +1,341 @@
+<!-- 建物名寄せ画面 -->
+
+<apex:page docType="html-5.0" standardStylesheets="false" controller="GD601006Controller" title="建物名寄せ">
+    
+    <head>
+        
+        <meta charset="utf-8"/>
+        
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+        
+        <meta name="format-detection" content="telephone=no"/>
+        
+        <meta name="robots" content="noindex" />
+        
+        <title>建物名寄せ</title>
+
+        <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/reset.min.css')}"/>
+        <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/foundation.css')}"/>
+        <apex:stylesheet value="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css"/>    
+        <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/modaal.css')}"/>
+        <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/style.css')}"/>
+        <apex:stylesheet value="{!URLFOR($Resource.external_file, 'external_file/common_style.css')}"/>  
+        <apex:stylesheet value="{!URLFOR($Resource.jQuery,'jQuery/jQueryUI/jquery-ui.css')}" />
+
+        <apex:includeScript value="{!URLFOR($Resource.jQuery, 'jQuery/jquery-3.6.0.min.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.jQuery, 'jQuery/jquery.blockUI.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.jQuery, 'jQuery/jQueryUI/jquery-ui.min.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.designer_file, 'designer_file/js/modaal.js')}"/> 
+        <apex:includeScript value="{!URLFOR($Resource.external_file, 'external_file/common_screen_util.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.external_file, 'external_file/input_rules.js')}"/>
+
+        
+        <script type="text/javascript">
+        
+        //名寄せ不要確認メッセージ
+        async function checkMerge() {
+            var message = "{!MSG_COM_V_EXECUTE_NON_MERGE}";
+            var retVal = await showConfirm(message);
+            if ( retVal ) {
+                blockUi();
+                margeCompleted();
+            }
+            
+        }
+        
+        //名寄せ不要完了メッセージ
+        async function alertMerge() {
+            
+            //完了メッセージ
+            await showAlert("{!MSG_COM_I_NON_MERGE_END}");
+            
+            //画面を閉じる
+            closePage();
+            
+        }
+        
+        </script>
+    </head>
+    
+    <body style="background-color:#ffffff;">
+        
+        <main id="ga102003">
+            
+            <article>
+                <apex:form id="form">
+                    <!-- actionFunction -->
+                    <apex:actionFunction action="{! margeCompleted}" name="margeCompleted"
+                                         oncomplete="unblockUi();if(!{! hasErrorMessage}){alertMerge()}else{gotoTop()}" reRender="messageArea"/>
+                    
+                    <apex:pageMessages id="messageArea" />
+                    <section>
+                        <section class="" style="display: flex">
+                            <h1 class="fontb font3rem" style="margin-bottom: 10px">建物名寄せ</h1>
+                            <apex:commandButton style=" visibility:hidden;" rerender="dummy"/> 
+                        </section>
+                        <div class="flex-wrap justify-between align_center mb10">
+                            
+                            <h1 class="fontb font2rem">建物情報</h1>
+                            <apex:commandButton value="建物名寄せ不要" onclick="if(!checkMerge()){return false}" disabled="{!isOpenError||inputMode = '物件名寄せ'}"
+                                                styleClass="btn btn btn-sm btn-normal" tabIndex="2" reRender="dummy" />
+                        </div>
+                        
+                        <div class="border-g-3 mb60">
+                            
+                            <div class="flex-wrap flex_wrap flex-xs-xolumn justify-between">
+                                
+                                <div class="wd33 wd49_md wd100_xs mb10">
+                                    
+                                    <div class="information_title">建物名</div>
+                                    
+                                    <div class="information_contents">
+                                        <apex:commandLink value="{!targetRecord.Name}"
+                                                          onclick="showPage('GA104003View', '', 'true', 'id={! targetRecord.Id}')"
+                                                          rerender="dummy"
+                                                          tabIndex="1"/>
+                                    </div>
+                                    
+                                </div>
+                                
+                                <div class="wd33 wd49_md wd100_xs mb10">
+                                    
+                                    <div class="information_title">建物名2</div>
+                                    
+                                    <div class="information_contents">
+                                        <apex:outputText value="{!targetRecord.BuildName2__c}" />
+                                    </div>
+                                    
+                                </div>
+                                
+                                <div class="wd33 wd49_md wd100_xs mb10">
+                                    
+                                    <div class="information_title">建物名3</div>
+                                    
+                                    <div class="information_contents">
+                                        <apex:outputText value="{!targetRecord.BuildName3__c}" />
+                                    </div>
+                                    
+                                </div>
+                                
+                                <div class="wd33 wd49_md wd100_xs mb10">
+                                    
+                                    <div class="information_title">建物名(カナ)</div>
+                                    
+                                    <div class="information_contents">
+                                        <apex:outputText value="{!targetRecord.BuildKana__c}" />
+                                    </div>
+                                    
+                                </div>
+                                
+                                <div class="wd33 wd49_md wd100_xs mb10">
+                                    
+                                    <div class="information_title">建物名(カナ)2</div>
+                                    
+                                    <div class="information_contents">
+                                        <apex:outputText value="{!targetRecord.BuildKana2__c}" />
+                                    </div>
+                                    
+                                </div>
+                                
+                                <div class="wd33 wd49_md wd100_xs mb10">
+                                    
+                                    <div class="information_title">建物名(カナ)3</div>
+                                    
+                                    <div class="information_contents">
+                                        <apex:outputText value="{!targetRecord.BuildKana3__c}" />
+                                    </div>
+                                    
+                                </div>
+                                
+                                <div class="wd33 wd49_md wd100_xs mb10">
+                                    
+                                    <div class="information_title">郵便番号</div>
+                                    
+                                    <div class="information_contents">
+                                        <apex:outputText value="{!targetRecord.PostalCode__c}" />
+                                    </div>
+                                    
+                                </div>
+                                
+                                <div class="wd33 wd49_md wd100_xs mb10" style="width: 66%">
+                                    
+                                    <div class="information_title">住所</div>
+                                    
+                                    <div class="information_contents">
+                                        <apex:outputText value="{!targetRecord.Address__c}" />
+                                    </div>
+                                    
+                                </div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </section>
+                    <apex:outputPanel rendered="{!inputMode = '物件名寄せ'}">
+                        <section>
+                            
+                            <div class="flex-wrap flex_wrap justify-between flex-md-xolumn mb10">
+                                
+                                <h2 class="fontb font2rem mb10">物件一覧</h2>
+                                
+                                <div class="flex-wrap flex_wrap ">
+                                    <apex:commandButton value="物件名寄せ" action="{!checkSelectedNumber}"
+                                                        oncomplete="if({! hasErrorMessage}){}else{showPage('GD601008View', '_self', 'true', 'id1={! propertyMergeId1}&id2={! propertyMergeId2}')}"
+                                                        styleClass="btn btn btn-sm btn-normal mr10 mb10"
+                                                        disabled="{!isOpenError}" reRender="messageArea" />
+                                    
+                                </div>
+                                
+                            </div>
+                            
+                            
+                            
+                            <table class="gray mb30" style="height:452px;">
+                                
+                                <tbody>
+                                    
+                                    <tr>
+                                        
+                                        <th class="wd1">
+                                            <apex:inputCheckbox id="sc" value="{!allSelected}" styleClass="propertyHeadCheck"
+                                                                onchange="listCheckBoxAllChange(this, '.propertyHeadCheck',  '.propertyCheck');" />
+                                            <apex:outputlabel styleClass="serach_check3" for="sc" />
+                                        </th>
+                                        
+                                        <th class="wd3">部屋番号</th>
+                                        
+                                        <th class="wd5">名寄せ</th>
+                                        
+                                        <th class="wd5">現況</th>
+                                        
+                                        <th class="wd5">間取り</th>
+                                        
+                                        <th class="wd5">専有面積(㎡)</th>
+                                        
+                                        <th class="wd5">賃料</th>
+                                        
+                                        <th class="wdlast">物件写真枚数</th>
+                                        
+                                    </tr>
+
+                                    <apex:repeat value="{!displayPropertyCandidateResult}" var="P">
+                                        <tr>
+                                            <td>
+                                                <apex:inputCheckbox id="sc5" value="{!P.isSelected}" styleClass="propertyCheck"  onchange="headCheckBoxChange(this, '.propertyHeadCheck',  '.propertyCheck');"/>
+                                                <apex:outputlabel styleClass="serach_check5" for="sc5" />
+                                            </td>
+                                            
+                                            <td><apex:commandLink value="{!P.candidatePropertyResult.name}"
+                                                                  onclick="showPage('GA104006View', '', 'true', 'propertyId={!P.candidatePropertyResult.Id}')"
+                                                                  rerender="dummy"/></td>
+                                            
+                                            <td><apex:outputText value="{!if(P.candidatePropertyResult.IsMergeCompletedFlag__c, '', '対象あり')}" /></td>
+                                            
+                                            <td><apex:outputText value="{!P.candidatePropertyResult.LiveStatus__c}" /></td>
+                                            
+                                            <td><apex:outputText value="{!P.candidatePropertyResult.RoomCount__c}{!P.candidatePropertyResult.RoomLayout__c}" /></td>
+                                            
+                                            <td><apex:outputText value="{!P.candidatePropertyResult.RoomArea__c}" /></td>
+                                            
+                                            <td><apex:outputText value="{!P.candidatePropertyResult.RentFee__c}" /></td>
+                                            
+                                            <td><apex:outputText value="{!P.candidatePropertyResult.PhotoCount__c}" /></td>
+                                        </tr>
+                                    </apex:repeat>  
+                                    
+                                </tbody>
+                                
+                            </table>
+                            
+                        </section>
+                    </apex:outputPanel>
+                    
+                    
+                    <apex:outputPanel rendered="{!inputMode = '建物名寄せ'}">
+                        <section>
+                            
+                            <h2 class="fontb font18">名寄せ対象一覧
+                                <apex:image url="/img/msg_icons/info16.png"
+                                            title="名寄対象となる条件に合致する建物です。条件：建物名または建物名カナまたは「都道府県＋住所1＋住所2」のうち、最低一項目が一致する。"/>
+                            </h2>
+                            
+                            
+                            
+                            <table class="gray" style="height:452px;">
+                                
+                                <tbody>
+                                    
+                                    <tr>
+                                        
+                                        <th class="wd1"></th>
+                                        
+                                        <th class="wd3">建物名</th>
+                                        
+                                        <th class="wd5">建物名(カナ)</th>
+                                        
+                                        <th class="wd5">建物名2</th>
+                                        
+                                        <th class="wd5">建物名(カナ)2</th>
+                                        
+                                        <th class="wd5">建物名3</th>
+                                        
+                                        <th class="wd5">建物名(カナ)3</th>
+                                        
+                                        <th class="wd3">郵便番号</th>
+                                        
+                                        <th class="wdlast">住所</th>
+                                        
+                                    </tr>
+
+                                    <apex:repeat value="{!displayCandidateResult}" var="D">
+                                        
+                                        <tr>
+                                            
+                                            <td class="text-center">
+                                                <apex:commandLink value="選択" styleClass="blue"
+                                                                  onclick="showPage('GD601007View', '_self', 'true', 'id1={! D.candidateResult.Id }&id2={! targetRecord.Id }')"
+                                                                  rerender="dummy"/>
+                                            </td>
+                                            
+                                            <td>
+                                                <apex:commandLink value="{!D.candidateResult.name}"
+                                                                  onclick="showPage('GA104003View', '', 'true', 'id={! D.candidateResult.Id }')"
+                                                                  rerender="dummy"/>
+                                            </td>
+                                            
+                                            <td><apex:outputText value="{!D.candidateResult.BuildKana__c}" /></td>
+                                            
+                                            <td><apex:outputText value="{!D.candidateResult.BuildName2__c}" /></td>
+                                            
+                                            <td><apex:outputText value="{!D.candidateResult.BuildKana2__c}" /></td>
+                                            
+                                            <td><apex:outputText value="{!D.candidateResult.BuildName3__c}" /></td>
+                                            
+                                            <td><apex:outputText value="{!D.candidateResult.BuildKana3__c}" /></td>
+                                            
+                                            <td><apex:outputText value="{!D.candidateResult.PostalCode__c}" /></td>
+                                            
+                                            <td><apex:outputText value="{!D.candidateResult.Address__c}" /></td>
+                                            
+                                        </tr>
+                                        
+                                    </apex:repeat>
+                                    
+                                </tbody>
+                                
+                            </table>
+                            
+                        </section>
+                    </apex:outputPanel>
+                </apex:form>
+            </article>
+            
+        </main>
+        
+    </body>
+    
+    
+    
+    
+</apex:page>

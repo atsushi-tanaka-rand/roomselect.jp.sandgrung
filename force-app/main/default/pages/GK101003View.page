@@ -1,0 +1,482 @@
+<!-- HPおすすめ物件一覧画面 -->
+<apex:page controller="GK101003Controller" docType="html-5.0" standardStylesheets="false" title="HPおすすめ物件一覧">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="format-detection" content="telephone=no" />
+        <meta name="robots" content="noindex" />
+        <title>HPおすすめ物件一覧</title>
+        
+        <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/reset.min.css')}" />
+        <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/foundation.css')}" />
+        <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/modaal.css')}" />
+        <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/style.css')}" />
+        <apex:stylesheet value="https://use.fontawesome.com/releases/v5.0.6/css/all.css" />
+        <apex:stylesheet value="{!URLFOR($Resource.external_file, 'external_file/common_style.css')}" />
+        <apex:stylesheet value="{!URLFOR($Resource.jQuery,'jQuery/jQueryUI/jquery-ui.css')}" />
+        
+        <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery-3.6.0.min.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery.blockUI.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jQueryUI/jquery-ui.min.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.designer_file, 'designer_file/js/modaal.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/common_screen_util.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/input_rules.js')}" />
+        
+        
+        
+    </head>
+    <apex:form id="form">
+        
+        <body id="gd401001">
+            <main>
+                <article>
+                    <section class="">
+                    
+                        <apex:pageMessages id="messageArea" />
+                        <apex:outputPanel layout="block" rendered="{! !useAuthorityPortalErrorFlg}">
+                            <div class="flex-wrap flex_wrap align-items_end mb10">
+                            <h1 class="fontb font2rem" style="margin-bottom: 10px float:left">HPおすすめ物件一覧</h1>
+                            <!-- 非表示検索ボタン（Enterキー押下時動作用の隠し項目） -->
+                            <apex:commandButton styleClass="btn btn-submit btn-primary" value="検索(非表示))" disabled="{!isOpenError}" 
+                                onclick="blockUi();"
+                                action="{!search}" 
+                                reRender="searchSection, searchResultTableList,buttun,  messageArea" 
+                                oncomplete="unblockUi(); if({!hasErrorMessage}){gotoTop()}"
+                                status="loadComponent" style="visibility:hidden;"/>      
+                            </div>
+                            <section>
+                                <div class="border-g pd20 pd20_xs">
+                                    
+                                    <div class="back_graydark pd3 mb20">検索</div>
+                                    <div class="flex-wrap flex_wrap align-items_end mb10">
+                                        <div class="information_title">検索対象</div>
+                                    </div>
+                                    <div class="flex-wrap  flex_wrap justify-between align_center ">
+
+                                        <div class=" mb10 wd32 wd49_md wd100_xs">
+                                            
+                                            <div class="information_title">店舗</div>
+                                            <apex:selectList styleClass="form-control" size="1" value="{!searchShopsName}" tabIndex="1">
+                                                <apex:selectOptions value="{!selectShopList}"></apex:selectOptions>
+                                            </apex:selectList>
+                                            
+                                        </div>
+                                        
+                                        <div class=" mb10 wd20 wd49_md wd100_xs">
+                                            
+                                            <div class="information_title mb10" >パノラマツアー登録</div>
+                                            <!-- 有 -->
+                                            <apex:inputCheckbox id="searchPanoramaTourRegisteAvailable" value="{!searchPanoramaTourRegisteAvailable}" />
+                                            <apex:outputlabel styleClass="serach_check"  for="searchPanoramaTourRegisteAvailable" value="有" tabindex="2" />
+                                            <!-- 無 -->
+                                            <apex:inputCheckbox id="searchPanoramaTourRegisteNotAvailable" value="{!searchPanoramaTourRegisteNotAvailable}" styleClass="stationCheck" />
+                                            <apex:outputlabel styleClass="serach_check" style="left: 10%;" for="searchPanoramaTourRegisteNotAvailable" value="無" tabindex="3" />
+                                            
+                                        </div>
+                                        
+                                        <div class=" mb10 wd25 wd49_md wd100_xs">
+                                            
+                                            <div class="information_title mb10">おすすめ物件</div>
+                                            <!-- 登録中 -->
+                                            <apex:inputCheckbox id="searchDisplayFlagRegistering" value="{!searchDisplayFlagRegistering}" />
+                                            <apex:outputlabel styleClass="serach_check" for="searchDisplayFlagRegistering" value="{!DISPLAY_FLAG_REGISTERING}" tabindex="4" />
+                                            <!-- 解除 -->
+                                            <apex:inputCheckbox id="searchDisplayFlagRelease" value="{!searchDisplayFlagRelease}" styleClass="stationCheck" />
+                                            <apex:outputlabel styleClass="serach_check" style="left: 5%;" for="searchDisplayFlagRelease" value="{!DISPLAY_FLAG_RELEASE}" tabindex="5" />
+                                            
+                                        </div>
+                                        
+                                        
+                                    </div>
+                                    
+                                    <div class="btn btn-submit btn-primary text-center ">
+                                        <apex:commandButton styleclass="btn btn-submit btn-primary " value="検索" onclick="blockUi();" action="{!search}" oncomplete="unblockUi(); if({!hasErrorMessage}){gotoTop()}"
+                                                            reRender="searchSection, searchResultTableList,buttun,  messageArea" tabIndex="6" disabled="{!isOpenError}"/>
+                                    </div>
+                                    
+                                    <apex:outputPanel id="searchSection">
+                                        
+                                        <div class="back_graydark posi_re mb30 pd3 mt60">検索結果
+                                        </div>
+                                        <div class="flex-wrap  flex_wrap">
+                                        
+                                            <table class="none_table">
+                                                <tr>
+                                                    <th>おすすめ物件登録中件数</th>
+                                                    <td>
+                                                        <apex:outputText value="{!recommendPropertyDisplayFlagCount}" />件
+                                                    </td>                     
+                                                </tr>
+                                                
+                                                <tr>
+                                                    <th>パノラマツアー登録件数</th>
+                                                    <td>
+                                                        <apex:outputText value="{!panoramaTourRegisterCount}" />件
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </div>        
+                                    </apex:outputPanel>
+                                    <div class="back_graydark posi_re mb30 pd3 mt60">物件一覧
+                                        <apex:outputPanel id="buttun">
+                                            <div class="ab_btn ab_btn_xs2">
+                                                
+                                                <div class="flex-wrap flex_wrap">
+                                                    <apex:outputPanel layout="block" styleClass="flex-wrap" >
+                                                        <apex:commandButton value="THETA 360.biz 管理コンソール" styleClass="modal btn-w-2 btn-w-2_normal blue" disabled="{! isOpenError}"
+                                                                            oncomplete="unblockUi();window.open('https://theta360.biz/ja/console/login','');"
+                                                                            reRender="dummy" tabIndex="7" />
+                                                        
+                                                        <apex:outputPanel layout="block" styleClass="flex-wrap" >
+                                                            <apex:commandButton value="編集" styleClass="modal btn-w-2 blue" disabled="{! isOpenError}" onclick="listSelectCheckEditButton();"
+                                                                                reRender="dummy" tabIndex="8" />
+                                                        </apex:outputPanel>
+                                                        
+                                                        <apex:commandButton value="おすすめ登録解除" styleClass="modal btn-w-2 btn-w-2_normal blue" disabled="{! isOpenError}" oncomplete="listSelectCheckRecommendReleaseButton();"
+                                                                            reRender="dummy" tabIndex="9" />
+
+                                                        <apex:commandButton value="削除" styleClass="modal btn-w-2 btn-w-2_normal blue" disabled="{! isOpenError}" oncomplete="listSelectCheckDeleteButton();"
+                                                                            reRender="dummy" tabIndex="10" />
+                                                        
+                                                    </apex:outputPanel>
+                                                </div>
+                                            </div>
+                                        </apex:outputPanel>
+
+                                    </div>
+                                    <apex:outputPanel id="searchResultTableList">
+                                        <table class="gray mb30 mt20 nowrap" style="height:550px;" id="searchResultTable" >
+                                            <tbody> 
+                                                <tr>
+                                                    <th style="width:5%;">　</th>
+                                                    <th style="width:20%;">登録店舗</th>
+                                                    <th style="width:10%;">店舗スタッフ</th>
+                                                    <th style="width:10%;">登録日</th>
+                                                    <th style="width:20%;">物件名</th>                                                
+                                                    <th style="width:10%;">パノラマツアー登録</th>
+                                                    <th style="width:10%;">おすすめ物件</th>
+                                                    <th style="width:15%;">コメント</th>
+                                                </tr>
+                                                
+                                                <apex:variable var="num" value="0" />
+                                                <apex:repeat value="{! screenRecommendPropertyList}" var="recommendPropertyRecord">
+                                                    <tr>
+                                                        <!-- チェックボックス -->
+                                                        <td>
+                                                            <apex:inputCheckbox id="checkrecommendPropertyRecord"  value="{!recommendPropertyRecord.isSelected}"/> 
+                                                            <apex:outputlabel styleClass="serach_check5" for="checkrecommendPropertyRecord" />
+                                                        </td>
+
+                                                        <!-- 登録店舗 -->
+                                                        <td>
+                                                            <apex:outputText value="{!recommendPropertyRecord.shopName}" />
+                                                        </td>
+
+                                                        <!-- 店舗スタッフ -->
+                                                        <td>
+                                                            <apex:outputText value="{!recommendPropertyRecord.UserName}" />
+                                                        </td>
+
+                                                        <!-- 登録日 -->
+                                                        <td>
+                                                            <apex:outputText value="{!recommendPropertyRecord.createdDate}" />
+                                                        </td>
+                                                        
+                                                        <!-- 物件名 -->
+                                                        <td>
+                                                            <apex:commandLink value="{!recommendPropertyRecord.buildingName}  {!recommendPropertyRecord.propertyName}"
+                                                                            onclick="showPage('GA104006View', '', 'true', 'propertyId={!recommendPropertyRecord.propertyId}')"
+                                                                            rerender="dummy"
+                                                                            />
+                                                        </td>
+                                    
+                                                        <!-- パノラマツアー登録 -->
+                                                        <td>
+                                                            <apex:outputText value="{!recommendPropertyRecord.panoramaTourRegister}" />
+                                                        </td>
+
+                                                        <!-- おすすめ物件 -->
+                                                        <td>
+                                                            <apex:outputText id="displayFlag" value="{!recommendPropertyRecord.displayFlag}" />
+                                                        </td>
+                                                        
+                                                        <!-- コメント -->
+                                                        <td>
+                                                            <apex:outputText value="{!recommendPropertyRecord.comment}"/>
+                                                        </td>
+
+                                                        <!-- 非表示項目_パノラマツアーURL -->
+                                                        <td style="width: 1px;padding : 0px">
+                                                            <apex:inputHidden id="panoramaTour" value="{!recommendPropertyRecord.recommendProperty.PanoramaTourUrl__c}"/>
+                                                        </td>
+                                                    </tr>
+                                                    <apex:variable var="num" value="{!VALUE(num) + 1}" />
+                                                </apex:repeat>
+                                            </tbody>
+                                        </table>
+                                        <apex:inputHidden id="checkedIndex" value="{!checkedIndex}" />
+                                        <apex:inputHidden id="targetsNumber" value="{!targetsNumber}" />
+                                        <apex:inputHidden id="processingDifferentialNumber" value="{!processingDifferentialNumber}" />
+                                        <apex:inputHidden id="msgComEPanoramatourPrivate" value="{!msgComEPanoramatourPrivate}" />
+                                        <apex:inputHidden id="msgComEPanoramatourPrivateMultiple" value="{!msgComEPanoramatourPrivateMultiple}" />
+                                    </apex:outputPanel>
+                                </div>
+                            </section>
+                            <!-- おすすめ物件登録押下 -->
+                            <apex:actionFunction action="{! openRecommendPropertyRegistration}"   name="openRecommendPropertyFunction"
+                                                oncomplete="unblockUi();jQuery('#dialog-modal3-portal').dialog('open')" reRender="GA104006Modal3-ModalForm" />
+                            <!-- おすすめ物件登録終了 -->
+                            <apex:actionFunction name="closeRecommendPropertyFunction" action="{!closeRecommendPropertyRegistration}" oncomplete="unblockUi()"
+                                                reRender="searchSection,searchResultTableList, messageArea" />
+                            <!-- おすすめ登録解除 -->
+                            <apex:actionFunction name="recommendRelease" action="{!recommendRelease}" oncomplete="unblockUi();if({!hasErrorMessage}){gotoTop();}else{alertRecommendReleaseFinish();}"
+                                                    reRender="searchSection,searchResultTableList, messageArea" />
+                            <!-- おすすめ物件削除 -->
+                            <apex:actionFunction name="deleteRecommendProperty" action="{!deleteRecommendProperty}" oncomplete="unblockUi();if({!hasErrorMessage}){gotoTop();}else{alertDeleteFinish();}"
+                                                        reRender="searchSection,searchResultTableList, messageArea" />
+                        </apex:outputPanel>
+                    </section>
+                </article>
+            </main>
+            
+            <!-- 【JAVASCRIPT】 -->
+            <script>
+                // 画面起動時
+                $(function () {
+                    
+                    var Accordion = function (el, multiple) {
+                        this.el = el || {};
+                        this.multiple = multiple || false;
+                        
+                        // Variables privadas
+                        var links = this.el.find('.link');
+                        
+                        // Evento
+                        links.on('click', { el: this.el, multiple: this.multiple }, this.dropdown)
+                    }
+                    
+                    Accordion.prototype.dropdown = function (e) {
+                        var $el = e.data.el;
+                        $this = $(this),
+                            $next = $this.next();
+                        $next.slideToggle();
+                        $this.parent().toggleClass('open');
+                        
+                        
+                        
+                        if (!e.data.multiple) {
+                            // $el.find('.submenu-defalt').not($next).slideUp().parent().removeClass('open');
+                        };
+                    }
+                    var accordion = new Accordion($('#accordion'), false);
+                });
+                
+                
+                
+                $(function () {
+                    $('#btn').on('click', function (e) {
+                        
+                        var textList = document.getElementById('accordion');
+                        
+                        let elements = textList.getElementsByTagName('li');
+                        
+                        Array.prototype.forEach.call(elements, function (element) {
+                            element.classList.remove('open', 'default');
+                            $('.submenu-defalt').fadeOut()
+                        });
+                    });
+                });
+            
+            </script>
+            <apex:outputPanel id="checkJS">
+                <script>
+                    // おすすめ物件一覧にチェックがついているか確認
+                    async function listSelectCheckEditButton(){
+                        var searchResultTableList = getJQueryObjectByApexTagId('searchResultTableList');
+                        var checkList = searchResultTableList.find('input[id$="checkrecommendPropertyRecord"]');
+                        var count = 0;
+                        var checkedIndex = 0;
+                        // チェックされた件数とチェックしている行数を取得
+                        for (var i=0; i < checkList.length; i++) {
+                            if (checkList[i].checked) {
+                                count += 1;
+                                checkedIndex = i;
+                            }
+                        }
+
+                        if(count == 0){
+                            await showAlert("{!MSG_COM_W_NO_SELECTION}");
+                            return false;
+                        }
+                        if(count > 1){
+                            await showAlert("{!MSG_COM_W_SELECTION_ONLY_ONE}");
+                            return false;
+                        }
+
+                        if(count == 1){
+                            document.getElementById("{!$Component.checkedIndex}").value = checkedIndex;
+                            // 編集モーダルを開く
+                            openRecommendPropertyFunction();
+                        }
+
+                    }
+
+                    // おすすめ登録解除のチェック確認
+                    async function listSelectCheckRecommendReleaseButton(){
+                        var searchResultTableList = getJQueryObjectByApexTagId('searchResultTableList');                        
+                        var checkList = searchResultTableList.find('tr');
+                        var count = 0;
+                        for (var i=0; i < checkList.length; i++) {
+                            var checkdate = $(checkList[i]).find('input[id$="checkrecommendPropertyRecord"]');
+                            // チェックのついていないおすすめ物件はスルー
+                            if(checkdate.length == 0){
+                                continue;
+                            }
+                            if (!checkdate[0].checked) {
+                                continue;
+                            }
+
+                            var displayFlag = $(checkList[i]).find('span[id$="displayFlag"]');
+                            // 解除となっているおすすめ物件はスルー
+                            if (displayFlag[0].textContent == "{!DISPLAY_FLAG_RELEASE}"){
+                                continue;
+                            }
+
+                            count += 1;
+                        }
+
+                        if(count == 0){
+                            await showAlert("{!MSG_COM_W_SELECTION_OR_MORE}");
+                            return false;
+                        }
+
+                        // 解除対象が５０件を超える場合エラー
+                        if(count > 50){
+                            await showAlert("{!MSG_COM_W_SELECTION_REMOVE_RECOMMENDATION}");
+                            return false;
+                        }
+
+                        if(count >= 1){
+                            // 登録解除確認メッセージ
+                            var message = "{!MSG_COM_W_REMOVE_RECOMMENDATION}";
+                            if (await showConfirm(message)) {
+                                blockUi();
+                                // 非公開処理
+                                recommendRelease();
+                            }
+                        }
+                    }
+
+                    //おすすめ物件解除完了メッセージ
+                    async function alertRecommendReleaseFinish() {
+                        var message = setFinishMessage("{!MSG_COM_I_REMOVE_RECOMMENDATION}");                        
+                        //完了メッセージ
+                        await showAlert(message);
+                        
+                        //最上部までスクロール
+                        gotoTop();
+
+                    }
+
+                    // 削除ボタン時のチェック確認
+                    async function listSelectCheckDeleteButton(){
+                        var searchResultTableList = getJQueryObjectByApexTagId('searchResultTableList');                        
+                        var checkList = searchResultTableList.find('tr');
+                        var count = 0;
+                        for (var i=0; i < checkList.length; i++) {
+                            var checkdate = $(checkList[i]).find('input[id$="checkrecommendPropertyRecord"]');
+                            // チェックのついていないおすすめ物件はスルー
+                            if(checkdate.length == 0){
+                                continue;
+                            }
+                            if (!checkdate[0].checked) {
+                                continue;
+                            }
+                            count += 1;
+                        }
+
+                        if(count == 0){
+                            await showAlert("{!MSG_COM_W_NO_SELECTION}");
+                            return false;
+                        }
+
+                        // 解除対象が５０件を超える場合エラー
+                        if(count > 50){
+                            await showAlert("{!MSG_COM_W_SELECTION_DELETE_RECOMMENDATION}");
+                            return false;
+                        }
+
+                        if(count >= 1){
+                            // 削除解除確認メッセージ
+                            var message = "{!MSG_COM_W_REMOVE_RECOMMENDATION}";
+                            if (await showConfirm(message)) {
+                                blockUi();
+                                // 削除処理
+                                deleteRecommendProperty();
+                            }
+                        }
+                    }
+
+                    //おすすめ物件削除完了メッセージ
+                    async function alertDeleteFinish() {
+                        var message = setFinishMessage("{!MSG_COM_I_DELETE}");
+                        //削除完了メッセージ
+                        await showAlert(message);
+                        
+                        //最上部までスクロール
+                        gotoTop();
+
+                    }
+
+                    // メッセージの設定
+                    function setFinishMessage(defaultMessage){
+                        var message = defaultMessage;
+                        var targetsNumber = Number(document.getElementById("{!$Component.targetsNumber}").value);
+                        var processingDifferentialNumber = Number(document.getElementById("{!$Component.processingDifferentialNumber}").value);
+                        
+                        if(targetsNumber == 1 && processingDifferentialNumber > 0){
+                            // １件でパノラマツアーの更新がうまく行かなかったメッセージ
+                            message = document.getElementById("{!$Component.msgComEPanoramatourPrivate}").value;
+                        }else if (targetsNumber > 1 && processingDifferentialNumber > 0){
+                            // 複数件でパノラマツアーの更新がうまく行かなかったメッセージ
+                            message = document.getElementById("{!$Component.msgComEPanoramatourPrivateMultiple}").value;
+                        }
+                        return message;
+                    }
+
+                    function getJQueryObjectByApexTagId(Id) {
+                        return $('[id$=":'+Id+'"]');
+                    }
+                </script>
+            </apex:outputPanel>
+        </body>
+    </apex:form>
+    <div id="dialog-modal3-portal" title="">
+        <apex:outputPanel id="dialogPanel3-portal">
+            <c:GA104006Modal3View ParameterClass="{!GA104006Modal3Parameter}" />
+        </apex:outputPanel>
+    </div>
+    <!-- 【JAVASCRIPT】 -->
+    <script language="javascript" type="text/javascript">
+        jQuery(function () {
+            if(document.body.clientWidth > 800){
+                clientWidth = 800;
+            }else{
+                clientWidth = document.body.clientWidth;
+            }
+            
+            jQuery("#dialog-modal3-portal").dialog({
+                modal: true,
+                autoOpen: false,
+                width: clientWidth,
+            });
+        });
+        async function closeDialogModal3Portal() {
+            jQuery("#dialog-modal3-portal").dialog("close");
+            unblockUi();
+
+            await showAlert("{!MSG_COM_I_SAVE}");
+            closeRecommendPropertyFunction();
+        }
+    </script>
+</apex:page>

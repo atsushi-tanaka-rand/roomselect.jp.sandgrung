@@ -1,0 +1,320 @@
+<!-- プレビュー -->
+<apex:page standardStylesheets="false" docType="html-5.0" controller="GK101006Controller2" title="プレビュー"  action="{!deleteNewsReleasePreviewParameter}" >
+
+    <apex:form id="form">
+        <head>
+            <meta charset="utf-8" />
+            <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+            <meta name="format-detection" content="telephone=no" />
+            <meta name="robots" content="noindex" />
+            <title>プレビュー</title>
+            <apex:stylesheet value="{!PORTAL_CSS_PATH}reset.min.css"/>
+            <apex:stylesheet value="{!PORTAL_CSS_PATH}foundation.min.css"/>
+            <apex:stylesheet value="{!PORTAL_CSS_PATH}style.css"/>
+            <apex:stylesheet value="{!PORTAL_CSS_PATH}style02.css"/>
+            <apex:stylesheet value="{!PORTAL_CSS_PATH}style03.css"/>
+            <apex:stylesheet value="{!PORTAL_CSS_PATH}jquery.mmenu.all.css"/>
+            <apex:stylesheet value="{!PORTAL_CSS_PATH}menu.css"/>
+            <apex:stylesheet value="{!PORTAL_CSS_PATH}remodal.min.css"/>
+            <apex:stylesheet value="{!PORTAL_CSS_PATH}slick.css"/>
+            <link href="https://use.fontawesome.com/releases/v5.6.1/css/all.css" rel="stylesheet"/>
+        </head>
+
+        <style type="text/css">
+
+            .label-Design-non{
+                display: block;
+                position: relative;
+                padding-left: 0px;
+                padding-right: 0px;
+                margin: 0px 0;
+                cursor: auto;
+            }
+
+        </style>
+        <body class="home">
+            <apex:pageMessages id="messageArea" />
+            <div class="container">
+                <main class="main">
+                    <!-- テンプレート１ -->
+                    <apex:outputPanel rendered="{! if(template == NEWSRELEASE_TEMPLATE_1,true,false)}">
+                        <div class="main-inner">
+                            <div class="row align-center mt30 ">
+                                <div class="columns small-12 medium-11 large-8">
+                                    <!-- 掲載開始日＋タイトル -->
+                                    <div class="search-box-title">
+                                        {!releaseStartDate}　{!title}
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- 本文１ -->
+                            <div class="row align-center mt30 ">
+                                <div class="columns small-12 medium-11 large-8">
+                                    <!-- 掲載写真ファイル１ -->
+                                    <img alt="" src="{!releasePhotoFilePath1}" style="width:100%;height:auto;"/>
+                                    <p>
+                                        <apex:outputField value="{!screenPreview.Body1__c}" styleClass="label-Design-non"/>
+                                    </p>
+                                    <p>
+                                        <!-- リンク -->
+                                        <a class="black" href="{!linkUrl1}">
+                                            {!linkSubject1}
+                                        </a>
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- 本文２ -->
+                            <div class="row align-center mt30 ">
+                                <div class="columns small-12 medium-11 large-8">
+                                    <!-- 掲載写真ファイル２ -->
+                                    <img alt="" src="{!releasePhotoFilePath2}" style="width:100%;height:auto;"/>
+                                    <p>
+                                        <apex:outputField value="{!screenPreview.Body2__c}" styleClass="label-Design-non"/>
+                                    </p>
+                                    <p>
+                                        <!-- リンク２ -->
+                                        <a class="black" href="{!linkUrl2}">
+                                            {!linkSubject2}
+                                        </a>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </apex:outputPanel>
+
+                    <!-- テンプレート２ -->
+                    <apex:outputPanel rendered="{! if(template == NEWSRELEASE_TEMPLATE_2,true,false)}">
+                        <div class="main-inner">
+                            <div class="row align-center mt30 ">
+                                <div class="columns small-12 medium-12 large-9">
+                                    <!-- 掲載開始日＋タイトル -->
+                                    <div class="search-box-title m-lfs">
+                                        {!releaseStartDate}　<br class="sp"/>{!title}
+                                    </div>
+                                    
+                                </div>
+                            </div>
+
+                            <div class="row align-center mt30">
+                                <!-- 本文１ -->
+                                <div class="columns small-12 medium-12 large-9 p-news-details">
+                                    <!-- 掲載写真ファイル１ -->
+                                    <p class="e-img">
+                                        <img alt="" src="{!releasePhotoFilePath1}" style="width:100%;height:auto;"/>
+                                    </p>
+                                    <div class="e-textbox">
+                                        <p class="e-text">
+                                            <apex:outputField value="{!screenPreview.Body1__c}" styleClass="label-Design-non"/>
+                                        </p>
+                                        <p>
+                                            <a class="black" href="{!linkUrl1}">
+                                                {!linkSubject1}
+                                            </a>
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <!-- 本文２ -->
+                                <div class="columns small-12 medium-12 large-9 p-news-details">
+                                    <!-- 掲載写真ファイル２ -->
+                                    <p class="e-img">
+                                        <img alt="" src="{!releasePhotoFilePath2}" style="width:100%;height:auto;"/>
+                                    </p>
+                                    <div class="e-textbox">
+                                        <p class="e-text">
+                                            <apex:outputField value="{!screenPreview.Body2__c}" styleClass="label-Design-non"/>
+                                        </p>
+                                        <p>
+                                            <a class="black" href="{!linkUrl2}">
+                                                {!linkSubject2}
+                                            </a>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </apex:outputPanel>
+
+                    <!-- テンプレートなし -->
+                    <apex:outputPanel rendered="{! if(template == NEWSRELEASE_TEMPLATE_NOTHING,true,false)}">
+                        <div class="main-inner">
+                            <div class="row align-center mt30 ">
+                                <div class="columns small-12 medium-11 large-8">
+                                    <!-- 掲載開始日＋タイトル -->
+                                    <div class="search-box-title">
+                                        {!releaseStartDate}　{!title}
+                                    </div>
+                                </div>
+                            </div>
+                            <apex:outputField value="{!screenPreview.HtmlBody__c}" styleClass="label-Design-non"/>
+                        </div>
+                    </apex:outputPanel>    
+                </main>
+            </div>
+        </body>
+        <!-- 共通(物件詳細・Map追加あり) -->
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+        <script src="js/jquery.mmenu.all.js"></script>
+        <script src="js/remodal.min.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/webfont/1.4.7/webfont.js"></script>
+        <script src="js/script.js"></script>
+        <!-- /共通(物件詳細・Map追加あり) -->
+        <script src="js/slick.min.js"></script>
+        <script>
+
+            jQuery(function() {
+                var topBtn = jQuery('#footerFloatingMenu');
+                topBtn.hide();
+                jQuery(window).scroll(function () {
+                    if (jQuery(this).scrollTop() > 5000) { // 200pxで表示
+                        topBtn.fadeOut();
+                    } else {
+                        topBtn.fadeIn();
+                    }
+                });
+            });
+            $(".custom-select").each(function() {
+                var classes = $(this).attr("class"),
+                    id      = $(this).attr("id"),
+                    name    = $(this).attr("name");
+                var template =  '<div class="' + classes + '">';
+                    template += '<span class="custom-select-trigger">' + $(this).attr("placeholder") + '</span>';
+                    template += '<div class="custom-options">';
+                    $(this).find("option").each(function() {
+                        template += '<span class="custom-option ' + $(this).attr("class") + '" data-value="' + $(this).attr("value") + '">' + $(this).html() + '</span>';
+                    });
+                template += '</div></div>';
+
+                $(this).wrap('<div class="custom-select-wrapper"></div>');
+                $(this).hide();
+                $(this).after(template);
+                });
+                $(".custom-option:first-of-type").hover(function() {
+                $(this).parents(".custom-options").addClass("option-hover");
+                }, function() {
+                $(this).parents(".custom-options").removeClass("option-hover");
+                });
+                $(".custom-select-trigger").on("click", function() {
+                $('html').one('click',function() {
+                    $(".custom-select").removeClass("opened");
+                });
+                $(this).parents(".custom-select").toggleClass("opened");
+                event.stopPropagation();
+                });
+                $(".custom-option").on("click", function() {
+                $(this).parents(".custom-select-wrapper").find("select").val($(this).data("value"));
+                $(this).parents(".custom-options").find(".custom-option").removeClass("selection");
+                $(this).addClass("selection");
+                $(this).parents(".custom-select").removeClass("opened");
+                $(this).parents(".custom-select").find(".custom-select-trigger").text($(this).text());
+                });
+
+
+                $(function() {
+                    var Accordion = function(el, multiple) {
+                        this.el = el || {};
+                        this.multiple = multiple || false;
+
+                        // Variables privadas
+                        var links = this.el.find('.link');
+                        // Evento
+                        links.on('click', {el: this.el, multiple: this.multiple}, this.dropdown)
+                    }
+
+                    Accordion.prototype.dropdown = function(e) {
+                        var $el = e.data.el;
+                            $this = $(this),
+                            $next = $this.next();
+
+                        $next.slideToggle();
+                        $this.parent().toggleClass('open');
+                        $this.find('i').toggleClass('fa-minus');
+                        $this.find('i').toggleClass('fa-plus');
+                        /* if (!e.data.multiple) {
+                            $el.find('.submenu').not($next).slideUp().parent().removeClass('open');
+                        }; */
+                    }
+
+                    var accordion = new Accordion($('#accordion'), false);
+                });
+            </script>
+            <!-- <script src="js/slick.min.js"></script> -->
+            <script>
+            $(function() {
+                $('.slider').on('init', function(event, slick) {
+                    $(this).append('<div class="slick-counter"><span class="current"></span> / <span class="total"></span></div>');
+                    $('.current').text(slick.currentSlide + 1);
+                    $('.total').text(slick.slideCount);
+                })
+                .slick({
+                    asNavFor:'.thumbnail',
+                    arrows: true,
+                    slidesToShow:1,
+                    prevArrow:'<div class="arrow prev"><img src="images/left30.png" alt="prev"></div>',
+                    nextArrow:'<div class="arrow next"><img src="images/right30.png" alt="NEXT"></div>',
+                })
+                .on('beforeChange', function(event, slick, currentSlide, nextSlide) {
+                    $('.current').text(nextSlide + 1);
+                });
+                $('.thumbnail').slick({
+                    asNavFor:'.slider',
+                    focusOnSelect: true,
+                    arrows: false,
+                    slidesToShow:4,
+                    });
+
+                });
+
+            jQuery(document).ready(function($){
+                /* 	$('.slider').slick({
+                asNavFor:'.thumbnail',
+                arrows: true,
+                slidesToShow:1,
+                prevArrow:'<div class="arrow prev">PREV</div>',
+                nextArrow:'<div class="arrow next">NEXT</div>',
+                }); */
+                /*  $('.thumbnail').slick({
+                asNavFor:'.slider',
+                focusOnSelect: true,
+                arrows: false,
+                slidesToShow:4,
+                }); */
+                $('.slidermenu').slick({
+                    autoplay: false,
+                    dots: false,
+                    infinite: true,
+                    //autoplaySpeed: 2500,
+                    speed: 500,
+                    fade: false,
+                    arrows: false,
+                    slidesToShow:7,
+                    // centerMode:true,
+                    //cssEase: 'linear',
+                    responsive:[
+                        /*  {
+                                breakpoint: 1024,
+                                settings:{
+                                    slidesToShow:3,
+                                }
+                            }, */
+                            {
+                                breakpoint: 768,
+                                settings:{
+                                    centerMode:false,
+                                    slidesToShow:4,
+                                }
+                            },
+                        /*  {
+                                breakpoint: 480,
+                                settings:{
+                                    slidesToShow:1,
+                                }
+                            }, */
+                        ]
+                });
+            });
+        </script>
+    <!-- </html> -->
+    </apex:form>
+</apex:page>

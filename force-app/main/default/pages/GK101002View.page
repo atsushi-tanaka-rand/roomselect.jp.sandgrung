@@ -1,0 +1,511 @@
+<!-- HP会員詳細 画面 -->
+<apex:page controller="GK101002Controller" docType="html-5.0" standardStylesheets="false" title="HP会員詳細">
+    
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="format-detection" content="telephone=no" />
+        <meta name="robots" content="noindex" />
+        <title>HP会員詳細</title>
+        
+        <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/reset.min.css')}" />
+        <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/foundation.css')}" />
+        <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/modaal.css')}" />
+        <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/style.css')}" />
+        <apex:stylesheet value="https://use.fontawesome.com/releases/v5.0.6/css/all.css" />
+        <apex:stylesheet value="{!URLFOR($Resource.external_file, 'external_file/common_style.css')}" />
+        <apex:stylesheet value="{!URLFOR($Resource.jQuery,'jQuery/jQueryUI/jquery-ui.css')}" />
+        
+        <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery-3.6.0.min.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery.blockUI.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jQueryUI/jquery-ui.min.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.designer_file, 'designer_file/js/modaal.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/common_screen_util.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/input_rules.js')}" />
+        
+        
+    </head>
+    
+    <body style="background-color:#ffffff;" id="gd701001">
+        <main>
+            <article>
+                <apex:form id="form">
+                    
+                    <!-- actionFunction -->
+                    <apex:actionFunction action="{! save}"   name="save"
+                                        oncomplete="unblockUi();if(!{! hasErrorMessage}){alertSaveFinish()}else{gotoTop()}" reRender="messageArea" />
+                    
+                    <apex:pageMessages id="messageArea"/>
+                    <apex:outputPanel rendered="{!isOpetionPortal}">
+                        <section>
+                            
+                            <div class="flex-wrap flex_wrap align-items_end mb10">
+                                <h1 class="fontb font2rem" style="float:left">HP会員詳細</h1>
+                                <apex:commandButton style=" visibility:hidden;" rerender="dummy"/> 
+                            </div>
+
+                            <ul id="accordion" class="accordion-defalt">
+                                <li class="default open">
+                                    <div class="link"><i class="fa fa-chevron-up"></i>会員情報</div>
+                                    <ul class="submenu-defalt ensen ">
+                                        <li>
+                                            <div class="flex-wrap  flex_wrap justify-between mb20">  
+                                                
+
+                                                <div class="wd33 wd49_md wd100_xs  flex-wrap   justify-between align-items_end" >
+                                                <!--1行目-->    
+                                                    <!--↓入力項目-->
+                                                    <div class="wd100 mb10"  >
+                                                        <div class="information_title">会員ID</div>
+                                                        <apex:input type="text" value="{!MemberIdEmail}" styleClass="form-control mr5" onchange="correctInputRules(this,'email');" tabIndex="1" disabled="{! targetMember.MemberStatus__c == WITHDRAWAL}"/>
+                                                    </div> 
+                                                </div>
+
+                                                <div class=" mb10 wd33 wd49_md wd100_xs  flex-wrap   justify-between align-items_end wd100" >
+                                                    <div  class="wd100" >
+                                                        <div class="information_title">姓</div>
+                                                        <div class="information_contents mb0" ><apex:outputLabel value="{! targetMember.LastName__c}"  style="border: 0;" /></div>
+                                                    </div>                                                       
+                                                </div>
+
+                                                <div class=" mb10 wd33 wd49_md wd100_xs  flex-wrap   justify-between align-items_end wd100" >
+                                                    <div  class="wd100" >
+                                                        <div class="information_title">名</div>
+                                                        <div class="information_contents mb0" ><apex:outputLabel value="{! targetMember.FirstName__c}"  style="border: 0;" /></div>
+                                                    </div>                                                       
+                                                </div>
+                                                <!--2行目-->    
+                                                <div class=" mb10 wd33 wd49_md wd100_xs  flex-wrap   justify-between align-items_end wd100" >
+                                                    <div  class="wd100" >
+                                                        <div class="information_title">姓（カナ）</div>
+                                                        <div class="information_contents mb0" ><apex:outputLabel value="{! targetMember.LastNameKana__c}"  style="border: 0;" /></div>
+                                                    </div>                                                       
+                                                </div>
+                                                <div class=" mb10 wd33 wd49_md wd100_xs  flex-wrap   justify-between align-items_end wd100" >
+                                                    <div  class="wd100" >
+                                                        <div class="information_title">名（カナ）</div>
+                                                        <div class="information_contents mb0" ><apex:outputLabel value="{! targetMember.FirstNameKana__c}"  style="border: 0;" /></div>
+                                                    </div>                                                       
+                                                </div>
+                                                <div class=" mb10 wd33 wd49_md wd100_xs flex-wrap    justify-between align-items_end" >
+                                                    <div class="wd48 wd49_md wd100_xs" >
+                                                        <div class="information_title">性別</div>
+                                                        <div class="information_contents mb0" ><apex:outputLabel value="{! targetMember.Gender__c}"  style="border: 0;" /></div>
+                                                    </div>          
+                                                    <div class="wd48 wd49_md wd100_xs" >
+                                                        <div class="information_title">生年月日</div>
+                                                        <div class="information_contents mb0" ><apex:outputField value="{! targetMember.BirthDate__c}"  style="border: 0;" /></div>
+                                                    </div>                                                       
+                                                </div>
+                                                <!--3行目-->   
+                                                <div class=" mb10 wd33 wd49_md wd100_xs flex-wrap    justify-between align-items_end" >
+                                                    <div class="wd48 wd49_md wd100_xs" >
+                                                        <div class="information_title">年齢</div>
+                                                        <div class="information_contents mb0" ><apex:outputLabel value="{! targetMember.Age__c}"  style="border: 0;" /></div>
+                                                    </div>          
+                                                    <div class="wd48 wd49_md wd100_xs" >
+                                                        <div class="information_title">職業</div>
+                                                        <div class="information_contents mb0" ><apex:outputLabel value="{! targetMember.Job__c}"  style="border: 0;" /></div>
+                                                    </div>                                                       
+                                                </div>
+
+                                                <div class=" mb10 wd33 wd49_md wd100_xs  flex-wrap   justify-between align-items_end wd100" >
+                                                    <div  class="wd100" >
+                                                        <div class="information_title">血液型</div>
+                                                        <div class="information_contents mb0" ><apex:outputLabel value="{! targetMember.BloodType__c}"  style="border: 0;" /></div>
+                                                    </div>                                                       
+                                                </div>
+
+                                                <div class=" mb10 wd33 wd49_md wd100_xs  flex-wrap   justify-between align-items_end wd100" >
+                                                </div>
+
+                                                <!--4行目-->    
+                                                <div class=" mb10 wd33 wd49_md wd100_xs  flex-wrap   justify-between align-items_end wd100" >
+                                                    <div  class="wd100" >
+                                                        <div class="information_title">電話番号</div>
+                                                        <apex:input styleClass="form-control" type="tel" value="{! tell}" onchange="correctInputRulesTellPortal(this)" tabIndex="2" disabled="{! targetMember.MemberStatus__c == WITHDRAWAL}"/>
+                                                    </div>
+                                                </div>
+                                                <div class=" mb10 wd33 wd49_md wd100_xs  flex-wrap   justify-between align-items_end wd100" >
+                                                    <div  class="wd100" >
+                                                        <div class="information_title">FAX</div>
+                                                        <div class="information_contents mb0" ><apex:outputLabel value="{! targetMember.Fax__c}"  style="border: 0;" /></div>
+                                                    </div>                                                       
+                                                </div>
+                                                <div class=" mb10 wd33 wd49_md wd100_xs  flex-wrap   justify-between align-items_end wd100" >
+                                                </div>
+                                                <!--5行目-->    
+                                                <div class=" mb10 wd33 wd49_md wd100_xs flex-wrap    justify-between align-items_end" >
+                                                    <div class="wd48 wd49_md wd100_xs" >
+                                                        <div class="information_title">郵便番号</div>
+                                                        <div class="information_contents mb0" ><apex:outputLabel value="{! targetMember.Zip__c}"  style="border: 0;" /></div>
+                                                    </div>          
+                                                    <div class="wd48 wd49_md wd100_xs" >
+                                                        <div class="information_title">都道府県</div>
+                                                        <div class="information_contents mb0" ><apex:outputLabel value="{! targetMember.State__c}"  style="border: 0;" /></div>
+                                                    </div>                                                       
+                                                </div>
+                                                <div class=" mb10 wd33 wd49_md wd100_xs  flex-wrap   justify-between align-items_end wd100" >
+                                                    <div  class="wd100" >
+                                                        <div class="information_title">住所1(市区町村)</div>
+                                                        <div class="information_contents mb0" ><apex:outputLabel value="{! targetMember.City__c}"  style="border: 0;" /></div>
+                                                    </div>                                                       
+                                                </div>
+                                                <div class=" mb10 wd33 wd49_md wd100_xs  flex-wrap   justify-between align-items_end wd100" >
+                                                    <div  class="wd100" >
+                                                        <div class="information_title">住所2(番地)</div>
+                                                        <div class="information_contents mb0" ><apex:outputLabel value="{! targetMember.Street__c}"  style="border: 0;" /></div>
+                                                    </div>                                                       
+                                                </div>
+                                                <!--6行目-->    
+                                                <div class=" mb10 wd33 wd49_md wd100_xs  flex-wrap   justify-between align-items_end wd100" >
+                                                    <div  class="wd100" >
+                                                        <div class="information_title">家族構成</div>
+                                                        <div class="information_contents mb0" ><apex:outputLabel value="{! targetMember.FamilyStructure__c}"  style="border: 0;" /></div>
+                                                    </div>                                                       
+                                                </div>
+
+                                                <div class=" mb10 wd33 wd49_md wd100_xs flex-wrap    justify-between align-items_end" >
+                                                    <div class="wd48 wd49_md wd100_xs" >
+                                                        <div class="information_title">持ち家</div>
+                                                        <div class="information_contents mb0" ><apex:outputLabel value="{! targetMember.OwnHouse__c}"  style="border: 0;" /></div>
+                                                    </div>          
+                                                    <div class="wd48 wd49_md wd100_xs" >
+                                                        <div class="information_title">ご入居の予定人数</div>
+                                                        <div class="information_contents mb0" ><apex:outputLabel value="{! targetMember.LivePeople__c}"  style="border: 0;" /></div>
+                                                    </div>                                                       
+                                                </div>
+
+                                                <div class=" mb10 wd33 wd49_md wd100_xs  flex-wrap   justify-between align-items_end wd100" >                                            
+                                                </div>
+
+                                                <!--7行目-->    
+                                                <div class=" mb10 wd33 wd49_md wd100_xs  flex-wrap   justify-between align-items_end wd100" >
+                                                    <div  class="wd100" >
+                                                        <div class="information_title">入居希望時期</div>
+                                                        <div class="information_contents mb0" ><apex:outputLabel value="{! targetMember.DesireMoveIn__c}"  style="border: 0;" /></div>
+                                                    </div>                                                       
+                                                </div>
+
+                                                <div class=" mb10 wd33 wd49_md wd100_xs  flex-wrap   justify-between align-items_end wd100" >
+                                                    <div  class="wd100" >
+                                                        <div class="information_title">希望の路線・駅</div>
+                                                        <div class="information_contents mb0" ><apex:outputLabel value="{! targetMember.DesireTrainRouteStation__c}"  style="border: 0;" /></div>
+                                                    </div>                                                       
+                                                </div>
+
+                                                <div class=" mb10 wd33 wd49_md wd100_xs  flex-wrap   justify-between align-items_end wd100" >
+                                                    <div  class="wd100" >
+                                                        <div class="information_title">希望のエリア</div>
+                                                        <div class="information_contents mb0" ><apex:outputLabel value="{!SUBSTITUTE(targetMember.DesireArea__c, ';', ',')}" style="border: 0;" /></div>
+                                                    </div>                                                       
+                                                </div>
+
+                                                <!--8行目-->    
+                                                <div class=" mb10 wd33 wd49_md wd100_xs flex-wrap    justify-between align-items_end" >
+                                                    <div class="wd48 wd49_md wd100_xs" >
+                                                        <div class="information_title">希望する間取り</div>
+                                                        <div class="information_contents mb0" ><apex:outputLabel value="{!SUBSTITUTE(targetMember.DesireRoomPlan__c, ';', ',')}"  style="border: 0;" /></div>
+                                                    </div>          
+                                                    <div class="wd48 wd49_md wd100_xs" >
+                                                        <div class="information_title">希望の家賃</div>
+                                                        <div class="information_contents mb0" ><apex:outputLabel value="{! targetMember.DesireRentFee__c}"  style="border: 0;" /></div>
+                                                    </div>                                                       
+                                                </div>
+
+                                                <div class=" mb10 wd33 wd49_md wd100_xs flex-wrap    justify-between align-items_end" >
+                                                    <div class="mb10 wd48 wd49_md wd100_xs" >
+                                                        <div class="information_title">管理費・公益費込み</div>
+                                                        <apex:inputCheckbox id="ManageFeeFlg"  value="{! targetMember.ManageFeeFlg__c}" disabled="true"/><apex:outputLabel for="ManageFeeFlg" styleClass="serach_check3"/>                                                
+                                                    </div>          
+                                                    <div class="mb10 wd48 wd49_md wd100_xs" >
+                                                        <div class="information_title">レコメンドメールフラグ</div>
+                                                        <apex:inputCheckbox id="RecommendMailFlg"  value="{! targetMember.RecommendMailFlg__c}" disabled="true"/><apex:outputLabel for="RecommendMailFlg" styleClass="serach_check3"/>                                                
+                                                    </div>          
+                                                </div>
+
+                                                <div class=" mb10 wd33 wd49_md wd100_xs  flex-wrap   justify-between align-items_end wd100" >                                                 
+                                                </div>
+
+                                                <!--9行目-->    
+                                                <div class=" mb10 wd33 wd49_md wd100_xs  flex-wrap   justify-between align-items_end wd100" >
+                                                    <div  class="wd100" >
+                                                        <div class="information_title">引越理由</div>
+                                                        <div class="information_contents mb0" ><apex:outputLabel value="{!SUBSTITUTE(targetMember.HomeMovingReason__c, ';', ',')}"  style="border: 0;" /></div>
+                                                    </div>                                                       
+                                                </div>
+                                                <div class=" mb10 wd33 wd49_md wd100_xs  flex-wrap   justify-between align-items_end wd100" >
+                                                    <div  class="wd100" >
+                                                        <div class="information_title">不満理由</div>
+                                                        <div class="information_contents mb0" ><apex:outputLabel value="{! targetMember.Dissatisfaction__c}"  style="border: 0;" /></div>
+                                                    </div>                                                       
+                                                </div>
+                                                <div class=" mb10 wd33 wd49_md wd100_xs  flex-wrap   justify-between align-items_end wd100" >
+                                                    <div  class="wd100" >
+                                                        <div class="information_title">趣味・嗜好</div>
+                                                        <div class="information_contents mb0" ><apex:outputLabel value="{!SUBSTITUTE(targetMember.Taste__c, ';', ',')}"  style="border: 0;" /></div>
+                                                    </div>                                                       
+                                                </div>
+
+                                                <!--10行目-->
+                                                <div class=" mb10 wd33 wd49_md wd100_xs flex-wrap    justify-between align-items_end" >
+                                                    <div class="wd48 wd49_md wd100_xs" >
+                                                        <div class="information_title">最終ログイン</div>
+                                                        <div class="information_contents mb0" ><apex:outputField value="{! targetMember.LastAccessDate__c}"  style="border: 0;" /></div>
+                                                    </div>          
+                                                    <div class="wd48 wd49_md wd100_xs" >
+                                                        <div class="information_title">会員状況</div>
+                                                        <div class="information_contents mb0" ><apex:outputLabel value="{! targetMember.MemberStatus__c}"  style="border: 0;" /></div>
+                                                    </div>                                                       
+                                                </div>
+
+                                                <div class=" mb10 wd33 wd49_md wd100_xs flex-wrap    justify-between align-items_end" >
+                                                    <div class="wd48 wd49_md wd100_xs" >
+                                                        <div class="information_title">入会日</div>
+                                                        <div class="information_contents mb0" ><apex:outputField value="{! targetMember.JoinDate__c}"  style="border: 0;" /></div>
+                                                    </div>          
+                                                    <div class="wd48 wd49_md wd100_xs" >
+                                                        <div class="information_title">退会日</div>
+                                                        <div class="information_contents mb0" ><apex:outputField value="{! targetMember.QuitDate__c}"  style="border: 0;" /></div>
+                                                    </div>                                                       
+                                                </div>
+
+                                                <div class=" mb10 wd33 wd49_md wd100_xs  flex-wrap   justify-between align-items_end wd100" >
+                                                    <div  class="wd100" >
+                                                        <div class="information_title">ブラックリストフラグ</div>
+                                                        <apex:inputCheckbox id="blackListCheck"  value="{! blackListFlg}" disabled="{! targetMember.MemberStatus__c == WITHDRAWAL}" tabindex="3">
+                                                            <apex:actionSupport event="onchange" reRender="script" onsubmit="blockUi();" oncomplete="unblockUi();"/>
+                                                        </apex:inputCheckbox>
+                                                        <apex:outputLabel for="blackListCheck" styleClass="serach_check3"/>
+                                                    </div>                                                       
+                                                </div>
+
+                                            </div>                                                                                    
+                                        </li>
+                                        <div class="flex-wrap justify-center flex-xs-xolumn  mt60">
+                                            <apex:commandButton styleClass="btn  btn-cancel text-center mauto_xs wd30 ml5 mr5 modal " value="キャンセル" oncomplete="closePage()" tabindex="4"/>
+                                            <apex:commandButton styleClass="btn btn200 btn-primary text-center mauto_xs wd30 ml5 mr5 modal " value="保存" reRender="dummy" disabled="{!isOpenError || targetMember.MemberStatus__c == WITHDRAWAL}" 
+                                                                onclick="checkSave()" id="save" tabindex="5"/>                                    
+                                            </div>
+            
+                                    </ul>
+                                </li>
+
+                                <li class="default open">
+                                    <div class="link"><i class="fa fa-chevron-up"></i>お気に入り物件</div>
+                                    <ul class="submenu-defalt ensen ">
+                                        <li>
+                                            <table class="gray" style="height: 550px;">
+                                                <tbody>
+                                                    <tr>
+                                                        <th class="wd4">物件名</th>
+                                                        <th class="wd5">住所</th>
+                                                        <th class="wd4">登録日</th>
+                                                    </tr>
+                                                    <apex:repeat value="{! portalFavoritePropertyList}" var="favorite">
+                                                        <tr>
+                                                            <td>
+                                                                <apex:commandLink value="{!favorite.PropertyId__r.Building__r.Name} {!favorite.PropertyId__r.Name}"  reRender="dummy" 
+                                                                onclick="showPage('GA104006View', '', 'true', 'propertyId={! favorite.PropertyId__c}')">                                                              
+                                                                </apex:commandLink>
+                                                            </td>
+                                                            <td>
+                                                                <apex:outputText value="{!favorite.PropertyId__r.Building__r.Address__c}" />
+                                                            </td>
+                                                            <td>
+                                                                <apex:outputField value="{!favorite.BrowsingDate__c}" />
+                                                            </td>
+                                                        </tr>
+                                                    </apex:repeat>
+                                                    
+                                                </tbody>
+                                            </table>
+
+                                        </li>
+                                    </ul>
+                                </li>
+
+
+                                <li class="default open">
+                                    <div class="link"><i class="fa fa-chevron-up"></i>閲覧履歴</div>
+                                    <ul class="submenu-defalt ensen ">
+                                        <li>
+                                            <table class="gray" style="height: 550px;">
+                                                <tbody>
+                                                    <tr>
+                                                        <th class="wd4">物件名</th>
+                                                        <th class="wd5">住所</th>
+                                                        <th class="wd4">閲覧日時</th>
+                                                    </tr>
+                                                    <apex:repeat value="{! browsingHistoryList}" var="browsing">
+                                                        <tr>
+                                                            <td>
+                                                                <apex:commandLink value="{!browsing.PropertyId__r.Building__r.Name} {!browsing.PropertyId__r.Name}"  reRender="dummy" 
+                                                                onclick="showPage('GA104006View', '', 'true', 'propertyId={! browsing.PropertyId__c}')">                                                              
+                                                                </apex:commandLink>
+                                                            </td>
+                                                            <td>
+                                                                <apex:outputText value="{!browsing.PropertyId__r.Building__r.Address__c}" />
+                                                            </td>
+                                                            <td>
+                                                                <apex:outputField value="{!browsing.BrowsingDate__c}" />
+                                                            </td>
+                                                        </tr>
+                                                    </apex:repeat>
+                                                    
+                                                </tbody>
+                                            </table>
+
+                                        </li>
+                                    </ul>
+                                </li>
+
+                                <li class="default open">
+                                    <div class="link"><i class="fa fa-chevron-up"></i>検索条件</div>
+                                    <ul class="submenu-defalt ensen ">
+                                        <li>
+                                            <table class="gray" style="height: 550px;">
+                                                <tbody>
+                                                    <tr>
+                                                        <th class="wd5">検索条件</th>
+                                                        <th class="wd4">登録日</th>
+                                                    </tr>
+                                                    <apex:repeat value="{! ScreenSearchHistoryList}" var="search">
+                                                        <tr>
+                                                            <td>
+                                                                <apex:outputText value="{!search.searchHistoryDisplay}" />
+                                                            </td>
+                                                            <td>
+                                                                <apex:outputField value="{!search.searchHistory.SearchDate__c}" />
+                                                            </td>
+                                                        </tr>
+                                                    </apex:repeat>
+                                                    
+                                                </tbody>
+                                            </table>
+
+                                        </li>
+                                    </ul>
+                                </li>
+
+                            </ul>  
+                        </section>
+                    </apex:outputPanel>                    
+
+                </apex:form>
+            </article>
+        </main>
+
+
+        <apex:outputPanel id="script">
+            <script>
+                //保存確認メッセージ
+                async function checkSave(){
+                    var retVal;
+                    if ("{!BlackListFlg}"== 'true'){
+                        //ブラックリスト変更時
+                        message = "{! MSG_COM_V_BLACKLIST_CHANGE}";
+                    }else{
+                        message = "{! MSG_COM_V_UPDATE_MEMBER}";
+                    }
+                    var retVal = await showConfirm(message);
+                    if (retVal) {
+                        blockUi();
+                        save();
+                    }        
+                }
+
+                //保存完了メッセージ
+                async function alertSaveFinish(){
+                    //完了メッセージ
+                    await showAlert("{! MSG_COM_I_SAVE}");
+                    
+                    //画面を閉じる
+                    closePage();
+                }    
+
+                /**
+                電話番号入力制御（静的リソースとは別のポータルの入力に合わせた内容）
+                @param Target 入力規則を確認する対象の項目
+                **/
+                function correctInputRulesTellPortal(Target){
+                    var myTarget = Target; // 入力規則を確認する対象の項目
+                    // 最大文字数は固定で40
+                    var myMaxLength = 40;
+
+                    // 型変換
+                    myTarget.value = toHalfWidth(myTarget.value); // 全角を半角に変換
+                    myTarget.value = setTelStringPortal(myTarget.value); // 電話用の修正
+                    if(myTarget.value.length > myMaxLength){
+                        // 最大文字数以降の文字は削除
+                        myTarget.value = sliceMaxLength(myTarget.value, myMaxLength); // 最大文字数の修正
+                    }
+                }
+
+                /**
+                電話の入力規則の判定処理
+                入力規則に合わせて対象の値を修正します。
+                @param text 入力規則を確認する対象の文字列
+                @return 修正した電話の文字列
+                **/
+                function setTelStringPortal(text) {
+                    text = text.replace(/[^0-9]/g, ''); // 正規表現とreplaceで数字以外を排除
+                    
+                    // 文の先頭と末尾の1文字を取得
+                    var headText = text.slice(0,1);
+                    var endText =  text.slice(-1);
+                    
+                    return text;
+                }
+            </script>
+        </apex:outputPanel>
+
+
+        <script src="/soap/ajax/47.0/connection.js" type="text/javascript"></script>
+        <script>
+
+
+         $(function() {
+             var Accordion = function(el, multiple) {
+                 this.el = el || {};
+                 this.multiple = multiple || false;
+                 
+                 // Variables privadas
+                 var links = this.el.find('.link');
+                 // Evento
+                 links.off('click');//重複登録を防ぐ
+                 links.on('click', {el: this.el, multiple: this.multiple}, this.dropdown)
+                 
+             }
+             
+             Accordion.prototype.dropdown = function(e) {
+                 var $el = e.data.el;
+                 $this = $(this),
+                     $next = $this.next();
+                 
+                 $next.slideToggle();
+                 $this.parent().toggleClass('open');
+                 
+                 if (!e.data.multiple) {
+                 };
+             }
+             
+             var accordion = new Accordion($('#accordion'), false);
+             var accordion = new Accordion($('#accordion2'), false);
+
+         });
+         
+         $(function() {
+             $('#btn').on('click', function(e) {
+                 var textList = document.getElementById('accordion');
+                 let elements = textList.getElementsByTagName('li');
+                 Array.prototype.forEach.call(elements, function(element) {
+                     element.classList.remove('open','default');
+                     $('.submenu-defalt').fadeOut()
+                 });
+             });
+         });
+        </script>
+    </body>
+    
+</apex:page>

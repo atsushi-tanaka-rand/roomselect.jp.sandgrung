@@ -1,0 +1,13 @@
+<!--地区別メンテナンス条件一覧-->
+<aura:component implements="force:appHostable,flexipage:availableForAllPageTypes" access="global" >
+
+    <!-- lightningページのヘッダを消す -->
+    <ltng:require styles="{!$Resource.external_file + '/external_file/lightningPageNoHeader.css'}"/>
+    
+	<lightning:listView
+    objectApiName="AreaMaintenanceCondition__c"
+    listName="All"
+    showSearchBar="true"
+    showActionBar="true"
+    enableInlineEdit="false"/>
+</aura:component>

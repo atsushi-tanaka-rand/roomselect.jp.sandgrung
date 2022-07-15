@@ -1,0 +1,89 @@
+<!--自動追客一覧-->
+<apex:component controller="GA102001Modal7Controller" allowDML="true">
+    <apex:attribute name="ParameterClass" type="GA102001Modal7ParameterClass" assignTo="{!parameter}" description="key" />
+    <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery-3.6.0.min.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery.blockUI.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/common_screen_util.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.designer_file, 'designer_file/js/modaal.js')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/reset.min.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/foundation.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/style.css')}"/>
+    <apex:stylesheet value="https://use.fontawesome.com/releases/v5.0.6/css/all.css"/>
+    <body style="background-color:#ffffff;">
+
+        
+        <apex:form id="GA102001Modal7" >
+            
+            <apex:pageBlock rendered="{!parameter.noFirst}">
+                <apex:outputText rendered="{!init}" />
+                <apex:pageMessages id="messageArea"/>
+                
+                <div class="modal-header">
+                        <h4 class="modal-title fontb mb20">自動追客一覧</h4>               
+                </div>
+
+                <div class="modal-body">  
+
+
+                    <div class="flex-wrap flex_wrap align_center">
+                        <div class="mr20">
+                            <div class="information_title">追客開始日</div>
+                            <apex:input type="date" value="{!introMailInfoFirstSendDate}" id="dateInput" disabled="{!isOpenError}"
+                                        styleClass="form-control FirstSendDate" style="width: auto;"
+                                        onkeydown="dateInputKeydownFocusAdjust(this, event)"
+                                        onblur="clearValidateErrorValue(this)" html-min="1700-01-01" html-max="4000-12-31"/>
+                        </div>
+                        <div class="mr20">
+                        <div class="information_title">追客開始時間</div>
+                            <apex:selectList value="{!introMailInfoFirstSendTime}"
+                                            styleClass="form-control" size="1">
+                                <apex:selectOptions value="{!sendingTimeList}" />
+                            </apex:selectList>
+                        </div>
+                        <!-- ▼ 2021.11.30 LINE連携対応より、LINE送信フラグを追加 -->
+                        <div class="mt20">
+                            <apex:inputCheckbox id="lineSend" value="{! isSendLine }" />
+                            <apex:outputLabel for="lineSend" styleClass="serach_check {! IF(parameter.lineMemberId != null, '', 'disabled-chkbox') }" >LINE送信</apex:outputLabel>
+                        </div>
+                        <!-- ▲ 2021.11.30 -->
+                    </div>
+                </div>
+                <div class="modal-footer mt20">
+                    <div class="flex-wrap justify-around flex_wrap">
+                        <div class="mb10  btn btn-primary btn-submit text-center">
+                            <apex:commandButton styleClass="btn btn-submit btn-primary text-center mauto_xs" id="register" value="保存" disabled="{!isOpenError}"
+                                reRender="dummy"
+                                onclick="checkInsertIntroMail();" 
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 更新時の動作 -->
+                <apex:actionFunction name="insetdate" action="{!clickSave}"
+                oncomplete="if({!hasErrorMessage}){unblockUi();return false;}closeDialogModalIntroMail7();"
+                reRender="GA102001Modal7"  />
+
+                <apex:outputPanel id="js">
+                    <script language="javascript" type="text/javascript">
+                        //登録確認メッセージ
+                        async function checkInsertIntroMail() {
+                            var message = "{! MSG_COM_V_SAVE}";
+                            if (!await showConfirm(message)) {
+                                return false;
+                            }
+                            blockUi();
+                            insetdate();
+                            return true;
+                        }
+                        $(document).ready(
+                            function(){
+                                $('.FirstSendDate').val('{! Text(introMailInfoFirstSendDate)}'); //なぜか追客開始日が入っているので、強制的に上書く
+                            }
+                        );
+                    </script>
+                </apex:outputPanel>
+            </apex:pageBlock>
+        </apex:form>
+    </body>
+</apex:component>

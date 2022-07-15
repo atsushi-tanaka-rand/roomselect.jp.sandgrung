@@ -1,0 +1,548 @@
+<!--モーダル画面対応履歴＋アポイント確定-->
+<apex:component controller="GA102001Modal2Controller" allowDML="true">
+    <apex:attribute name="ParameterClass" type="GA102001Modal2ParameterClass" assignTo="{!Parameter}" description="key" />
+    <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery-3.6.0.min.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery.blockUI.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/common_screen_util.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.designer_file, 'designer_file/js/modaal.js')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/reset.min.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/foundation.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/style.css')}"/>
+    <apex:stylesheet value="https://use.fontawesome.com/releases/v5.0.6/css/all.css"/>
+    <body style="background-color:#ffffff;">
+        <apex:form id="GA102001Modal2" >
+            <apex:pageBlock rendered="{!parameter.noFirst}">
+                <apex:outputText rendered="{!init}" />
+                <apex:pageMessages />
+                <div class="modal-header">
+                    <!-- ▼ 2021.09.28 問合せNo.521 対応種別との余白を変更 -->
+                    <!-- ▼問合せNo295で追加 (追客保留、アポイントキャンセル、終了以外)-->
+                    <!-- アポイント確定以外 -->
+                    <apex:outputPanel rendered="{!screenCorrespondDetail.CorrespondType != TASK_CORRESPONDTYPE_APPOINTMENT && screenCorrespondDetail.CorrespondType != TASK_CORRESPONDTYPE_PURSUITHOLD && screenCorrespondDetail.CorrespondType != TASK_CORRESPONDTYPE_APO_CANCEL && screenCorrespondDetail.CorrespondType != TASK_CORRESPONDTYPE_CLOSE}" >
+                        <h4 class="modal-title fontb">対応履歴</h4>
+                    </apex:outputPanel>
+                    <!-- アポイント確定 -->
+                    <apex:outputPanel rendered="{!screenCorrespondDetail.CorrespondType == TASK_CORRESPONDTYPE_APPOINTMENT}" >
+                        <h4 class="modal-title fontb">アポイント確定</h4>
+                    </apex:outputPanel>
+                    <!-- ▼問合せNo295で追加 -->
+                    <!-- 追客保留 -->
+                    <apex:outputPanel rendered="{!screenCorrespondDetail.CorrespondType == TASK_CORRESPONDTYPE_PURSUITHOLD}" >
+                        <h4 class="modal-title fontb">追客保留</h4>
+                    </apex:outputPanel>
+                    <!-- アポイントキャンセル -->
+                    <apex:outputPanel rendered="{!screenCorrespondDetail.CorrespondType == TASK_CORRESPONDTYPE_APO_CANCEL}" >
+                        <h4 class="modal-title fontb">アポイントキャンセル</h4>
+                    </apex:outputPanel>
+                    <!-- 終了 -->
+                    <apex:outputPanel rendered="{!screenCorrespondDetail.CorrespondType == TASK_CORRESPONDTYPE_CLOSE}" >
+                        <h4 class="modal-title fontb">終了</h4>
+                    </apex:outputPanel>
+                    <!-- ▲問合せNo295で追加 -->
+                    <!-- ▲ 2021.09.28 問合せNo.521 -->
+                    
+                </div>
+                
+                <!-- ▼ 2021.09.28 問合せNo.521 タイトル部との余白を変更 -->
+                <div class="mt10">対応種別<apex:commandButton style="visibility:hidden;" rerender="dummy"/></div>
+                <!-- ▲ 2021.09.28 問合せNo.521 -->
+                <div class="information_contents mb0">
+                    <apex:outputLabel value="{!screenCorrespondDetail.CorrespondType}" style="border: 0;" />
+                </div>
+
+                <div class="modal-body">
+
+                    <!-- ▼ 2021.11.30 LINE連携対応より、メモと電話の切り替え用対応種別を追加 -->
+                    <apex:outputPanel rendered="{! (isModalTelStatus == TRUE || screenCorrespondDetail.CorrespondType == TASK_CORRESPONDTYPE_MEMO) && parameter.isDispCorrespondType }" layout="block" styleClass="mb10 wd100">
+                        <div class="information_title">対応種別</div>
+                        <apex:selectList styleClass="form-control" size="1" onchange="blockUi(); chgCorrespondType();" value="{! selectedCorrespondType }">
+                            <apex:selectOptions value="{! chgCorrespondTypeList }"/>
+                        </apex:selectList>
+                    </apex:outputPanel>
+                    <!-- ▲ 2021.11.30 -->
+
+                    <!-- ▼問合せNo295で追加 -->
+                    <!-- 電話、アポキャンセル、終了の場合は表示せず、追客保留の場合は表示位置が変わる -->
+                    <apex:outputPanel rendered="{! isModalTelStatus == FALSE && screenCorrespondDetail.CorrespondType != TASK_CORRESPONDTYPE_APO_CANCEL && screenCorrespondDetail.CorrespondType != TASK_CORRESPONDTYPE_CLOSE}" layout="block" styleClass="mb10 wd100">
+                        <div class="information_title">表題</div>
+                        <apex:input value="{!screenCorrespondDetail.SupportedTitle}" styleClass="form-control"  onchange="correctInputRules(this,'text', '255')" />
+                    </apex:outputPanel>
+                    
+                    <!-- アポキャンセル時のみ表示 -->
+                    <apex:outputPanel rendered="{!screenCorrespondDetail.CorrespondType == TASK_CORRESPONDTYPE_APO_CANCEL}" 
+                                    styleClass="mb10 wd48 wd100_xs">
+                        <div class="information_title">アポキャンセル理由</div>
+                        <!-- apex:actionRegion -->                                    
+                            <apex:selectList styleClass="form-control" size="1" value="{!screenCorrespondDetail.SupportedTitle}" >
+                                <apex:selectOptions value="{!selectApoCancelList}"/>
+                                <apex:actionSupport event="onchange" onsubmit="blockUi();" oncomplete="unblockUi();" reRender="otherDicision" /> 
+                            </apex:selectList>
+                        <!-- /apex:actionRegion -->
+                    </apex:outputPanel>
+                    
+                    <!-- 追客保留時のみ -->
+                    <div class="flex-wrap justify-between ">
+                        <apex:outputPanel rendered="{!screenCorrespondDetail.CorrespondType == TASK_CORRESPONDTYPE_PURSUITHOLD}" styleClass="mb10 wd48">
+                            <div class="information_title">条件完全一致予約 </div>
+                                <apex:selectList styleClass="form-control" size="1" value="{!screenCorrespondDetail.ExactConditionMatch}" >
+                                    <apex:selectOptions value="{!selectExactConditionMatchList}"/>
+                                    <!-- ▼2021.10.08 No.307 対応で追加 -->
+									<apex:actionSupport event="onchange" reRender="reservedPropertyCriteria"
+									onsubmit="blockUi();" oncomplete="unblockUi();"/>
+                                    <!-- ▲2021.10.08 No.307 対応で追加 -->
+                                </apex:selectList>
+                        </apex:outputPanel>
+                        <!-- ▼2021.10.08 No.307 対応で追加 -->
+						<!-- 予約物件条件チェックリストが複数件ある場合のみ -->
+                        <apex:outputPanel rendered="{!AND(screenCorrespondDetail.CorrespondType == TASK_CORRESPONDTYPE_PURSUITHOLD, Parameter.GA102001Paremeter10.spcIndexList.size != 1)}" styleClass="wd48">
+                            <div style="padding-top:17px;">
+                                <apex:commandButton styleClass="btn btn-submit btn-primary text-center mauto_xs" id="reservedPropertyCriteria" value="予約物件条件"
+                                        disabled="{!isOpenError ||(screenCorrespondDetail.ExactConditionMatch == CORRESPOND_EXACT_CONDITION_MATCH_NO)}"
+                                        reRender="GA102001Modal10"
+                                        onclick="openModal10Js();"
+                                        oncomplete="unblockUi();"
+                                />
+                            </div>
+                        </apex:outputPanel>
+                        <!-- ▲2021.10.08 No.307 対応で追加 -->
+                    </div>
+                
+                    <apex:outputPanel rendered="{!screenCorrespondDetail.CorrespondType == TASK_CORRESPONDTYPE_PURSUITHOLD}" styleClass="mb10 wd48 wd100_xs">
+                        <div class="information_title">保留理由</div>
+                        <apex:inputTextarea value="{!screenCorrespondDetail.SupportedContent}" onchange="correctInputRules(this,'text',131072)"
+                                            cols="20" rows="{! if(screenCorrespondDetail.CorrespondType == TASK_CORRESPONDTYPE_MEMO,6,3) }" styleClass="form-control" style="font-size:80%" />
+                    </apex:outputPanel>
+                    <!-- ▲問合せNo295で追加 -->
+                    
+                    <div class="flex-wrap flex_wrap flex_wrap justify-between align_center ">
+
+                    <!-- アポイント確定のみ -->
+                    <apex:outputPanel rendered="{!screenCorrespondDetail.CorrespondType == TASK_CORRESPONDTYPE_APPOINTMENT}" styleClass="mb10 wd100">
+
+                        <apex:outputPanel id="staffChoiceRadioPanel" styleClass="flex_wrap justify-between">
+                            <apex:selectRadio value="{!staffCountValue}" styleClass="displayRadio">
+                                <apex:selectOptions value="{!staffCountList}" />
+                                <apex:actionSupport event="onchange" reRender="tab_wrap,js2" onsubmit="displayStaffTab();"/>
+                            </apex:selectRadio> 
+                        </apex:outputPanel>
+
+
+
+                            <!--
+                            <div class="flex-wrap flex_wrap flex_wrap align_center wd100_xs">
+                                <input type="radio" name="staff" value="" checked="checked"
+                                onclick="document.getElementById('tab2').style.visibility = 'hidden';
+                                　　　　　document.getElementById('tab2_label').style.visibility = 'hidden';"
+                                style="display:inherit;" class="mr5" />１名&nbsp;&nbsp;
+                            <input type="radio" name="staff" value=""
+                                onclick="document.getElementById('tab2').style.visibility = 'visible';
+                            　　　　　    document.getElementById('tab2_label').style.visibility = 'visible';"
+                                style="display:inherit" class="mr5"/>２名
+
+                            </div>
+                            -->
+
+                        <div class="tab_wrap" id="tab_wrap">
+                            <input id="tab1" type="radio" name="tab_btn" checked="checked" />
+                            <input id="tab2" type="radio" name="tab_btn" style="visibility:hidden"/>
+                            <div class="tab_area">
+                                <label id="tab1_label" class="tab1_label" for="tab1" style="padding:12px 12px 12px 12px;">担当者１</label>
+                                <label id="tab2_label" class="tab2_label" for="tab2" style="padding:12px 12px 12px 12px; visibility:hidden;">担当者２</label>
+                            </div>
+
+                            <div class="panel_area">
+
+                                <!-- 担当者１タブ -->
+                                <div id="panel1" class="tab_panel flex-wrap align_center wd100_xs" style="padding: 40px 0px 0px 0px">
+                                    <div class="flex-wrap align_center wd100_xs justify-between">
+                                        <div class="mb10 wd48 ">
+                                            <div class="information_title">開始日時</div>
+                                            <apex:input type="date" value="{!screenCorrespondDetail.StartDate}" html-min="1700-01-01" html-max="4000-12-31"
+                                                        onkeydown="dateInputKeydownFocusAdjust(this, event)"
+                                                        onblur="clearValidateErrorValue(this)" styleClass="form-control modalStartDate" />
+                                        </div>
+                                        <div class="mb10 wd48 ">
+                                            <div class="information_title"> 　</div>
+                                            <apex:input type="time" value="{!screenCorrespondDetail.StartDateTime}"
+                                                        onkeydown="dateInputKeydownFocusAdjust(this, event)"
+                                                        onblur="clearValidateErrorValue(this)" styleClass="form-control modalStartDateTime" />
+                                        </div>
+                                    </div>
+                                    <div class="flex-wrap align_center wd100_xs justify-between">
+                                        <div class="mb10 wd48 ">
+                                            <div class="information_title">終了日時</div>
+                                            <apex:input type="date" value="{! screenCorrespondDetail.EndDate}" html-min="1700-01-01" html-max="4000-12-31"
+                                                        onkeydown="dateInputKeydownFocusAdjust(this, event)"
+                                                        onblur="clearValidateErrorValue(this)" styleClass="form-control modalEndDate" />
+                                        </div>
+                                        <div class="mb10 wd48 ">
+                                            <div class="information_title">　</div>
+                                            <apex:input type="time" value="{! screenCorrespondDetail.EndDateTime}"
+                                                        onkeydown="dateInputKeydownFocusAdjust(this, event)"
+                                                        onblur="clearValidateErrorValue(this)" styleClass="form-control modalEndDateTime" />
+                                        </div>
+                                    </div>
+                                    <!--
+                                    <div class="flex-wrap align_center wd100_xs justify-between">
+                                        <div class="mb10 wd48 wd100_xs">
+                                            <div class="information_title">来店担当者</div>
+                                            <div class="information_contents mb0">
+                                                <apex:outputLabel value="{!screenCorrespondDetail.VisitShopName}"  style="border: 0;" />
+                                            </div>
+                                        </div>
+                                        <div class=" mb10 wd48 wd100_xs">
+                                            <div class="information_title"> 　</div>
+                                            <div class="information_contents mb0">
+                                                <apex:outputLabel value="{!screenCorrespondDetail.ShopStaffName}"  style="border: 0;" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                    -->
+                                    <div class="flex-wrap align_center wd100_xs justify-between">
+                                        <div class=" mb10 wd48 wd100_xs">
+                                            <div>店舗</div>
+                                                <apex:selectList styleClass="form-control" size="1" value="{!screenCorrespondDetail.VisitShop}">
+                                                    <apex:selectOptions value="{!selectVisitShop1List}"/>
+                                                    <apex:actionSupport event="onchange" onsubmit="blockUi();" action="{!getVisitShopList1}" oncomplete="unblockUi();" reRender="selectShopStaff1List" />    
+                                                </apex:selectList>
+                                        </div>
+                
+                                        <apex:outputPanel id="selectShopStaff1List" layout="block" styleClass="mb10 wd48 wd100_xs">
+                                            <div>担当者</div>
+                                            <apex:selectList styleClass="form-control" size="1" value="{!screenCorrespondDetail.ShopStaff}">
+                                                <apex:selectOptions value="{!selectShopStaff1List}" />
+                                            </apex:selectList>
+                                        </apex:outputPanel>
+                                    </div>
+                                </div>
+
+                                <!-- 担当者２タブ -->
+                                <div id="panel2" class="tab_panel justify-between " style="padding: 40px 0px 0px 0px">
+                                    <div class="flex-wrap align_center wd100_xs justify-between">
+                                        <div class="mb10 wd48 ">
+                                            <div class="information_title">開始日時</div>
+                                            <apex:input type="date" value="{!screenCorrespondDetail.StartDate2}" html-min="1700-01-01" html-max="4000-12-31"
+                                                        onkeydown="dateInputKeydownFocusAdjust(this, event)"
+                                                        onblur="clearValidateErrorValue(this)" styleClass="form-control modalStartDate2" />
+                                        </div>
+                                        <div class="mb10 wd48 ">
+                                            <div class="information_title"> 　</div>
+                                            <apex:input type="time" value="{!screenCorrespondDetail.StartDateTime2}"
+                                                        onkeydown="dateInputKeydownFocusAdjust(this, event)"
+                                                        onblur="clearValidateErrorValue(this)" styleClass="form-control modalStartDateTime2" />
+                                        </div>
+                                    </div>
+                                    <div class="flex-wrap align_center wd100_xs justify-between">
+                                        <div class="mb10 wd48 ">
+                                            <div class="information_title">終了日時</div>
+                                            <apex:input type="date" value="{! screenCorrespondDetail.EndDate2}" html-min="1700-01-01" html-max="4000-12-31"
+                                                        onkeydown="dateInputKeydownFocusAdjust(this, event)"
+                                                        onblur="clearValidateErrorValue(this)" styleClass="form-control modalEndDate2" />
+                                        </div>
+                                        <div class="mb10 wd48 ">
+                                            <div class="information_title">　</div>
+                                            <apex:input type="time" value="{! screenCorrespondDetail.EndDateTime2}"
+                                                        onkeydown="dateInputKeydownFocusAdjust(this, event)"
+                                                        onblur="clearValidateErrorValue(this)" styleClass="form-control modalEndDateTime2" />
+                                        </div>
+                                    </div>
+                                    <!--
+                                    <div class="flex-wrap align_center wd100_xs justify-between">
+                                        <div class="mb10 wd48 wd100_xs">
+                                            <div class="information_title">来店担当者</div>
+                                            <div class="information_contents mb0">
+                                                <apex:outputLabel value="{!screenCorrespondDetail.ShopStaffName}"  style="border: 0;" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                    -->
+
+                                    <div class="flex-wrap align_center wd100_xs justify-between">
+                                        <div class=" mb10 wd48 wd100_xs">
+                                            <div>店舗</div>
+                                            <!-- <apex:actionRegion > actionRegionをコメントアウトしないとreRenderが利かない-->                                  
+                                                <apex:selectList styleClass="form-control" size="1" value="{!screenCorrespondDetail.VisitShop2}" >
+                                                    <apex:selectOptions value="{!selectVisitShop2List}"/>
+                                                    <apex:actionSupport event="onchange" onsubmit="blockUi();" action="{!getVisitShopList2}" oncomplete="unblockUi();" reRender="selectShopStaff2List" />    
+                                                </apex:selectList>
+                                            <!-- </apex:actionRegion> -->
+                                        </div>
+                
+                                        <apex:outputPanel id="selectShopStaff2List" layout="block" styleClass="mb10 wd48 wd100_xs">
+                                            <div>担当者</div>
+                                            <apex:selectList styleClass="form-control" size="1" value="{!screenCorrespondDetail.ShopStaff2}" >
+                                                <apex:selectOptions value="{!selectShopStaff2List}" />
+                                            </apex:selectList>
+                                        </apex:outputPanel>
+                                    </div>
+
+
+
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class=" mb10 wd100 ">
+                            <div>案内方法</div>
+                            <apex:selectList styleClass="form-control" size="1" value="{!screenCorrespondDetail.GuidanceMethod}" >
+                                <apex:selectOptions value="{!selectGuidanceMethodList}"/> 
+                            </apex:selectList>
+                        </div>
+                        
+                        <div class=" mb10 wd100">
+                            <div class="information_title">物件名</div>
+                            <div class="information_contents mb0">
+                                <apex:outputLabel value="{!screenCorrespondDetail.BuildingName}" style="border: 0;" />
+                            </div>
+                        </div>
+                        <!-- </div> -->
+                    </apex:outputPanel>
+
+                        <!-- 対応種別が終了時のみ表示 -->
+                        <apex:outputPanel rendered="{!Parameter.Status == CORRESPOND_STATUS_CLOSE }" 
+                                            styleClass="mb10 wd48 wd100_xs">
+                            <div class="information_title">状況</div>
+                            <apex:actionRegion >                                    
+                                <apex:selectList styleClass="form-control" size="1" value="{!screenCorrespondDetail.PhoneStatus}" disabled="{! !insCorrespondDetailFlg}" >
+                                    <apex:selectOptions value="{!selectSituationList}"/>
+                                </apex:selectList>
+                            </apex:actionRegion>
+                        </apex:outputPanel>
+                        
+                        <!-- 追客保留時のみ -->
+                        <apex:outputPanel rendered="{!screenCorrespondDetail.CorrespondType == TASK_CORRESPONDTYPE_PURSUITHOLD}" styleClass="mb10 wd48 wd100_xs">
+                            <div class="information_title">追客解除日</div>
+                            <apex:input type="date" value="{!screenCorrespondDetail.PursuitDissolveDate}" html-min="1700-01-01" html-max="4000-12-31"
+                                        onkeydown="dateInputKeydownFocusAdjust(this, event)"
+                                        onblur="clearValidateErrorValue(this)" styleClass="form-control modalPursuitDissolveDate" />
+                        </apex:outputPanel>
+                        <apex:outputPanel rendered="{!screenCorrespondDetail.CorrespondType == TASK_CORRESPONDTYPE_PURSUITHOLD}" styleClass="mb10 wd48 wd100_xs">
+                            <div class="information_title"> 　</div>
+                            <apex:input type="time" value="{!screenCorrespondDetail.PursuitDissolveTime}"
+                                        onkeydown="dateInputKeydownFocusAdjust(this, event)"
+                                        onblur="clearValidateErrorValue(this)" styleClass="form-control modalPursuitDissolveTime" />
+                        </apex:outputPanel>
+
+                        <!-- 電話の場合のみ -->
+                        <apex:outputPanel rendered="{! isModalTelStatus == TRUE }" styleClass="mb10 wd48 wd100_xs">
+                            <div class="information_title">発信者</div>
+                                <apex:selectList styleClass="form-control" size="1" onchange="blockUi();changeSenderTel();" value="{!screenCorrespondDetail.Sender}" disabled="{! !insCorrespondDetailFlg}" >
+                                    <apex:selectOptions value="{!selectSenderList}"/>
+                                </apex:selectList>
+                        </apex:outputPanel>
+
+                        <apex:outputPanel rendered="{! isModalTelStatus == TRUE }" styleClass="mb10 wd48 wd100_xs">
+                            <div class="information_title">状況</div>
+                            <apex:actionRegion >                                    
+                                <apex:selectList id="PhoneStatus_tel" styleClass="form-control" onchange="blockUi();changePhoneStatusTel();" size="1" value="{!screenCorrespondDetail.PhoneStatus}" disabled="{! !insCorrespondDetailFlg || screenCorrespondDetail.Sender == null}" >
+                                    <apex:selectOptions value="{!selectSituationList}"/>
+                                </apex:selectList>
+                            </apex:actionRegion>
+                        </apex:outputPanel>
+
+                        <apex:outputPanel rendered="{! isModalTelStatus == TRUE }" styleClass="mb10 wd48 wd100_xs">
+                            <div class="information_title">ポータルサイト</div>
+                            <apex:actionRegion >                                    
+                                <apex:selectList id="PortalSite_tel" styleClass="form-control" size="1" value="{!screenCorrespondDetail.PortalSite}" disabled="{! !insCorrespondDetailFlg || screenCorrespondDetail.Sender == null || !isEcho }" >
+                                    <apex:selectOptions value="{!selectPortalSiteList}"/>
+                                </apex:selectList>
+                            </apex:actionRegion>
+                        </apex:outputPanel>
+
+                        <apex:outputPanel rendered="{! isModalTelStatus == TRUE }" styleClass="mb10 wd48 wd100_xs">
+                            <div class="information_title">地区</div>
+                            <apex:actionRegion >                                    
+                                <apex:selectList id="District_tel" styleClass="form-control" size="1" value="{!screenCorrespondDetail.District}" disabled="{! !insCorrespondDetailFlg || screenCorrespondDetail.Sender == null || !isEcho}" >
+                                    <apex:selectOptions value="{!selectDistrictList}"/>
+                                </apex:selectList>
+                            </apex:actionRegion>
+                        </apex:outputPanel>
+                        <!-- ▼問合せ416で追加 -->
+                        <apex:outputPanel rendered="{! isModalTelStatus == TRUE }" styleClass=" mb10 wd100 wd100_xs">
+                            <div class="information_title">お問合せ物件</div>
+                            <apex:actionRegion >  
+                                <apex:selectList id="selectBuildingName" styleClass="form-control" size="1" value="{!screenCorrespondDetail.SelectedInquiryProp}" disabled="{! !insCorrespondDetailFlg || screenCorrespondDetail.Sender == null || !isEcho}">
+                                    <apex:selectOptions value="{!screenFavoritePropertyList}"/>   
+                                </apex:selectList>
+                            </apex:actionRegion>
+                        </apex:outputPanel>
+                        <!-- ▲問合せ416で追加 -->
+                    
+                    </div>
+                    <!-- ▼ 2021.09.28 問合せNo.521 対応内容の高さを変更 -->
+                    <!-- ▼問合せNo295で追加 -->
+                    <apex:outputPanel rendered="{!screenCorrespondDetail.CorrespondType != TASK_CORRESPONDTYPE_PURSUITHOLD && screenCorrespondDetail.CorrespondType != TASK_CORRESPONDTYPE_CLOSE && screenCorrespondDetail.CorrespondType != TASK_CORRESPONDTYPE_APO_CANCEL}" styleClass="mb10 wd48 wd100_xs">
+                        <div class="information_title">対応内容</div>
+                        <apex:inputTextarea value="{!screenCorrespondDetail.SupportedContent}" onchange="correctInputRules(this,'text',131072)"
+                        cols="20" rows="15" styleClass="form-control" style="font-size:80%" />
+                    </apex:outputPanel>
+
+                    <apex:outputPanel id="otherDicision" rendered="{!screenCorrespondDetail.CorrespondType == TASK_CORRESPONDTYPE_APO_CANCEL}" styleClass="mb10 wd48 wd100_xs">
+                        <div class="information_title"> {! if(screenCorrespondDetail.SupportedTitle == '他決','物件確認及び提案内容','対応内容')} </div>
+                        <apex:inputTextarea value="{!screenCorrespondDetail.SupportedContent}" onchange="correctInputRules(this,'text',131072)"
+                        cols="20" rows="15" styleClass="form-control" style="font-size:80%" />
+                    </apex:outputPanel>
+
+                    <apex:outputPanel rendered="{!screenCorrespondDetail.CorrespondType == TASK_CORRESPONDTYPE_CLOSE}" styleClass="mb10 wd48 wd100_xs">
+                        <div class="information_title">終了理由</div>
+                        <apex:inputTextarea value="{!screenCorrespondDetail.SupportedContent}" onchange="correctInputRules(this,'text',131072)"
+                        cols="20" rows="3" styleClass="form-control" style="font-size:80%" />
+                    </apex:outputPanel>
+                    <!-- ▲問合せNo295で追加 -->
+                    <!-- ▲ 2021.09.28 問合せNo.521 -->
+                </div>
+                <div class="modal-footer">
+                    <div class="flex-wrap justify-around flex_wrap">
+                        <!-- ▼ 2021.09.28 問合せNo.521 レスポンシブ時にボタンサイズが変更される不具合の為、変更 -->
+                        <div class="mb10">
+                        <!-- ▲ 2021.09.28 問合せNo.521 -->
+                            <apex:commandButton styleClass="btn btn-submit btn-primary text-center mauto_xs" id="register" value="登録" disabled="{!isOpenError ||if( isModalTelStatus == FALSE , false , screenCorrespondDetail.Sender == null)}"
+                                    reRender="dummy" 
+                                    onclick="checkInsert2();" 
+                            />
+                        </div>
+                    </div>
+                </div>
+                <!-- actionfunction -->
+                <!--電話の発信者の選択リストのぐるぐるを消す↓-->
+                <apex:actionFunction name="changeSenderTel" action="{! changeSender}" oncomplete="unblockUi();" reRender="register,PhoneStatus_tel,PortalSite_tel, District_tel, selectBuildingName"/>
+                <!--電話の状況の選択リストのぐるぐるを消す↓-->
+                <apex:actionFunction name="changePhoneStatusTel" action="{! changePhoneStatus}" oncomplete="unblockUi();" reRender="PortalSite_tel, District_tel, selectBuildingName"/>
+                <apex:actionFunction name="insetdate" action="{!saveDate}"                                                                  
+                        oncomplete="if({!hasErrorMessage}){unblockUi();return false;}closeDialogModal2();"
+                        reRender="GA102001Modal2" />
+                <!-- ▼2021.10.08 No.307 対応で追加 -->
+                <!-- 予約物件条件ボタン -->
+                <apex:actionFunction name="openModal10"
+                oncomplete="unblockUi();
+                        if({!hasErrorMessage}) {return false;}
+                        openModal10Js();" 
+                rerender="GA102001Modal10,messageArea,js2" />
+                <!-- ▲2021.10.08 No.307 対応で追加 -->
+
+                <!-- ▼ 2021.11.30 LINE連携対応より、メモと電話の切り替え用対応種別を追加 -->
+                <apex:actionFunction name="chgCorrespondType" action="{! chgCorrespondType }" oncomplete="unblockUi();" reRender="GA102001Modal2"/>
+                <!-- ▲ 2021.11.30 -->
+
+                <apex:outputPanel id="js">
+                    <script language="javascript" type="text/javascript">
+                        //登録確認メッセージ
+                        async function checkInsert2() {
+                            var message = "{! MSG_COM_V_SAVE}";
+                            if (!await showConfirm(message)) {
+                                return false;
+                            }
+                            insetdate();
+                            blockUi();
+                            return true;
+                        }
+                    </script>
+                </apex:outputPanel>
+                <apex:outputPanel id="js2" rendered="{!screenCorrespondDetail.CorrespondType == TASK_CORRESPONDTYPE_APPOINTMENT}">
+                    <script language="javascript" type="text/javascript">
+                        $(document).ready(
+                            function(){
+                                $('.modalStartDate').val('{! Text(screenCorrespondDetail.StartDate)}'); //なぜか開始日時が入っているので、強制的に上書く
+                                $('.modalStartDateTime').val('{! Text(screenCorrespondDetail.StartDateTime)}'); //なぜか開始日時が入っているので、強制的に上書く
+
+                                $('.modalEndDate').val('{! Text(screenCorrespondDetail.EndDate)}'); //なぜか終了日時が入っているので、強制的に上書く
+                                $('.modalEndDateTime').val('{! Text(screenCorrespondDetail.EndDateTime)}'); //なぜか終了日時が入っているので、強制的に上書く
+
+                                $('.modalStartDate2').val('{! Text(screenCorrespondDetail.StartDate2)}'); //なぜか開始日時が入っているので、強制的に上書く
+                                $('.modalStartDateTime2').val('{! Text(screenCorrespondDetail.StartDateTime2)}'); //なぜか開始日時が入っているので、強制的に上書く
+
+                                $('.modalEndDate2').val('{! Text(screenCorrespondDetail.EndDate2)}'); //なぜか終了日時が入っているので、強制的に上書く
+                                $('.modalEndDateTime2').val('{! Text(screenCorrespondDetail.EndDateTime2)}'); //なぜか終了日時が入っているので、強制的に上書く
+
+                                $('.modalPursuitDissolveDate').val('{! Text(screenCorrespondDetail.PursuitDissolveDate)}'); //なぜか追客解除日が入っているので、強制的に上書く
+                                $('.modalPursuitDissolveTime').val('{! Text(screenCorrespondDetail.PursuitDissolveTime)}'); //なぜか追客解除日が入っているので、強制的に上書く
+
+                                displayStaffTab(); //担当者タブの上書き
+                            }
+                        );
+
+                        // 担当者タブ表示制御
+                        function displayStaffTab() {
+
+                            // チェック
+                            var choice = getRadioChoice('staffChoiceRadioPanel');
+                            
+                            if (choice == "{!STAFF_ONE}"){
+                                document.getElementById('tab2').style.visibility = 'hidden';
+                                document.getElementById('tab2_label').style.visibility = 'hidden';
+                            } else {
+                                document.getElementById('tab2').style.visibility = 'visible';
+                                document.getElementById('tab2_label').style.visibility = 'visible';
+                            }
+                        }
+
+                        // ＜apex:radio＞の選択中の値を取得
+                        function getRadioChoice(radioId) {
+                            // ラジオボタン＜apex:radio＞のinput[type=radio]の要素を取得
+                            var radioItem = getRadioObjects(radioId);
+                            // 選択中の表示名を取得し返却
+                            for (var i=0; i < radioItem.length; i++) {
+                                if (radioItem[i].checked) {
+                                    return radioItem[i].value;
+                                }
+                            }
+                            return '';
+                        }
+                        
+                        // ＜apex:radio＞のinput[id&=radio]選択中の値を取得
+                        function getRadioObjects(radioId) {
+                            // ラジオボタン＜apex:radio＞のブロック要素を取得
+                            var radioBlock = getJQueryObjectByApexTagId(radioId);
+                            // ラジオボタン＜apex:radio＞のブロックの中からinput[type=radio]の要素を取得
+                            return radioBlock.find('input[type=radio]');
+                        }
+
+                        function getJQueryObjectByApexTagId(Id) {
+                            return $('[id$=":'+Id+'"]');
+                        }
+                    </script>
+                </apex:outputPanel>
+                <!-- ▼2021.10.08 No.307 対応で追加 -->
+                <apex:outputPanel id="js3" rendered="{!screenCorrespondDetail.CorrespondType == TASK_CORRESPONDTYPE_PURSUITHOLD}">
+                    <!-- 保留予定時のスクリプト -->
+                    <script language="javascript" type="text/javascript">
+                        jQuery(function () {
+                            // モーダル幅の設定用
+                            if(document.body.clientWidth > 600){
+                                clientWidth = 600;
+                            }else{
+                                clientWidth = document.body.clientWidth;
+                            }
+                            //ダイアログを表示（予約物件条件）
+                            jQuery("#dialog-modal2-1").dialog({
+                                modal: true,
+                                autoOpen: false,
+                                width: clientWidth,
+                            });
+                        });
+
+                        //予約物件条件モーダルを閉じる
+                        function closeGA102001_10View() {
+                            jQuery("#dialog-modal2-1").dialog("close");
+                        }
+
+                        //予約物件条件モーダルを開く
+                        async function openModal10Js() {
+                            blockUi();
+                            jQuery('#dialog-modal2-1').dialog('open');
+                        }
+                    </script>
+                </apex:outputPanel>
+                <!-- ▲2021.10.08 No.307 対応で追加 -->
+            </apex:pageBlock>
+        </apex:form>
+    </body>
+    <!-- ▼2021.10.08 No.307 対応で追加 -->
+    <!-- 【モーダルダイアログ_予約物件条件】 -->
+    <div id="dialog-modal2-1" title="">
+        <apex:outputPanel id="dialogPanel2-1">
+            <c:GA102001Modal10View ParameterClass="{!Parameter.GA102001Paremeter10}" />
+        </apex:outputPanel>
+    </div>
+    <!-- ▲2021.10.08 No.307 対応で追加 -->
+</apex:component>

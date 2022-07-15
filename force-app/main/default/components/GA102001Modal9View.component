@@ -1,0 +1,72 @@
+<!--モーダル物件検索-->
+<apex:component controller="GA102001Modal9Controller" allowDML="true">
+    <apex:attribute name="ParameterClass" type="GA102001Modal9ParameterClass" assignTo="{!Parameter}" description="key" />
+    <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery-3.6.0.min.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery.blockUI.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/common_screen_util.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.designer_file, 'designer_file/js/modaal.js')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/reset.min.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/foundation.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/style.css')}"/>
+    <apex:stylesheet value="https://use.fontawesome.com/releases/v5.0.6/css/all.css"/>
+    <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery-3.6.0.min.js')}" />
+    <body style="background-color:#ffffff;">
+        <apex:form id="GA102001Modal9" >
+            <apex:pageBlock rendered="{!parameter.noFirst}">
+                <apex:outputText rendered="{!init}" />
+                <apex:pageMessages />
+
+                <div class="modal-body" style="padding-top: 25px; padding-bottom: 25px;">
+                    <apex:outputLabel value="物件条件" for="spcSelectList"/>
+                    <apex:selectList id="spcSelectList" value="{!parameter.spcSelect}" size="1" styleClass="form-control"
+                    onchange="onchangeSpcCheck(this);">
+                        <apex:selectOptions value="{!parameter.spcSelectList}"/>    
+                    </apex:selectList>
+                </div>
+
+                <div class="modal-footer">
+                    <div class="flex-wrap justify-around flex_wrap">
+                        <div class="mb10">
+                            <apex:commandButton styleClass="btn btn-submit btn-primary text-center mauto_xs" id="GA102001Modal9ok" value="OK"
+                                    disabled="{!isOpenError}" onclick="openPropertySearch();"
+                            />
+                        </div>
+                    </div>
+                </div>
+                <apex:outputPanel id="js" layout="none">
+                    <script language="javascript" type="text/javascript">
+                        $(function () {
+                            var initControl = function(el) {
+                                this.el = el || {};
+
+                                // ボタン・リストボックスのクリックイベントの停止
+                                var btns = el.find('input[type="submit"], select');
+                                // 初期表示時にフォーカスを外す
+                                btns.blur();
+                                btns.on('click', function(e){return false;})
+                            }
+
+                            initControl($('form[id$="GA102001Modal9"]'));
+                            
+                        });
+
+                        // 取引先ID(初期値は必ず取引先)
+                        var accId = '{!parameter.spcSelect}';
+                        // 物件選択条件ID
+                        var spcId = '{!parameter.spcSelect}';
+                        
+                        // 選択物件条件変更処理を実行
+                        function onchangeSpcCheck(spcCheckObject){
+							//物件選択条件IDを更新
+                            spcId = spcCheckObject.value;
+                        }
+                        function openPropertySearch(){
+                            showPage('GA104001View', '', 'true', 'Id=' + spcId + '&accountId=' + accId);
+                        }
+                        //# sourceURL=GA102001Modal9View.js
+                    </script>
+                </apex:outputPanel>
+            </apex:pageBlock>
+        </apex:form>
+    </body>
+</apex:component>

@@ -1,0 +1,141 @@
+<!--モーダル画面（条件完全一致物件）-->
+<apex:component controller="GA102001Modal8Controller" allowDML="true">
+    <apex:attribute name="ParameterClass" type="GA102001Modal8ParameterClass" assignTo="{!Parameter}" description="key" />
+    <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery-3.6.0.min.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery.blockUI.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/common_screen_util.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.designer_file, 'designer_file/js/modaal.js')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/reset.min.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/foundation.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/style.css')}"/>
+    <apex:stylesheet value="https://use.fontawesome.com/releases/v5.0.6/css/all.css"/>
+
+    <!-- 条件完全一致物件ポップアップ -->
+    <body style="background-color:#ffffff;">
+        
+        <apex:form id="GA102001Modal8" >
+            <apex:pageBlock rendered="{!parameter.noFirst}">
+                <apex:outputText rendered="{!init}" />  
+                <apex:pageMessages />
+                <div class="modal-header">
+                    <h4 class="modal-title fontb mb20">条件完全一致物件<apex:commandButton style="visibility:hidden;" rerender="dummy"/></h4>
+                </div>
+
+                <div class="modal-body">
+                    <div class="flex-wrap  flex_wrap justify-between align_center ">
+                        <div class="wd49 wd100_md wd100_xs flex-wrap flex_wrap justify-between">
+                            <div class=" mb10 wd48 wd100_xs">
+                                <div class="information_title">物件名</div>
+                                <div class="information_contents mb0">
+                                    <apex:outputLabel value="{! screenExactConditionMatchProperty.Property}" style="border: 0;"  />
+                                </div>
+                            </div>
+                            <div class=" mb10 wd48 wd100_xs">
+                                <div class="information_title">状況</div>
+                                <div class="information_contents mb0">
+                                    <apex:outputLabel value="{! screenExactConditionMatchProperty.PropertyStatus}" style="border: 0;"  />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="wd49 wd100_md  wd100_xs flex-wrap flex_wrap">
+                            <div class=" mb10 wd100">
+                                <div class="information_title">住所</div>
+                                <div class="information_contents mb0">
+                                    <apex:outputLabel value="{! screenExactConditionMatchProperty.Address}" style="border: 0;"  />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex-wrap  flex_wrap justify-between align_center ">
+                        <div class="wd49 wd100_md wd100_xs flex-wrap flex_wrap justify-between">
+                            <div class=" mb10 wd48 wd100_xs">
+                                <div class="information_title">賃料</div>
+                                <div class="information_contents mb0">
+                                    <apex:outputLabel value="{! screenExactConditionMatchProperty.RentFee}" style="border: 0;" />
+                                </div>
+                            </div>
+
+                            <div class=" mb10 wd48 wd100_xs">
+                                <div class="information_title">最寄駅</div>
+                                <div class="information_contents mb0">
+                                    <apex:outputLabel value="{! screenExactConditionMatchProperty.NearestStation}" style="border: 0;" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="wd49 wd100_md flex-wrap flex_wrap justify-between">
+                            <div class=" mb10 wd48 wd100_xs">
+                                <div class="information_title">築年</div>
+                                <div class="information_contents mb0">
+                                    <apex:outputLabel value="{! screenExactConditionMatchProperty.BuildingYM}" style="border: 0;"  />
+                                </div>
+                            </div>
+
+                            <div class=" mb10 wd48 wd100_xs">
+                                <div class="information_title">駐車場</div>
+                                <div class="information_contents mb0">
+                                    <apex:outputLabel value="{! screenExactConditionMatchProperty.ParkingFee}" style="border: 0;"  />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex-wrap  flex_wrap justify-between align_center ">
+                        <div class=" mb10 wd48 wd100_xs flex-wrap">
+                            <div class=" mb10 wd48 wd100_xs">
+                                <div class="information_title">ステータス</div>
+                                <apex:actionRegion >
+                                    <apex:selectList styleClass="form-control" size="1" value="{!screenExactConditionMatchProperty.Status}" >
+                                        <apex:selectOptions value="{!selectStatus}" />
+                                    </apex:selectList>
+                                </apex:actionRegion>
+                            </div>
+                            <div class=" mb10 wd48 wd100_xs show-for-large-only"></div>
+                        </div>
+                        <div class="wd48 flex-wrap show-for-large-only"></div>
+                    </div>
+
+                    <div class="information_title">紹介感想</div>
+                    <apex:inputTextarea value="{!screenExactConditionMatchProperty.IntroductionImpression}" onchange="correctInputRules(this,'text', '131072')"
+                    styleClass="form-control"
+                    cols="20" rows="3" />
+                </div>
+
+                <div class="modal-footer">
+                    <div class="flex-wrap justify-around flex_wrap">
+                        <apex:commandButton value="更新"  styleclass="mb10 message btn btn-primary btn-submit text-center"
+                            disabled="{!isOpenError}"     
+                            onclick="checkInsert8();" 
+                            reRender="dummy" 
+                            />
+                    </div>
+                </div>
+
+                <apex:actionFunction name="insetdate" action="{!saveDate}"                                                                  
+                        oncomplete="if({!hasErrorMessage}){unblockUi();return false;}closeDialogModal10();"
+                        reRender="GA102001Modal8,CorrespondenceHistory,GA102001panel"   />
+
+                <apex:outputPanel id="js">
+                    <script language="javascript" type="text/javascript">
+                        //登録確認メッセージ
+                        async function checkInsert8() {
+                            var message = "{! MSG_COM_V_SAVE}";
+                            if (!await showConfirm(message)) {
+                                return false;
+                            }
+
+                            insetdate();
+                            blockUi();
+                            return true;
+                        }
+        
+                    </script>
+        
+                </apex:outputPanel>
+            </apex:pageBlock>
+        </apex:form>
+
+    </body>
+</apex:component>

@@ -1,0 +1,272 @@
+<!-- 申請登録ipad -->
+<apex:page controller="GA103001Controller2" docType="html-5.0" id="page" standardStylesheets="false" title="申込登録">
+    
+    <head>
+        <meta charset="utf-8"/>
+        
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+        
+        <meta name="format-detection" content="telephone=no"/>
+        
+        <meta name="robots" content="noindex" />
+        
+        <title>申込登録</title>
+        <apex:includeScript value="{!URLFOR($Resource.jQuery, 'jQuery/jquery-3.6.0.min.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.jQuery, 'jQuery/jquery.blockUI.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jQueryUI/jquery-ui.min.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.designer_file,'designer_file/js/modaal.js')}"/> 
+        <apex:includeScript value="{!URLFOR($Resource.external_file, 'external_file/common_screen_util.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.external_file, 'external_file/input_rules.js')}"/>
+        
+        
+        <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/reset.min.css')}"/>
+        <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/foundation.css')}"/>
+        <apex:stylesheet value="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css"/>    
+        <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/modaal.css')}"/>
+        <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/style.css')}"/>
+        <apex:stylesheet value="{!URLFOR($Resource.external_file, 'external_file/common_style.css')}"/> 
+        <apex:stylesheet value="{!URLFOR($Resource.jQuery,'jQuery/jQueryUI/jquery-ui.css')}" />
+        
+        
+    </head>
+    <apex:form id="form">
+        
+        <!-- actionFunction -->
+        <apex:actionFunction action="{! save}"   name="save"
+                             oncomplete="unblockUi();if(!{! hasErrorMessage}){alertSaveFinish()  }else{gotoTop()}" reRender="messageArea" />
+        <apex:actionFunction name="remove"
+                action="{! removeEtceteraAuxiliaryItemList}" 
+                oncomplete="unblockUi(); if(!{! hasErrorMessage}) { removeFinish(); } else { gotoTop() }"
+                reRender="form"
+        >
+            <apex:param name="ListIndex" value="" />
+        </apex:actionFunction>
+
+        <body id="gd401001">
+            <apex:commandButton style="visibility:hidden;" rerender="dummy"/>
+            <main>
+                <article>
+                    <section class="">
+                        <apex:pageMessages id="messageArea"/>             
+                        
+                        <apex:outputPanel id="next" rendered="{! !isKutikomi}">
+                            <apex:image alt="" url="{!formLogoUrl}"/>
+                            
+                            <div style="letter-spacing: 0.2em;">
+                                <br/><br/><br/><br/><br/><br/><br/>
+                                <p style="text-align: center;"><font size="5"><b>申込の登録が完了しました。</b></font></p>
+                                <p style="text-align: center;"><font size="5"><b>このままの状態でスタッフにお渡しください。</b></font></p>
+                            </div>
+                            <div class="mt30" layout="inline">
+                                <div class="flex-wrap justify-center flex-xs-xolumn  mt60">
+                                    <apex:commandButton styleClass="btn btn200 btn-primary text-center mauto_xs wd30 ml5 mr5" value="次へ" disabled="{! isOpenError}"
+                                                        onclick="blockUi();" action="{! clickNext}" oncomplete="unblockUi();" reRender="form"/>
+                                </div>
+                            </div>
+                        </apex:outputPanel>
+                        
+                        <apex:outputPanel id="kutikomi" rendered="{! isKutikomi}">
+                            <div class="border-g pd20 pd20_xs mb30">
+                                <div class="back_graydark pd3 mb20">口コミチェック</div>
+                                <apex:inputCheckbox id="ck1" value="{! screenTargetRecord.isReviewEntry}" /><apex:outputLabel for="ck1" styleClass="serach_check2">口コミを記入いただいた。</apex:outputLabel><br/>
+                                <apex:inputCheckbox id="ck2" value="{! screenTargetRecord.isReviewRequestProhibited}" /><apex:outputLabel for="ck2" styleClass="serach_check2">口コミを依頼したが断られた</apex:outputLabel>
+                                
+                                <div class="back_graydark posi_re mb30 pd3 mt20">仲介手数料/広告宣伝費（AD）</div>
+                                
+                                <div class="flex-wrap  flex_wrap justify-between align_center ">
+                                    
+                                    <div class=" mb10 wd32 wd49_md wd100_xs">
+                                        <div class="information_title">仲介手数料</div>
+                                        <apex:input type="text" value="{! screenTargetRecord.brokerageFirstFee}" onchange="correctInputRules(this,'currency', '9',0)" styleClass="form-control"/>
+                                    </div>
+                                    <div class=" mb10 wd32 wd49_md wd100_xs">
+                                        <div class="information_title">駐車場紹介料</div>
+                                        <apex:input type="text" value="{! screenTargetRecord.ParkingBrokerageFirstFee}" onchange="correctInputRules(this,'currency', '11',0)" styleClass="form-control"/>
+                                    </div>
+                                    
+                                    <div class=" mb10 wd32 wd49_md wd100_xs">
+                                        <div class="information_title">広告宣伝費</div>
+                                        <apex:input type="text" value="{! screenTargetRecord.adFee}" onchange="correctInputRules(this,'currency', '11',0)" styleClass="form-control"/>
+                                    </div>
+                                    
+                                </div>
+                                
+                                <div class="back_graydark posi_re mb30 pd3 mt20">付帯商品</div>  
+                                
+                                <div class="flex-wrap flex_wrap   justify-between align-items_end  wd100_xs nowrap">
+                                    
+                                    <div class="wd47  wd100_xs flex-wrap justify-between">
+                                        <div class="wd50">
+                                            <div class="information_title">付帯保証プラン</div>
+                                            <apex:selectList size="1" styleClass="form-control" value="{! screenTargetRecord.auxiliaryDepositPlan}">
+                                                <apex:selectOptions value="{! SelectAuxiliaryDepositPlanList}"/>
+                                                <apex:actionSupport event="onchange" action="{!depositPlanListChange}" reRender="DepositPlan" />
+                                            </apex:selectList>    
+                                        </div>
+                                        <!-- ▼ 2022.02.15 No0727 マージン文言追加 -->
+                                        <div class="wd45 ">
+                                            <div class="information_title">マージン</div>
+                                            <div class="flex-wrap align-items_end">
+                                                <apex:input type="text" id="DepositPlan" value="{! screenTargetRecord.auxiliaryDepositPlanFee}" onchange="correctInputRules(this,'currency', '7',0)" styleClass="form-control mr5"/>円
+                                            </div>
+                                        </div>
+                                        <!-- ▲ 2022.02.15 No0727 マージン文言追加 -->
+                                    </div>
+                                    
+                                    <div class="wd47  wd100_xs flex-wrap justify-between">
+                                        <div class="wd50">
+                                            <div class="information_title">付帯火災保険</div>
+                                            <apex:selectList size="1" styleClass="form-control" value="{! screenTargetRecord.auxiliaryFireInsurance}">
+                                                <apex:selectOptions value="{! SelectAuxiliaryFireInsuranceList}"/>
+                                                <apex:actionSupport event="onchange" action="{!fireInsuranceListChange}" reRender="FireInsurance" />
+                                            </apex:selectList>    
+                                        </div>
+                                        <!-- ▼ 2022.02.15 No0727 マージン文言追加 -->
+                                        <div class="wd45">
+                                            <div class="information_title">マージン</div>
+                                            <div class="flex-wrap align-items_end">
+                                                <apex:input type="text" id="FireInsurance" value="{! screenTargetRecord.auxiliaryFireInsuranceFee}" onchange="correctInputRules(this,'currency', '7',0)" styleClass="form-control mr5"/>円
+                                            </div>
+                                        </div>
+                                        <!-- ▲ 2022.02.15 No0727 マージン文言追加 -->
+                                    </div>
+                                </div>
+
+                                <div class="back_graydark posi_re pd3 mt20 wd100">その他付帯商品</div>
+                                <div class="border-g pd20" style="width:100%; display:flex; flex-wrap:wrap; flex-direction:column;">
+                                    <div class="flex-wrap flex_wrap justify-between align-items_end wd100_xs nowrap mb30">
+                                        <div class="flex-md-xolumn" style="width:15%; min-width:150px;">
+                                            <div class="information_title">付帯商品種別</div>
+                                            <apex:selectList id="EtceteraAuxiliaryItemType" size="1" styleClass="form-control" value="{! screenTargetRecord.etceteraAuxiliaryItemType}">
+                                                <apex:actionSupport event="onchange" action="{!etceteraAuxiliaryItemTypeListChange}" onsubmit="blockUi();" oncomplete="unblockUi();" reRender="EtceteraAuxiliaryItemName" />
+                                                <apex:selectOptions value="{! SelectEtceteraAuxiliaryItemTypeList}"/>
+                                            </apex:selectList>
+                                        </div>
+                                        <div class="flex-md-xolumn" style="width:50%">
+                                            <div class="information_title">付帯業者／付帯商品／付帯料金</div>
+                                            <apex:selectList id="EtceteraAuxiliaryItemName" size="1" styleClass="form-control" value="{! screenTargetRecord.etceteraAuxiliaryItemName}">
+                                                <apex:actionSupport event="onchange" action="{!etceteraAuxiliaryItemNameListChange}" onsubmit="blockUi();" oncomplete="unblockUi();" reRender="EtceteraAuxiliaryItemFee" />
+                                                <apex:selectOptions value="{! SelectEtceteraAuxiliaryItemNameList}"/>
+                                            </apex:selectList>
+                                        </div>
+                                        <div class="flex-md-xolumn" style="width:15%; min-width:140px;">
+                                            <div class="information_title">販売価格</div>
+                                            <div>
+                                                <apex:input type="text"
+                                                        id="EtceteraAuxiliaryItemFee"
+                                                        styleClass="form-control mr5"
+                                                        style="width:80%!important; min-width:120px;"
+                                                        value="{! screenTargetRecord.etceteraAuxiliaryItemFee}"
+                                                        onchange="correctInputRules(this,'currency', '7',0)"
+                                                />
+                                                円
+                                            </div>
+                                        </div>
+                                        <div style="width:10%; min-width:55px; display:flex; justify-content:flex-end;">
+                                            <apex:commandButton value=" 追加 "
+                                                    styleClass="modal btn btn btn-sm btn-normal"
+                                                    disabled="{! isOpenError}"
+                                                    onclick="blockUi();"
+                                                    oncomplete="unblockUi();if({! hasErrorMessage}){gotoTop()}" 
+                                                    action="{! addEtceteraAuxiliaryItemList}"
+                                                    reRender="form"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div class="lock_box" style="width:100%; height:400px;">
+                                        <table class="data gray" style="width:100%; height:400px; border-left: 1px #d2d2d2 solid;">
+                                            <tr>
+                                                <th class="wd2"   ></th>
+                                                <th class="wd6"   >付帯商品種別</th>
+                                                <th class="wdlast">付帯業者／付帯商品</th>
+                                                <th class="wd4"   >販売価格</th>
+                                            </tr>
+
+                                            <apex:variable var="num" value="0" />
+                                            <apex:repeat value="{!screenTargetRecord.etceteraAuxiliaryItemList}" var="item" id="etceteraAuxiliaryItemList">  
+                                                <tr>
+                                                    <td>
+                                                        <apex:commandButton value="削除"
+                                                            onclick="clickRemove({! num})"
+                                                            disabled="{! isOpenError}"
+                                                            styleClass="modal btn btn btn-sm btn-normal"
+                                                            reRender="dummy"
+                                                        />
+                                                    </td>
+                                                    <td>{! item.auxiliaryItemType}</td>
+                                                    <td>{! item.auxiliaryItemAccount}/{! item.auxiliaryItemName}</td>
+                                                    <td>{! item.auxiliaryItemFee}</td>
+                                                </tr>
+                                                <apex:variable var="num" value="{!VALUE(num)+1}" />
+                                            </apex:repeat> 
+                                        </table>
+                                    </div>
+                                </div>
+
+                                <div class="mt20 mb30 flex-wrap flex_wrap align-right align-items_end">
+                                    <div class="flex-wrap nowrap">
+                                        <div class="information_title mr26">合計</div>
+                                        <div class="wd5">
+                                            <apex:outputLabel id="sum" value="{! screenTargetRecord.sum}" 
+                                                              style="display:block; width:100%; height:25px; padding-left:10px; font-size:1.5rem; border-bottom:1px solid #d2d2d2;" />
+                                        </div>
+                                        <div class="mr20">円</div>
+                                    </div>
+                                    <div class="flex-wrap flex_wrap mt10">
+                                        <apex:commandButton value=" 再計算 " styleClass="modal btn btn btn-sm btn-normal" disabled="{! isOpenError}" onclick="blockUi();"  action="{! Recalculation}" 
+                                                            oncomplete="unblockUi();if({! hasErrorMessage}){gotoTop()}" reRender="sum,messageArea" />
+                                    </div>
+                                </div>   
+                            </div> 
+                            <div class="btn btn-submit btn-primary text-center mt30">
+                                <apex:commandButton styleClass="btn btn-submit btn-primary text-center mt30" value="保存" onclick="checkSave()" disabled="{! isOpenError}"
+                                                    reRender="dummy" />    
+                            </div>
+
+                        </apex:outputPanel>
+                    </section>
+                </article>
+            </main> 
+            <script type="text/javascript">
+            //保存確認メッセージ
+            async function checkSave(){
+                var message = "{! MSG_COM_V_SAVE}";
+                var retVal = await showConfirm(message);
+                if (retVal) {
+                    blockUi();
+                    save();
+                }          
+            }
+            
+            //保存完了メッセージ
+            async function alertSaveFinish(){
+                
+                //完了メッセージ
+                await showAlert("{! MSG_COM_I_SAVE}");
+                
+                //画面を閉じる(PCのみ)
+                if ( {! !isApp } ) {
+                    closePage();
+                }
+            }    
+
+            // 削除ボタン押下時
+            async function clickRemove(idx) {
+                var retVal = await showConfirm("{! MSG_COM_V_DELETE}");
+                if (retVal) {
+                    blockUi();
+                    remove(idx);
+                }
+            }
+
+            // 削除完了時
+            async function removeFinish() {
+                // 完了メッセージ
+                await showAlert("{! MSG_COM_I_DELETE}");
+            }
+
+            </script>      
+        </body>
+    </apex:form>
+</apex:page>

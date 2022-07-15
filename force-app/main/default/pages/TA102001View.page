@@ -1,0 +1,1717 @@
+<!-- 仮見積（帳票_PDF） -->
+<apex:page standardStylesheets="false" docType="html-5.0" controller="GA102002Controller2"
+            showHeader="false"
+            sidebar="false"
+            applyHtmlTag="false"
+            contentType="application/vnd.ms-excel#contacts.xls"
+            title="仮見積"
+            renderAs="PDF">
+<!-- <apex:page controller="GA102002Controller2" docType="html-5.0" standardStylesheets="false" title="仮見積"> -->
+
+
+  <head>
+    <apex:includeScript value="{!URLFOR($Resource.jQuery, 'jQuery/jquery-3.6.0.min.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.jQuery, 'jQuery/jQueryUI/jquery-ui.min.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.jQuery, 'jQuery/jquery.blockUI.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.designer_file,'designer_file/js/modaal.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.external_file, 'external_file/common_screen_util.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.external_file, 'external_file/input_rules.js')}" />
+    <apex:includeScript value="https://s.oproarts.com/js/jquery-1.12.4.min.js" />
+    <style>
+        /* 帳票の間隔調整 */
+        @page {
+            size:  A4;
+            padding: 0;
+            margin: 0mm;　
+        }
+        body {
+            font-family: Arial Unicode MS;
+            font-size: 14pt;
+        }
+        .print_pages2{
+          background-color: #ffffff;
+          padding:5px 10px;
+          width:1060px;
+          margin:0 auto;
+        }
+
+        .print_pages2 table, .print_pages2 th {
+
+          border: 1px #d2d2d2 solid;
+          border-collapse: collapse;
+          vertical-align:middle;
+          padding:3px 0;
+
+        }
+        .print_pages2 td {
+          border: 1px #d2d2d2 solid;
+          border-collapse: collapse;
+          vertical-align:middle;
+          padding:0px 5px 0px 10px;
+        }
+
+        .padding_yen {
+          padding:0px 30px 0px 0px;
+        }
+
+        .table_uchiwake_left_this{
+          width:300px;
+        }
+        .table_uchiwake_left_this.td {
+
+        }
+        .table_uchiwake_right_this, .font_min {
+          font-size : 8px;
+        }
+        .pdl50_this {
+          padding-left: 10px;
+        }
+        .table_price{
+          width: 300px;
+        }
+        .form-control_this{
+          font-size:10px;
+        }
+
+        /* ヘッダーテーブル項目の書式設定 */
+        .this_col_bukken {
+          width: 38% !important;
+        }
+        .this_col_juukyo {
+          width: 36% !important;
+        }
+        .this_col_keiyakubi {
+          width: 26% !important;
+        }
+
+        /* 内訳テーブルの書式設定 */
+        .this_table_uchiwake {
+          width: 100%;
+        }
+
+        /* 内訳テーブル項目の書式設定 */
+        .this_col_uchiwake1 {
+          width: 32% !important;
+          padding-left: 15px !important;
+          border-right: none !important;
+        }
+        .this_col_uchiwake2 {
+          width: 42% !important;
+          border-left: none !important;
+          font-size: 8px;
+        }
+        .this_col_uchiwake3 {
+          width: 74% !important;
+          height: 30px;
+          padding-left: 15px !important;
+          border-right: none !important;
+        }
+        .this_col_price {
+          width: 26% !important;
+        }
+
+    </style>
+
+    <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/foundation.css')}" />
+    <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/modaal.css')}" />
+    <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/style.css')}" />
+    <apex:stylesheet value="{!URLFOR($Resource.external_file, 'external_file/common_style.css')}" />
+    <apex:stylesheet value="{!URLFOR($Resource.jQuery,'jQuery/jQueryUI/jquery-ui.css')}"/>
+  </head>
+
+  <!-- 初回 -->
+  <body id="TA1020011" >
+    <div class="print_pages2" style=" width:90%;">
+      <table class=" mb10 mt10" style="font-size : 10px;  width:100%;">
+        <tr style="height:10px">
+          <td style="border: none;">
+            <div class="wd32" style="float:left;">
+              <apex:image style="float:left;" alt="" url="{! formLogoUrl}" styleClass="print_pages_logo" rendered="{!formLogoIsAlive}" />
+            </div>
+          </td>     
+          
+          <td style="border: none;">
+            <div class="font2rem wd32 text-center fontb" style="font-size : 18px;float:left; padding-right:60px;">仮見積り（初回）</div>
+          </td>
+
+          <td style="border: none;">
+            <div class="" style="float:right;"><apex:outputLabel value="発行日：{!screenProvisionalQuoteRecord.IssueDate}"/></div>
+          </td>
+        </tr>
+              
+        <tr>
+          <td style="border: none;">
+            <div class="flex-wrap " style="float:left;">
+              <div class="print_pages_name"><apex:outputLabel value="{!screenProvisionalQuoteRecord.AccountName}"/> 様</div>
+            </div>
+          </td>
+
+          <td style="border: none;">
+          
+          </td>
+            
+          <td style="border: none;">
+            <div class="flex-wrap " style="float:right;">
+                
+              <div class="print_pages_company">
+                {! screenProvisionalQuoteRecord.CompanyName}
+              <apex:outputLabel value="(登録番号" rendered="{! if(screenProvisionalQuoteRecord.InvoiceRegistNumber == null , false, true)}"/>
+              <apex:outputLabel value="{!screenProvisionalQuoteRecord.InvoiceRegistNumber}"/>
+              <apex:outputLabel value=")" rendered="{! if(screenProvisionalQuoteRecord.InvoiceRegistNumber == null , false, true)}"/><br/>
+              <apex:outputLabel value="{!screenProvisionalQuoteRecord.brandName}"/> <apex:outputLabel value="{!screenProvisionalQuoteRecord.UserName}"/><br/>
+              〒<apex:outputLabel value="{!screenProvisionalQuoteRecord.PostalCode}"/><br/>
+              <apex:outputLabel value="{!screenProvisionalQuoteRecord.Address}"/><br/>
+              TEL <apex:outputLabel value="{!screenProvisionalQuoteRecord.Phone}"/>　　FAX<apex:outputLabel value="{!screenProvisionalQuoteRecord.Fax}"/></div>
+            </div>
+          </td>
+        </tr>
+      </table>
+  
+      <table class="secondtable mb10 mt10" style="font-size : 10px; width:100%;" >
+        <tr>
+          <th class="back_graydark text-center this_col_bukken">物件名</th>
+          <th class="back_graydark text-center this_col_juukyo">住居表示</th>
+          <th class="back_graydark text-center this_col_keiyakubi">契約開始日</th>
+        </tr>
+        <tr>
+          <td class="text-center this_col_bukken"><apex:outputLabel value="{!screenProvisionalQuoteRecord.PropertyName}"/></td>
+          <td class="text-center this_col_juukyo"><apex:outputLabel value="{!screenProvisionalQuoteRecord.PropertyAddress}"/></td>
+          <td class="text-center this_col_keiyakubi"><apex:outputLabel value="{!screenProvisionalQuoteRecord.ContractStartDate}"/></td>
+        </tr>
+      </table>
+
+      <table class="this_table_uchiwake" style="font-size : 10px;" >
+        <tr>
+          <th class="back_graydark text-center this_col_uchiwake3" colspan = "2">内　　訳</th>
+          <th class="back_graydark text-center this_col_price">金　　額</th>
+        </tr>
+
+        
+        <tr style="display:{! if(screenProvisionalQuoteRecord.RentFlg, "run-in", "none")}; height: 30px;"> 
+          <td class="this_col_uchiwake1">
+            <div class="flex-wrap justify-between table_uchiwake_title"> 家　　賃</div>
+          </td>
+          <td class="this_col_uchiwake2">
+            <!-- 日割り分 -->
+            <apex:outputPanel rendered="{! if((!screenProvisionalQuoteRecord.Proratedflag || !screenProvisionalQuoteRecord.DailyRentFlg ), false , true)}">
+              <div class="print_pages_bottom pdl50_this">
+                <apex:outputLabel value="{!screenProvisionalQuoteRecord.RentThisMonthTextPdf}" escape="false"/>&nbsp;
+              </div>
+              <!-- ▼問合せNo0496で変更 -->
+              <!-- 月分入力-->            
+              <div class="pdl50_this">
+                <apex:outputLabel value="{!screenProvisionalQuoteRecord.RentNextMonthTextPdf}" escape="false"/>&nbsp;
+              </div>
+            </apex:outputPanel>
+            <apex:outputPanel rendered="{! if((screenProvisionalQuoteRecord.Proratedflag && screenProvisionalQuoteRecord.DailyRentFlg ), false , true)}">
+              <div class="pdt4 pdl50_this font_min">
+                <apex:outputLabel value="{!screenProvisionalQuoteRecord.RentFullMonthTextPdf}" escape="false"/>&nbsp;
+              </div>
+            </apex:outputPanel>
+            <!-- ▲問合せNo0496で変更 -->
+          </td>
+          <td class="this_col_price">
+            <!-- 金額 -->
+            <apex:outputPanel rendered="{! if((!screenProvisionalQuoteRecord.Proratedflag || !screenProvisionalQuoteRecord.DailyRentFlg), false , true)}">
+              <div class="print_pages_bottom text-right padding_yen">
+                  <apex:outputLabel value="{! screenProvisionalQuoteRecord.DailyRent}" styleClass="form-control_this mr5" style="border: none;height : 50%;text-align: right" />円
+              </div>  
+            </apex:outputPanel>
+          
+            <div class="text-right padding_yen">
+              <apex:outputLabel value="{! screenProvisionalQuoteRecord.Rent}" styleClass="form-control_this mr5" style="border: none;height : 50%;text-align: right" />円
+            </div> 
+          </td>
+        </tr>
+      
+
+        <tr style="display:{! if(screenProvisionalQuoteRecord.ManagementFeeFlg, "run-in", "none")}; height: 30px;"> 
+          <td class="this_col_uchiwake1">
+              <div class="flex-wrap" ><div class="flex-wrap justify-between "> 管　　理　　費
+                  <apex:outputLabel value="(" rendered="{! if(screenProvisionalQuoteRecord.ManagementFeeTaxType != null ,true,false)}"/>
+                  <apex:outputLabel value="{!screenProvisionalQuoteRecord.ManagementFeeTaxType} "/>
+                  <apex:outputLabel value=")" rendered="{! if(screenProvisionalQuoteRecord.ManagementFeeTaxType != null ,true,false)}"/>
+              </div></div>
+          </td>
+          <td class="this_col_uchiwake2">
+              <!-- 日割り分 -->
+              <apex:outputPanel rendered="{! if((!screenProvisionalQuoteRecord.Proratedflag || !screenProvisionalQuoteRecord.ManagementProratedFeeFlg ), false , true)}">
+                  <div class="print_pages_bottom pdl50_this">
+                      <apex:outputLabel value="{!screenProvisionalQuoteRecord.ManagementThisMonthTextPdf}" escape="false"/>&nbsp;
+                  </div>
+                  <!-- ▼問合せNo0496で変更 -->
+                  <!-- 月分入力-->            
+                  <div class="pdl50_this">
+                    <apex:outputLabel value="{!screenProvisionalQuoteRecord.ManagementNextMonthTextPdf}" escape="false"/>&nbsp;
+                  </div>
+              </apex:outputPanel>
+              <apex:outputPanel rendered="{! if((screenProvisionalQuoteRecord.Proratedflag && screenProvisionalQuoteRecord.ManagementProratedFeeFlg ), false , true)}">
+                <!-- 月分-->
+                <div class="pdt4 pdl50_this font_min">
+                  <apex:outputLabel value="{!screenProvisionalQuoteRecord.ManagementFullMonthTextPdf}" escape="false"/>&nbsp;
+                </div>
+              </apex:outputPanel>
+              <!-- ▲問合せNo0496で変更 -->
+          </td>
+          <td class="this_col_price">
+              <!-- 金額 -->
+              <apex:outputPanel rendered="{! if((!screenProvisionalQuoteRecord.Proratedflag || !screenProvisionalQuoteRecord.ManagementProratedFeeFlg), false , true)}">
+                <div class="print_pages_bottom text-right padding_yen">
+                    <apex:outputLabel value="{! screenProvisionalQuoteRecord.ManagementProratedFee}" styleClass="form-control_this mr5" style="border: none;height : 50%;text-align: right" />円
+                </div> 
+              </apex:outputPanel>
+              <div class="text-right padding_yen">
+                <apex:outputLabel value="{! screenProvisionalQuoteRecord.ManagementFee}" styleClass="form-control_this mr5" style="border: none;height : 50%;text-align: right" />円
+              </div> 
+          </td>
+        </tr>
+
+        <tr style="display:{! if(screenProvisionalQuoteRecord.TownMembershipFeeFlg, "run-in", "none")}; height: 30px;"> 
+          <td class="this_col_uchiwake1">
+              <div class="flex-wrap"><div class="flex-wrap justify-between "> 町　　会　　費　
+                  <apex:outputLabel value="(" rendered="{! if(screenProvisionalQuoteRecord.TownshipFeePaymentType != null ,true,false)}"/>
+                  <apex:outputLabel value="{!screenProvisionalQuoteRecord.TownshipFeePaymentType}"/>
+                  <apex:outputLabel value=")" rendered="{! if(screenProvisionalQuoteRecord.TownshipFeePaymentType != null ,true,false)}"/>
+                  <apex:outputLabel value="(" rendered="{! if(screenProvisionalQuoteRecord.TownshipFeeTaxType != null ,true,false)}"/>
+                  <apex:outputLabel value="{!screenProvisionalQuoteRecord.TownshipFeeTaxType}"/>
+                  <apex:outputLabel value=")" rendered="{! if(screenProvisionalQuoteRecord.TownshipFeeTaxType != null ,true,false)}"/>
+              </div></div>
+          </td>
+          <td class="this_col_uchiwake2">
+              <apex:outputPanel rendered="{! if((!screenProvisionalQuoteRecord.Proratedflag || 
+                                                 !screenProvisionalQuoteRecord.DailyAmountTownMembershipFeeFlg ||
+                                                 screenProvisionalQuoteRecord.TownshipFeePaymentType == PROPERTY_PAYMENTTYPE_YEAR), false , true)}">
+                  <div class="print_pages_bottom pdl50_this">
+                      <apex:outputLabel value="{!screenProvisionalQuoteRecord.TownshipThisMonthTextPdf}" escape="false"/>&nbsp;
+                  </div>
+                  <!-- ▼問合せNo0496で変更 -->
+                  <!-- 月分-->            
+                  <div class="pdl50_this">
+                    <apex:outputLabel value="{!screenProvisionalQuoteRecord.TownshipNextMonthTextPdf}" escape="false"/>&nbsp;
+                  </div>
+              </apex:outputPanel>
+              <apex:outputPanel rendered="{! if((screenProvisionalQuoteRecord.Proratedflag || 
+                                                 screenProvisionalQuoteRecord.DailyAmountTownMembershipFeeFlg ||
+                                                 screenProvisionalQuoteRecord.TownshipFeePaymentType == PROPERTY_PAYMENTTYPE_YEAR), false , true)}">
+                <!-- 月分-->            
+                <div class="pdt4 pdl50_this font_min">
+                  <apex:outputLabel value="{!screenProvisionalQuoteRecord.TownshipFullMonthTextPdf}" escape="false"/>&nbsp;
+                </div>
+                <!-- ▲問合せNo0496で変更 -->
+              </apex:outputPanel>
+          </td>
+          <td class="this_col_price">
+              <!-- 金額 -->
+              <apex:outputPanel rendered="{! if((!screenProvisionalQuoteRecord.Proratedflag || 
+                                                 !screenProvisionalQuoteRecord.DailyAmountTownMembershipFeeFlg || 
+                                                 screenProvisionalQuoteRecord.TownshipFeePaymentType == PROPERTY_PAYMENTTYPE_YEAR), false , true)}">
+                  <div class="print_pages_bottom text-right padding_yen">
+                      <apex:outputLabel value="{! screenProvisionalQuoteRecord.DailyAmountTownMembershipFee}" styleClass="form-control_this mr5" style="border: none;height : 50%;text-align: right" />円
+                  </div> 
+              </apex:outputPanel>
+              <div class="text-right padding_yen">
+                  <apex:outputLabel value="{! screenProvisionalQuoteRecord.TownMembershipFee}" styleClass="form-control_this mr5" style="border: none;height : 50%;text-align: right" />円
+              </div> 
+          </td>
+        </tr>
+
+        <tr style="display:{! if(screenProvisionalQuoteRecord.WaterBillFlg, "run-in", "none")}; height: 30px;"> 
+          <td class="this_col_uchiwake1">
+            <div class="flex-wrap"><div class="flex-wrap justify-between"> 水　　道　　代
+                <apex:outputLabel value="(" rendered="{! if(screenProvisionalQuoteRecord.WortFeeTaxType != null ,true,false)}"/>
+                <apex:outputLabel value="{!screenProvisionalQuoteRecord.WortFeeTaxType} "/>
+                <apex:outputLabel value=")" rendered="{! if(screenProvisionalQuoteRecord.WortFeeTaxType != null ,true,false)}"/>  
+            </div></div>
+          </td>
+          <td class="this_col_uchiwake2">
+            <apex:outputPanel rendered="{! if((!screenProvisionalQuoteRecord.Proratedflag || !screenProvisionalQuoteRecord.DailyWaterBillFlg), false , true)}">
+                <div class="print_pages_bottom pdl50_this">
+                    <apex:outputLabel value="{!screenProvisionalQuoteRecord.WaterThisMonthTextPdf}" escape="false"/>&nbsp;
+                </div>
+                <!-- ▼問合せNo0496で変更 -->
+                <!-- 月分入力-->            
+                <div class="pdl50_this">
+                  <apex:outputLabel value="{!screenProvisionalQuoteRecord.WaterNextMonthTextPdf}" escape="false"/>&nbsp;
+                </div>
+            </apex:outputPanel>
+            <apex:outputPanel rendered="{! if((screenProvisionalQuoteRecord.Proratedflag && screenProvisionalQuoteRecord.DailyRentFlg ), false , true)}">
+              <!-- 月分-->
+              <div class="pdt4 pdl50_this font_min">
+                <apex:outputLabel value="{!screenProvisionalQuoteRecord.WaterFullMonthTextPdf}" escape="false"/>&nbsp;
+              </div>
+            </apex:outputPanel>
+            <!-- ▲問合せNo0496で変更 -->
+          </td>
+          <td class="this_col_price">
+            <!-- 金額 -->
+            <apex:outputPanel rendered="{! if((!screenProvisionalQuoteRecord.Proratedflag || !screenProvisionalQuoteRecord.DailyWaterBillFlg), false , true)}">
+                <div class="print_pages_bottom text-right padding_yen">
+                    <apex:outputLabel value="{! screenProvisionalQuoteRecord.DailyWaterBill}" styleClass="form-control_this mr5" style="border: none;height : 50%;text-align: right" />円
+                </div> 
+            </apex:outputPanel>
+            <div class="text-right padding_yen">
+                <apex:outputLabel value="{! screenProvisionalQuoteRecord.WaterBill}" styleClass="form-control_this mr5" style="border: none;height : 50%;text-align: right" />円
+            </div>
+          </td>
+        </tr>
+
+        <tr style="display:{! if(screenProvisionalQuoteRecord.CATVFlg, "run-in", "none")}; height: 30px;">
+          <td class="this_col_uchiwake1">
+            <div class="flex-wrap"><div class="flex-wrap justify-between "> C　　A　　T　　V
+              <apex:outputLabel value="(" rendered="{! if(screenProvisionalQuoteRecord.CATVTaxType != null ,true,false)}"/>
+              <apex:outputLabel value="{!screenProvisionalQuoteRecord.CATVTaxType} "/>
+              <apex:outputLabel value=")" rendered="{! if(screenProvisionalQuoteRecord.CATVTaxType != null ,true,false)}"/>    
+            </div></div>
+          </td>
+          <td class="this_col_uchiwake2">
+              <apex:outputPanel rendered="{! if((!screenProvisionalQuoteRecord.Proratedflag || !screenProvisionalQuoteRecord.CATVDailyFlg), false , true)}">
+                <div class="print_pages_bottom pdl50_this">
+                    <apex:outputLabel value="{!screenProvisionalQuoteRecord.CatvThisMonthTextPdf}" escape="false"/>&nbsp;
+                </div>
+                <!-- ▼問合せNo0496で変更 -->
+                <!-- 月分-->            
+                <div class="pdl50_this">
+                  <apex:outputLabel value="{!screenProvisionalQuoteRecord.CatvNextMonthTextPdf}" escape="false"/>&nbsp;
+                </div>
+              </apex:outputPanel>
+              <apex:outputPanel rendered="{! if((screenProvisionalQuoteRecord.Proratedflag && screenProvisionalQuoteRecord.CATVDailyFlg ), false , true)}">
+                <!-- 月分-->
+                <div class="pdt4 pdl50_this font_min">
+                  <apex:outputLabel value="{!screenProvisionalQuoteRecord.CatvFullMonthTextPdf}" escape="false"/>&nbsp;
+                </div>
+              </apex:outputPanel>
+              <!-- ▲問合せNo0496で変更 -->
+          </td>
+          <td class="this_col_price">
+              <!-- 金額 -->
+              <apex:outputPanel rendered="{! if((!screenProvisionalQuoteRecord.Proratedflag || !screenProvisionalQuoteRecord.CATVDailyFlg), false , true)}">
+                  <div class="print_pages_bottom text-right padding_yen">
+                  <apex:outputLabel value="{! screenProvisionalQuoteRecord.CATVDaily}" styleClass="form-control_this mr5" style="border: none;height : 50%;text-align: right" />円
+                  </div> 
+              </apex:outputPanel>
+              <div class="text-right padding_yen">
+                  <apex:outputLabel value="{! screenProvisionalQuoteRecord.CATV}" styleClass="form-control_this mr5" style="border: none;height : 50%;text-align: right" />円
+              </div> 
+          </td>
+        </tr>
+
+        <tr style="display:{! if(screenProvisionalQuoteRecord.GarbageDisposalCostsFlg, "run-in", "none")}; height: 30px;">
+          <td class="this_col_uchiwake1">
+            <div class="flex-wrap">
+            <div class="flex-wrap justify-between"> ゴ　ミ　処　理　費
+              <apex:outputLabel value="(" rendered="{! if(screenProvisionalQuoteRecord.GarbageDisposalFeePaymentType != null ,true,false)}"/>
+              <apex:outputLabel value="{!screenProvisionalQuoteRecord.GarbageDisposalFeePaymentType} "/>
+              <apex:outputLabel value=")" rendered="{! if(screenProvisionalQuoteRecord.GarbageDisposalFeePaymentType != null ,true,false)}"/>
+              <apex:outputLabel value="(" rendered="{! if(screenProvisionalQuoteRecord.GarbageDisposalFeeTaxType != null ,true,false)}"/>
+              <apex:outputLabel value="{!screenProvisionalQuoteRecord.GarbageDisposalFeeTaxType} "/>
+              <apex:outputLabel value=")" rendered="{! if(screenProvisionalQuoteRecord.GarbageDisposalFeeTaxType != null ,true,false)}"/>
+            </div></div>
+          </td>
+          <td class="this_col_uchiwake2">
+            <apex:outputPanel rendered="{! if((!screenProvisionalQuoteRecord.Proratedflag || 
+                                               !screenProvisionalQuoteRecord.DailyGarbageDisposalExpensesFlg ||
+                                               screenProvisionalQuoteRecord.GarbageDisposalFeePaymentType == PROPERTY_PAYMENTTYPE_YEAR), false , true)}">
+              <div class="print_pages_bottom pdl50_this">
+                <apex:outputLabel value="{!screenProvisionalQuoteRecord.GarbageDisposalThisMonthTextPdf}" escape="false"/>&nbsp;
+              </div>
+              <!-- ▼問合せNo0496で変更 -->
+              <!-- 月分-->            
+              <div class="pdl50_this">
+                <apex:outputLabel value="{!screenProvisionalQuoteRecord.GarbageDisposalNextMonthTextPdf}" escape="false"/>&nbsp;
+              </div>
+            </apex:outputPanel>
+            <apex:outputPanel rendered="{! if((screenProvisionalQuoteRecord.Proratedflag || 
+                                                screenProvisionalQuoteRecord.DailyGarbageDisposalExpensesFlg ||
+                                                screenProvisionalQuoteRecord.GarbageDisposalFeePaymentType == PROPERTY_PAYMENTTYPE_YEAR ), false , true)}">
+              <!-- 月分-->              
+              <div class="pdt4 pdl50_this font_min">
+                <apex:outputLabel value="{!screenProvisionalQuoteRecord.GarbageDisposalFullMonthTextPdf}" escape="false"/>&nbsp;
+              </div>
+            </apex:outputPanel>
+            <!-- ▲問合せNo0496で変更 -->
+          </td>
+          <td class="this_col_price">
+
+            <!-- 金額 -->
+            <apex:outputPanel rendered="{! if((!screenProvisionalQuoteRecord.Proratedflag ||
+                                               !screenProvisionalQuoteRecord.DailyGarbageDisposalExpensesFlg ||
+                                               screenProvisionalQuoteRecord.GarbageDisposalFeePaymentType == PROPERTY_PAYMENTTYPE_YEAR), false , true)}">
+              <div class="print_pages_bottom text-right padding_yen">
+                <apex:outputLabel value="{! screenProvisionalQuoteRecord.DailyGarbageDisposalExpenses}" styleClass="form-control_this mr5" style="border: none;height : 50%;text-align: right" />円
+              </div> 
+            </apex:outputPanel>
+            <div class="text-right padding_yen">
+              <apex:outputLabel value="{! screenProvisionalQuoteRecord.GarbageDisposalCosts}" styleClass="form-control_this mr5" style="border: none;height : 50%;text-align: right" />円
+            </div> 
+
+          </td>
+        </tr>
+
+        <tr style="display:{! if((!screenProvisionalQuoteRecord.BicycleParkingFlag || !screenProvisionalQuoteRecord.BicycleparkingFeeFlg), "none","run-in")};height: 30px;">
+          <td class="this_col_uchiwake1">
+            <div class="flex-wrap"><div class="flex-wrap justify-between"> 駐　　輪　　場　　代
+              <apex:outputLabel value="(" rendered="{! if(screenProvisionalQuoteRecord.BicycleParkingFeeTaxType != null ,true,false)}"/>
+              <apex:outputLabel value="{!screenProvisionalQuoteRecord.BicycleParkingFeeTaxType} "/>
+              <apex:outputLabel value=")" rendered="{! if(screenProvisionalQuoteRecord.BicycleParkingFeeTaxType != null ,true,false)}"/>        
+            </div></div>
+          </td>
+          <td class="this_col_uchiwake2">
+            <apex:outputPanel rendered="{! if((!screenProvisionalQuoteRecord.Proratedflag || !screenProvisionalQuoteRecord.DailyBicycleParkingFeeFlg), false , true)}">
+              <div class="print_pages_bottom pdl50_this">
+                <apex:outputLabel value="{!screenProvisionalQuoteRecord.BicycleParkingThisMonthTextPdf}" escape="false"/>&nbsp;
+              </div>
+              <!-- ▼問合せNo0496で変更 -->
+              <!-- 月分-->            
+              <div class="pdl50_this">
+                <apex:outputLabel value="{!screenProvisionalQuoteRecord.BicycleParkingNextMonthTextPdf}" escape="false"/>&nbsp;
+              </div>
+            </apex:outputPanel>
+            <apex:outputPanel rendered="{! if((screenProvisionalQuoteRecord.Proratedflag && screenProvisionalQuoteRecord.DailyBicycleParkingFeeFlg ), false , true)}">
+              <!-- 月分-->
+              <div class="pdt4 pdl50_this font_min">
+                <apex:outputLabel value="{!screenProvisionalQuoteRecord.BicycleParkingFullMonthTextPdf}" escape="false"/>&nbsp;
+              </div>
+            </apex:outputPanel>
+            <!-- ▲問合せNo0496で変更 -->
+          </td>
+          <td class="this_col_price">
+            <!-- 金額 -->
+            <apex:outputPanel rendered="{! if((!screenProvisionalQuoteRecord.Proratedflag || !screenProvisionalQuoteRecord.DailyBicycleParkingFeeFlg), false , true)}">
+              <div class="print_pages_bottom text-right padding_yen">
+                <apex:outputLabel value="{! screenProvisionalQuoteRecord.DailyBicycleParkingFee}" styleClass="form-control_this mr5" style="border: none;height : 50%;text-align: right" />円
+              </div> 
+            </apex:outputPanel>
+            <div class="text-right padding_yen">
+              <apex:outputLabel value="{! screenProvisionalQuoteRecord.BicycleparkingFee}" styleClass="form-control_this mr5" style="border: none;height : 50%;text-align: right" />円
+            </div> 
+          </td>
+        </tr>
+
+        <tr style="display:{! if((!screenProvisionalQuoteRecord.Parkingflag || !screenProvisionalQuoteRecord.ParkingFeeFlg), "none","run-in")}; height: 30px;">
+          <td class="this_col_uchiwake1">
+            <div class="flex-wrap"><div class="flex-wrap justify-between"> 駐　　車　　場　　代
+              <apex:outputLabel value="(" rendered="{! if(screenProvisionalQuoteRecord.ParkingFeeTaxType != null ,true,false)}"/>
+              <apex:outputLabel value="{!screenProvisionalQuoteRecord.ParkingFeeTaxType} "/>
+              <apex:outputLabel value=")" rendered="{! if(screenProvisionalQuoteRecord.ParkingFeeTaxType != null ,true,false)}"/>    
+            </div></div>
+          </td>
+          <td class="this_col_uchiwake2">
+            <!-- 日割り分 -->
+            <apex:outputPanel rendered="{! if((!screenProvisionalQuoteRecord.Proratedflag || !screenProvisionalQuoteRecord.DailyDiscountParkingLotFlg), false , true)}">
+              <div class="print_pages_bottom pdl50_this">
+                <apex:outputLabel value="{!screenProvisionalQuoteRecord.ParkingThisMonthTextPdf}" escape="false"/>&nbsp;
+              </div>
+              <!-- ▼問合せNo0496で変更 -->
+              <!-- 月分-->            
+              <div class="pdl50_this">
+                <apex:outputLabel value="{!screenProvisionalQuoteRecord.ParkingNextMonthTextPdf}" escape="false"/>&nbsp;
+              </div>
+            </apex:outputPanel>
+            <apex:outputPanel rendered="{! if((screenProvisionalQuoteRecord.Proratedflag && screenProvisionalQuoteRecord.DailyDiscountParkingLotFlg ), false , true)}">
+              <!-- 月分-->
+              <div class="pdt4 pdl50_this font_min">
+                <apex:outputLabel value="{!screenProvisionalQuoteRecord.ParkingFullMonthTextPdf}" escape="false"/>&nbsp;
+              </div>
+            </apex:outputPanel>
+            <!-- ▲問合せNo0496で変更 -->
+          </td>
+          <td class="this_col_price">
+            <!-- 金額 -->
+            <apex:outputPanel rendered="{! if((!screenProvisionalQuoteRecord.Proratedflag || !screenProvisionalQuoteRecord.DailyDiscountParkingLotFlg), false , true)}">
+              <div class="print_pages_bottom text-right padding_yen">
+                <apex:outputLabel value="{! screenProvisionalQuoteRecord.DailyDiscountParkingLot}" styleClass="form-control_this mr5" style="border: none;height : 50%;text-align: right" />円
+              </div> 
+            </apex:outputPanel>
+            <div class="text-right padding_yen">
+              <apex:outputLabel value="{! screenProvisionalQuoteRecord.ParkingFee}" styleClass="form-control_this mr5" style="border: none;height : 50%;text-align: right" />円
+            </div> 
+          </td>
+        </tr>
+          
+        <tr style="display:{! if((!screenProvisionalQuoteRecord.BikeParkingSmallFlag || !screenProvisionalQuoteRecord.BikeStorageSeeDmallFlg), "none","run-in")}; height: 30px;">
+          <td class="this_col_uchiwake1">
+            <div class="flex-wrap">
+            <div class="flex-wrap justify-between"> バ イ ク 置 き 場 代 (小 型) 
+              <apex:outputLabel value="(" rendered="{! if(screenProvisionalQuoteRecord.BikeParkingSmallFeeTaxType != null ,true,false)}"/>
+              <apex:outputLabel value="{!screenProvisionalQuoteRecord.BikeParkingSmallFeeTaxType} "/>
+              <apex:outputLabel value=")" rendered="{! if(screenProvisionalQuoteRecord.BikeParkingSmallFeeTaxType != null ,true,false)}"/>   
+            </div></div>
+          </td>
+          <td class="this_col_uchiwake2">
+            <!-- 日割り分 -->
+            <apex:outputPanel rendered="{! if((!screenProvisionalQuoteRecord.Proratedflag || !screenProvisionalQuoteRecord.BikeStorageFeeSmallDailyDiscountFlg ), false , true)}">
+              <div class="print_pages_bottom pdl50_this">
+                <apex:outputLabel value="{!screenProvisionalQuoteRecord.BikeStorageSmallThisMonthTextPdf}" escape="false"/>&nbsp;
+              </div>
+                <!-- ▼問合せNo0496で変更 -->
+              <!-- 月分-->            
+              <div class="pdl50_this">
+                <apex:outputLabel value="{!screenProvisionalQuoteRecord.BikeStorageSmallNextMonthTextPdf}" escape="false"/>&nbsp;
+              </div>
+            </apex:outputPanel>
+            <apex:outputPanel rendered="{! if((screenProvisionalQuoteRecord.Proratedflag && screenProvisionalQuoteRecord.BikeStorageFeeSmallDailyDiscountFlg ), false , true)}">
+              <!-- 月分-->
+              <div class="pdt4 pdl50_this font_min">
+                <apex:outputLabel value="{!screenProvisionalQuoteRecord.BikeStorageSmallFullMonthTextPdf}" escape="false"/>&nbsp;
+              </div>
+            </apex:outputPanel>
+            <!-- ▲問合せNo0496で変更 -->
+          </td>
+          <td class="this_col_price">
+
+            <!-- 金額 -->
+            <apex:outputPanel rendered="{! if((!screenProvisionalQuoteRecord.Proratedflag || !screenProvisionalQuoteRecord.BikeStorageFeeSmallDailyDiscountFlg), false , true)}">
+              <div class="print_pages_bottom text-right padding_yen">
+                <apex:outputLabel value="{! screenProvisionalQuoteRecord.BikeStorageFeeSmallDailyDiscount}" styleClass="form-control_this mr5" style="border: none;height : 50%;text-align: right" />円
+              </div> 
+            </apex:outputPanel>
+            <div class="text-right padding_yen">
+              <apex:outputLabel value="{! screenProvisionalQuoteRecord.BikeStorageSeeDmall}" styleClass="form-control_this mr5" style="border: none;height : 50%;text-align: right" />円
+            </div> 
+          </td>
+        </tr>
+
+        <tr style="display:{! if((!screenProvisionalQuoteRecord.BikeParkingMediumFlag || !screenProvisionalQuoteRecord.BikeStorageFeeMediumSizeFlg) , "none","run-in")}; height: 30px;">
+          <td class="this_col_uchiwake1">
+            <div class="flex-wrap">
+            <div class="flex-wrap justify-between "> バ イ ク 置 き 場 代 (中 型)
+              <apex:outputLabel value="(" rendered="{! if(screenProvisionalQuoteRecord.BikeParkingMediumFeeTaxType != null ,true,false)}"/>
+              <apex:outputLabel value="{!screenProvisionalQuoteRecord.BikeParkingMediumFeeTaxType} "/>
+              <apex:outputLabel value=")" rendered="{! if(screenProvisionalQuoteRecord.BikeParkingMediumFeeTaxType != null ,true,false)}"/>  
+            </div></div></td>
+          <td class="this_col_uchiwake2">
+            <!-- 日割り分 -->
+            <apex:outputPanel rendered="{! if((!screenProvisionalQuoteRecord.Proratedflag || !screenProvisionalQuoteRecord.BikeStorageFeeMediumDailyFlg), false , true)}">
+              <div class="print_pages_bottom pdl50_this">
+                <apex:outputLabel value="{!screenProvisionalQuoteRecord.BikeStorageMediumThisMonthTextPdf}" escape="false"/>&nbsp;
+              </div>
+              <!-- ▼問合せNo0496で変更 -->
+              <!-- 月分-->            
+              <div class="pdl50_this">
+                <apex:outputLabel value="{!screenProvisionalQuoteRecord.BikeStorageMediumNextMonthTextPdf}" escape="false"/>&nbsp;
+              </div>
+            </apex:outputPanel>
+            <apex:outputPanel rendered="{! if((screenProvisionalQuoteRecord.Proratedflag && screenProvisionalQuoteRecord.BikeStorageFeeMediumDailyFlg ), false , true)}">
+              <!-- 月分-->
+              <div class="pdt4 pdl50_this font_min">
+                <apex:outputLabel value="{!screenProvisionalQuoteRecord.BikeStorageMediumFullMonthTextPdf}" escape="false"/>&nbsp;
+              </div>
+            </apex:outputPanel>
+            <!-- ▲問合せNo0496で変更 -->
+          </td>
+          <td class="this_col_price">
+            <!-- 金額 -->
+            <apex:outputPanel rendered="{! if((!screenProvisionalQuoteRecord.Proratedflag || !screenProvisionalQuoteRecord.BikeStorageFeeMediumDailyFlg), false , true)}">
+              <div class="print_pages_bottom text-right  padding_yen">
+                <apex:outputLabel value="{! screenProvisionalQuoteRecord.BikeStorageFeeMediumDaily}" styleClass="form-control_this mr5" style="border: none;height : 50%;text-align: right" />円
+              </div> 
+            </apex:outputPanel>
+            <div class="text-right padding_yen">
+              <apex:outputLabel value="{! screenProvisionalQuoteRecord.BikeStorageFeeMediumSize}" styleClass="form-control_this mr5" style="border: none;height : 50%;text-align: right" />円
+            </div> 
+          </td>
+        </tr>
+          
+        <tr style="display:{! if(!screenProvisionalQuoteRecord.BikeParkinLargeFlag || !screenProvisionalQuoteRecord.BikeStorageFeeLargeFlg, "none","run-in")}; height: 30px;">
+          <td class="this_col_uchiwake1">
+            <div class="flex-wrap">
+            <div class="flex-wrap justify-between "> バ イ ク 置 き 場 代 (大 型)
+              <apex:outputLabel value="(" rendered="{! if(screenProvisionalQuoteRecord.BikeParkinLargeFeeTaxType != null ,true,false)}"/>
+              <apex:outputLabel value="{!screenProvisionalQuoteRecord.BikeParkinLargeFeeTaxType} "/>
+              <apex:outputLabel value=")" rendered="{! if(screenProvisionalQuoteRecord.BikeParkinLargeFeeTaxType != null ,true,false)}"/>  
+            </div></div></td>
+          <td class="this_col_uchiwake2">
+            <!-- 日割り分 -->
+            <apex:outputPanel rendered="{! if((!screenProvisionalQuoteRecord.Proratedflag || !screenProvisionalQuoteRecord.BikeStorageFeeLargeDailyDiscountFlg), false , true)}">
+              <div class="print_pages_bottom pdl50_this">
+                <apex:outputLabel value="{!screenProvisionalQuoteRecord.BikeStorageLargeThisMonthTextPdf}" escape="false"/>&nbsp;
+              </div>
+              <!-- ▼問合せNo0496で変更 -->
+              <!-- 月分-->            
+              <div class="pdl50_this">
+                <apex:outputLabel value="{!screenProvisionalQuoteRecord.BikeStorageLargeNextMonthTextPdf}" escape="false"/>&nbsp;
+              </div>
+            </apex:outputPanel>
+            <apex:outputPanel rendered="{! if((screenProvisionalQuoteRecord.Proratedflag && screenProvisionalQuoteRecord.BikeStorageFeeLargeDailyDiscountFlg ), false , true)}">
+              <!-- 月分-->
+              <div class="pdt4 pdl50_this font_min">
+                <apex:outputLabel value="{!screenProvisionalQuoteRecord.BikeStorageLargeFullMonthTextPdf}" escape="false"/>&nbsp;
+              </div>
+            </apex:outputPanel>
+            <!-- ▲問合せNo0496で変更 -->
+          </td>
+          <td class="this_col_price">
+            <!-- 金額 -->
+            <apex:outputPanel rendered="{! if((!screenProvisionalQuoteRecord.Proratedflag || !screenProvisionalQuoteRecord.BikeStorageFeeLargeDailyDiscountFlg), false , true)}">
+              <div class="print_pages_bottom text-right  padding_yen">
+                <apex:outputLabel value="{! screenProvisionalQuoteRecord.BikeStorageFeeLargeDailyDiscount}" styleClass="form-control_this mr5" style="border: none;height : 50%;text-align: right" />円
+              </div> 
+            </apex:outputPanel>
+            <div class="text-right padding_yen">
+              <apex:outputLabel value="{! screenProvisionalQuoteRecord.BikeStorageFeeLarge}" styleClass="form-control_this mr5" style="border: none;height : 50%;text-align: right" />円
+            </div> 
+          </td>
+        </tr>
+
+        <!-- 管理会社指定商品_月額 -->
+        <apex:repeat value="{!screenProvisionalQuoteManageCompayItemMonthList}" var="ProvisionalQuoteManageCompayItem">
+          <tr style="display:{! if(ProvisionalQuoteManageCompayItem.displayFlg, "run-in", "none")}; height: 30px;">
+
+            <td class="this_col_uchiwake1">
+              <div class="flex-wrap"><div class="flex-wrap justify-between">
+                <apex:outputLabel value="{!ProvisionalQuoteManageCompayItem.ItemName}" />
+                <apex:outputLabel value="(" rendered="{! if(ProvisionalQuoteManageCompayItem.TaxType != null ,true,false)}"/>
+                <apex:outputLabel value="{!ProvisionalQuoteManageCompayItem.TaxType} "/>
+                <apex:outputLabel value=")" rendered="{! if(ProvisionalQuoteManageCompayItem.TaxType != null ,true,false)}"/>   
+              </div></div>
+            </td>
+
+            <td class="this_col_uchiwake2">
+              <!-- 日割り分 -->
+              <!-- ▼問合せNo0496で変更 -->
+              <apex:outputPanel rendered="{! if((!screenProvisionalQuoteRecord.Proratedflag || 
+                                                 !ProvisionalQuoteManageCompayItem.displaDydailyFlg) &&
+                                                  ProvisionalQuoteManageCompayItem.IssueDate == MANAGEMENTCOMPANYITEM_PAYMENTTYPE_MONTH 
+                                                  ,false,true)}">
+                <div class="print_pages_bottom pdl50_this">
+                  <apex:outputLabel value="{!ProvisionalQuoteManageCompayItem.ProvisionalQuoteItemThisMonthTextPdf}" escape="false"/>&nbsp;
+                </div>
+                <!-- 月分-->
+                <div class="pdl50_this">
+                  <apex:outputLabel value="{!ProvisionalQuoteManageCompayItem.ProvisionalQuoteItemNextMonthTextPdf}" escape="false"/>&nbsp;
+                </div>
+              </apex:outputPanel>
+              <apex:outputPanel rendered="{! if((screenProvisionalQuoteRecord.Proratedflag || 
+                                                 ProvisionalQuoteManageCompayItem.displaDydailyFlg) &&
+                                                 ProvisionalQuoteManageCompayItem.IssueDate == MANAGEMENTCOMPANYITEM_PAYMENTTYPE_MONTH 
+                                                  ,false,true)}">
+                <!-- 月分-->
+                <div class="pdt4 pdl50_this font_min">
+                  <apex:outputLabel value="{!ProvisionalQuoteManageCompayItem.ProvisionalQuoteItemFullMonthTextPdf}" escape="false"/>&nbsp;
+                </div>
+              </apex:outputPanel>
+                <!-- ▲問合せNo0496で変更 -->
+            </td>
+
+            <!-- 金額 -->
+            <td class="this_col_price">
+              <apex:outputPanel styleClass="print_pages_bottom text-right padding_yen" layout="block" 
+                                rendered="{! if((!screenProvisionalQuoteRecord.Proratedflag || 
+                                                 !ProvisionalQuoteManageCompayItem.displaDydailyFlg) &&
+                                                  ProvisionalQuoteManageCompayItem.IssueDate == MANAGEMENTCOMPANYITEM_PAYMENTTYPE_MONTH 
+                                                  ,false,true)}">
+                <apex:outputLabel value="{! ProvisionalQuoteManageCompayItem.DailyFee}" styleClass="form-control_this mr5" style="border: none;height : 50%;text-align: right" />円
+              </apex:outputPanel> 
+
+              <div class="text-right padding_yen">
+                <apex:outputLabel value="{! ProvisionalQuoteManageCompayItem.Fee}" styleClass="form-control_this mr5" style="border: none;height : 50%;text-align: right" />円
+              </div> 
+            </td>
+          </tr>
+        </apex:repeat>
+
+        <tr style="display:{! if(screenProvisionalQuoteRecord.MonthlyFeeDepositFlg, "run-in", "none")};height: 30px;">
+          <td class="this_col_uchiwake1">
+            <div class="flex-wrap justify-between "> 月　額　保　証　料 
+            </div>
+          </td>
+          <td class="this_col_uchiwake2">
+            <apex:outputPanel rendered="{! if((!screenProvisionalQuoteRecord.Proratedflag || !screenProvisionalQuoteRecord.MonthlyFeeDepositNextMonthFlg), false , true)}">
+              <div class="print_pages_bottom pdl50_this">
+                <apex:outputLabel value="{!screenProvisionalQuoteRecord.DepositThisMonthTextPdf}" escape="false"/>&nbsp;
+              </div>
+              <!-- ▼問合せNo0496で変更 -->
+              <!-- 月分-->            
+              <div class="pdl50_this">
+                <apex:outputLabel value="{!screenProvisionalQuoteRecord.DepositNextMonthTextPdf}" escape="false"/>&nbsp;
+              </div>
+            </apex:outputPanel>
+            <apex:outputPanel rendered="{! if((screenProvisionalQuoteRecord.Proratedflag || screenProvisionalQuoteRecord.MonthlyFeeDepositNextMonthFlg), false , true)}">
+              <div class="pdt4 pdl50_this font_min">
+                <apex:outputLabel value="{!screenProvisionalQuoteRecord.DepositFullMonthTextPdf}" escape="false"/>&nbsp;
+              </div>
+            </apex:outputPanel>
+            <!-- ▲問合せNo0496で変更 -->
+          </td>
+          <td class="this_col_price">
+            <!-- 金額 -->
+            <apex:outputPanel rendered="{! if((!screenProvisionalQuoteRecord.Proratedflag || !screenProvisionalQuoteRecord.MonthlyFeeDepositNextMonthFlg), false , true)}">
+              <div class="print_pages_bottom text-right padding_yen">
+                <apex:outputLabel value="{! screenProvisionalQuoteRecord.MonthlyFeeDepositNextMonth}" styleClass="form-control_this mr5" style="border: none;height : 50%;text-align: right" />円
+              </div> 
+            </apex:outputPanel>
+            <div class="text-right padding_yen">
+              <apex:outputLabel value="{! screenProvisionalQuoteRecord.MonthlyFeeDeposit}" styleClass="form-control_this mr5" style="border: none;text-align: right" />円
+            </div> 
+          </td>
+        </tr>
+
+        <!-- 火災保険料_月額 -->
+        <tr style="display:{! if(screenProvisionalQuoteRecord.FireInsurancePremiumsFlg && screenProvisionalQuoteRecord.FireInsuranceType == ITEM_PAYMENTTYPE_MONTH, "run-in", "none")}; height: 30px;">
+          <td class="this_col_uchiwake1">
+            <div class="flex-wrap"><div class="flex-wrap justify-between "> 火　災　保　険　料
+              <apex:outputLabel value="(" rendered="{! if(screenProvisionalQuoteRecord.FireInsuranceType != null ,true,false)}"/>
+              <apex:outputLabel value="{!screenProvisionalQuoteRecord.FireInsuranceTypeName} "/>
+              <apex:outputLabel value=")" rendered="{! if(screenProvisionalQuoteRecord.FireInsuranceType != null ,true,false)}"/>     
+            </div></div>
+            
+          </td>
+          <td class="this_col_uchiwake2">
+            <apex:outputPanel rendered="{! if((!screenProvisionalQuoteRecord.Proratedflag || !screenProvisionalQuoteRecord.FireInsurancePremiumDailyFlg), false , true)}">
+              <div class="print_pages_bottom pdl50_this">
+                <apex:outputLabel value="{!screenProvisionalQuoteRecord.FireInsuranceThisMonthTextPdf}" escape="false"/>&nbsp;
+              </div>
+              <!-- ▼問合せNo0496で変更 -->
+              <!-- 月分-->            
+              <div class="pdl50_this">
+                <apex:outputLabel value="{!screenProvisionalQuoteRecord.FireInsuranceNextMonthTextPdf}" escape="false"/>&nbsp;
+              </div>
+            </apex:outputPanel>
+            <apex:outputPanel rendered="{! if((screenProvisionalQuoteRecord.Proratedflag && screenProvisionalQuoteRecord.FireInsurancePremiumDailyFlg), false , true)}">
+              <div class="pdt4 pdl50_this font_min">
+                <apex:outputLabel value="{!screenProvisionalQuoteRecord.FireInsuranceFullMonthTextPdf}" escape="false"/>&nbsp;
+              </div>
+            </apex:outputPanel>
+            <!-- ▲問合せNo0496で変更 -->
+          </td>
+
+          <td class="this_col_price">
+            <!-- 金額 -->
+            <apex:outputPanel rendered="{! if((!screenProvisionalQuoteRecord.Proratedflag || !screenProvisionalQuoteRecord.FireInsurancePremiumDailyFlg), false , true)}">
+              <div class="print_pages_bottom text-right padding_yen">
+                <apex:outputLabel value="{! screenProvisionalQuoteRecord.FireInsurancePremiumDaily}" styleClass="form-control_this mr5" style="border: none;height : 50%;text-align: right" />円
+              </div> 
+            </apex:outputPanel>
+            <div class="text-right padding_yen">
+              <apex:outputLabel value="{! screenProvisionalQuoteRecord.FireInsurancePremiums}" styleClass="form-control_this mr5" style="border: none;height : 50%;text-align: right" />円
+            </div> 
+          </td>
+        </tr>
+
+        <tr style="display:{! if(screenProvisionalQuoteRecord.SecurityDepositFlg, "run-in", "none")}; height: 30px;">
+          <td class="this_col_uchiwake1">
+            <div class="flex-wrap justify-between table_uchiwake_title"> 敷　　金</div></td>
+          <td class="this_col_uchiwake2">
+            <div>　</div>　</td>
+          <td class="this_col_price">
+            <!-- 金額 -->
+            <div class="text-right padding_yen">
+              <apex:outputLabel value="{! screenProvisionalQuoteRecord.SecurityDeposit}" styleClass="form-control_this mr5"  style="border: none;text-align: right"/>円
+            </div> 
+          </td>
+        </tr>
+
+        <tr style="display:{! if(screenProvisionalQuoteRecord.DepositFlg, "run-in", "none")}; height: 30px;">
+          <td class="this_col_uchiwake1">
+            <div class="flex-wrap justify-between table_uchiwake_title"> 保　　証　　金</div>
+            </td>
+          <td class="this_col_uchiwake2">
+            <div></div></td>
+          <td class="this_col_price">
+            <!-- 金額 -->
+            <div class="text-right padding_yen">
+              <apex:outputLabel value="{! screenProvisionalQuoteRecord.Deposit}" styleClass="form-control_this mr5"  style="border: none;text-align: right"/>円
+            </div> 
+          </td>
+        </tr>
+
+        <tr style="display:{! if(screenProvisionalQuoteRecord.FixedrateRepairExpensesFlg, "run-in", "none")}; height: 30px;">
+          <td class="this_col_uchiwake1">
+            <div class="flex-wrap"><div class="flex-wrap justify-between "> 定　額　修　繕　費
+              <apex:outputLabel value="(" rendered="{! if(screenProvisionalQuoteRecord.CleaningFeeTaxType != null ,true,false)}"/>
+              <apex:outputLabel value="{!screenProvisionalQuoteRecord.CleaningFeeTaxType} "/>
+              <apex:outputLabel value=")" rendered="{! if(screenProvisionalQuoteRecord.CleaningFeeTaxType != null ,true,false)}"/>    
+            </div></div>
+          </td>
+          <td class="this_col_uchiwake2">
+            <div class="pdt4 pdl50_this font_min">
+              <apex:outputLabel value="{!screenProvisionalQuoteRecord.CleaningFeeShow}"/>
+            </div>
+          </td>
+          <td class="this_col_price">
+            <!-- 金額 -->
+            <div class="text-right padding_yen">
+              <apex:outputLabel value="{! screenProvisionalQuoteRecord.FixedrateRepairExpenses}" styleClass="form-control_this mr5"  style="border: none;text-align: right"/>円
+            </div> 
+          </td>
+        </tr>
+
+        <tr style="display:{! if(screenProvisionalQuoteRecord.KeyMoneyFlg, "run-in", "none")}; height: 30px;">
+          <td class="this_col_uchiwake1">
+            <div class="flex-wrap justify-between table_uchiwake_title"> 礼　　金</div></td>
+          <td class="this_col_uchiwake2">
+            <div></div>
+          </td>
+          <td class="this_col_price">
+            <!-- 金額 -->
+            <div class="text-right padding_yen">
+              <apex:outputLabel value="{! screenProvisionalQuoteRecord.KeyMoney}" styleClass="form-control_this mr5" style="border: none;text-align: right"/>円
+            </div> 
+          </td>
+        </tr>
+
+        <tr style="display:{! if(screenProvisionalQuoteRecord.EntranceFeeFlg, "run-in", "none")}; height: 30px;">
+          <td class="this_col_uchiwake1">
+
+            <div class="flex-wrap"><div class="flex-wrap justify-between "> 入　　町　　費
+              <apex:outputLabel value="(" rendered="{! if(screenProvisionalQuoteRecord.TownshipInitialFeeTaxType != null ,true,false)}"/>
+              <apex:outputLabel value="{!screenProvisionalQuoteRecord.TownshipInitialFeeTaxType} "/>
+              <apex:outputLabel value=")" rendered="{! if(screenProvisionalQuoteRecord.TownshipInitialFeeTaxType != null ,true,false)}"/>   
+            </div></div>
+          </td>
+          <td class="this_col_uchiwake2">
+            <div></div>
+          </td>
+          <td class="this_col_price">
+            <!-- 金額 -->
+            <div class="text-right padding_yen">
+              <apex:outputLabel value="{! screenProvisionalQuoteRecord.EntranceFee}" styleClass="form-control_this mr5"  style="border: none;text-align: right"/>円
+            </div> 
+          </td>
+        </tr>
+
+        <tr style="display:{! if((!screenProvisionalQuoteRecord.Parkingflag || !screenProvisionalQuoteRecord.ParkingDepositFlg), "none","run-in")}; height: 30px;">
+          <td class="this_col_uchiwake1">
+            <div class="flex-wrap">
+            <div class="flex-wrap justify-between"> 駐　車　場　保　証　金
+              <apex:outputLabel value="(" rendered="{! if(screenProvisionalQuoteRecord.ParkingDepositTaxType != null ,true,false)}"/>
+              <apex:outputLabel value="{!screenProvisionalQuoteRecord.ParkingDepositTaxType} "/>
+              <apex:outputLabel value=")" rendered="{! if(screenProvisionalQuoteRecord.ParkingDepositTaxType != null ,true,false)}"/>    
+            </div></div>
+          </td>
+          <td class="this_col_uchiwake2">
+            <div></div>
+          </td>
+          <td class="this_col_price">
+            <div class="text-right padding_yen">
+              <apex:outputLabel value="{! screenProvisionalQuoteRecord.ParkingDeposit}" styleClass="form-control_this mr5"  style="border: none;text-align: right"/>円
+            </div> 
+          </td>
+        </tr>
+
+        <tr style="display:{! if((!screenProvisionalQuoteRecord.Parkingflag || !screenProvisionalQuoteRecord.ParkingBrokerageFeeFlg), "none","run-in")}; height: 30px;">
+          <td class="this_col_uchiwake1">
+            <div class="flex-wrap"><div class="flex-wrap justify-between "> 駐　車　場　紹　介　料 ( 課税 )
+            </div></div>
+          </td>
+          <td class="this_col_uchiwake2">
+            <div></div>
+          </td>
+          <td class="this_col_price">
+            <div class="text-right padding_yen">
+              <apex:outputLabel value="{! screenProvisionalQuoteRecord.ParkingBrokerageFee}" styleClass="form-control_this mr5"  style="border: none;text-align: right"/>円
+            </div> 
+          </td>
+        </tr>
+
+        <tr style="display:{! if(screenProvisionalQuoteRecord.KeyExchangeCostsFlg, "run-in", "none")}; height: 30px;">
+          <td class="this_col_uchiwake1">
+
+            <div class="flex-wrap"><div class="flex-wrap justify-between "> 鍵　　交　　換　　費
+              <apex:outputLabel value="(" rendered="{! if(screenProvisionalQuoteRecord.KeyExchangeFeeTaxType != null ,true,false)}"/>
+              <apex:outputLabel value="{!screenProvisionalQuoteRecord.KeyExchangeFeeTaxType} "/>
+              <apex:outputLabel value=")" rendered="{! if(screenProvisionalQuoteRecord.KeyExchangeFeeTaxType != null ,true,false)}"/>     
+            </div></div>
+          </td>
+          <td class="this_col_uchiwake2">
+            <div></div></td>
+          <td class="this_col_price">
+            <div class="text-right padding_yen">
+              <apex:outputLabel value="{! screenProvisionalQuoteRecord.KeyExchangeCosts}" styleClass="form-control_this mr5"  style="border: none;text-align: right"/>円
+            </div> 
+          </td>
+        </tr>
+
+        <!-- 管理会社指定商品_初回 -->
+        <apex:repeat value="{!screenProvisionalQuoteManageCompayItemFirstList}" var="ProvisionalQuoteManageCompayItem">
+          <tr style="display:{! if(ProvisionalQuoteManageCompayItem.displayFlg, "run-in", "none")}; height: 30px;">
+
+            <td class="this_col_uchiwake1">
+              <div class="flex-wrap"><div class="flex-wrap justify-between">
+                <apex:outputLabel value="{!ProvisionalQuoteManageCompayItem.ItemName}" />
+                <apex:outputLabel value="(" rendered="{! if(ProvisionalQuoteManageCompayItem.TaxType != null ,true,false)}"/>
+                <apex:outputLabel value="{!ProvisionalQuoteManageCompayItem.TaxType} "/>
+                <apex:outputLabel value=")" rendered="{! if(ProvisionalQuoteManageCompayItem.TaxType != null ,true,false)}"/>   
+              </div></div>
+            </td>
+
+            <td class="this_col_uchiwake2">
+              <!-- 日割り分 -->
+              <apex:outputPanel styleClass="print_pages_bottom pdl50_this" rendered="{! if(ProvisionalQuoteManageCompayItem.IssueDate == MANAGEMENTCOMPANYITEM_PAYMENTTYPE_MONTH && screenProvisionalQuoteRecord.Proratedflag  ,true,false)}">
+                <apex:outputLabel value="{!screenProvisionalQuoteRecord.ContractMonth}"/>
+                &nbsp;　&nbsp;
+                <apex:outputLabel value="{!screenProvisionalQuoteRecord.ContractPerMonthDailyDays}"/>
+              </apex:outputPanel>
+              <!-- 月分-->
+              <apex:outputPanel styleClass="pdt4 pdl50_this font_min" rendered="{! if(ProvisionalQuoteManageCompayItem.IssueDate == MANAGEMENTCOMPANYITEM_PAYMENTTYPE_MONTH ,true,false)}">
+                <div class="pdt4 pdl50_this font_min">
+                  <apex:outputLabel value="{!screenProvisionalQuoteRecord.ContractNextMonth}"/>
+                </div>
+              </apex:outputPanel>
+            </td>
+
+            <!-- 金額 -->
+            <td class="this_col_price">
+              <apex:outputPanel styleClass="print_pages_bottom text-right padding_yen" layout="block" rendered="{! if(ProvisionalQuoteManageCompayItem.IssueDate == MANAGEMENTCOMPANYITEM_PAYMENTTYPE_MONTH && screenProvisionalQuoteRecord.Proratedflag ,true,false)}">
+                <apex:outputLabel value="{! ProvisionalQuoteManageCompayItem.DailyFee}" styleClass="form-control_this mr5" style="border: none;height : 50%;text-align: right" />円
+              </apex:outputPanel> 
+
+              <div class="text-right padding_yen">
+                <apex:outputLabel value="{! ProvisionalQuoteManageCompayItem.Fee}" styleClass="form-control_this mr5" style="border: none;height : 50%;text-align: right" />円
+              </div> 
+            </td>
+          </tr>
+        </apex:repeat>
+        <!-- 管理会社指定商品_年額 -->
+        <apex:repeat value="{!screenProvisionalQuoteManageCompayItemYearList}" var="ProvisionalQuoteManageCompayItem">
+          <tr style="display:{! if(ProvisionalQuoteManageCompayItem.displayFlg, "run-in", "none")}; height: 30px;">
+
+            <td class="this_col_uchiwake1">
+              <div class="flex-wrap"><div class="flex-wrap justify-between">
+                <apex:outputLabel value="{!ProvisionalQuoteManageCompayItem.ItemName}" />
+                <apex:outputLabel value="(" rendered="{! if(ProvisionalQuoteManageCompayItem.TaxType != null ,true,false)}"/>
+                <apex:outputLabel value="{!ProvisionalQuoteManageCompayItem.TaxType} "/>
+                <apex:outputLabel value=")" rendered="{! if(ProvisionalQuoteManageCompayItem.TaxType != null ,true,false)}"/>   
+              </div></div>
+            </td>
+
+            <td class="this_col_uchiwake2">
+              <!-- 日割り分 -->
+              <apex:outputPanel styleClass="print_pages_bottom pdl50_this" rendered="{! if(ProvisionalQuoteManageCompayItem.IssueDate == MANAGEMENTCOMPANYITEM_PAYMENTTYPE_MONTH && screenProvisionalQuoteRecord.Proratedflag  ,true,false)}">
+                <apex:outputLabel value="{!screenProvisionalQuoteRecord.ContractMonth}"/>
+                &nbsp;　&nbsp;
+                <apex:outputLabel value="{!screenProvisionalQuoteRecord.ContractPerMonthDailyDays}"/>
+              </apex:outputPanel>
+              <!-- 月分-->
+              <apex:outputPanel styleClass="pdt4 pdl50_this font_min" rendered="{! if(ProvisionalQuoteManageCompayItem.IssueDate == MANAGEMENTCOMPANYITEM_PAYMENTTYPE_MONTH ,true,false)}">
+                <div class="pdt4 pdl50_this font_min">
+                  <apex:outputLabel value="{!screenProvisionalQuoteRecord.ContractNextMonth}"/>
+                </div>
+              </apex:outputPanel>
+            </td>
+
+            <!-- 金額 -->
+            <td class="this_col_price">
+              <apex:outputPanel styleClass="print_pages_bottom text-right padding_yen" layout="block" rendered="{! if(ProvisionalQuoteManageCompayItem.IssueDate == MANAGEMENTCOMPANYITEM_PAYMENTTYPE_MONTH && screenProvisionalQuoteRecord.Proratedflag ,true,false)}">
+                <apex:outputLabel value="{! ProvisionalQuoteManageCompayItem.DailyFee}" styleClass="form-control_this mr5" style="border: none;height : 50%;text-align: right" />円
+              </apex:outputPanel> 
+
+              <div class="text-right padding_yen">
+                <apex:outputLabel value="{! ProvisionalQuoteManageCompayItem.Fee}" styleClass="form-control_this mr5" style="border: none;height : 50%;text-align: right" />円
+              </div> 
+            </td>
+          </tr>
+        </apex:repeat>
+        
+        <tr style="display:{! if(screenProvisionalQuoteRecord.FirstWarrantyFlg, "run-in", "none")}; height: 30px;">
+          <td class="this_col_uchiwake1">
+            <div class="flex-wrap justify-between "> 初　回　保　証　料 
+            </div>
+            
+          </td>
+          <td class="this_col_uchiwake2">
+            <div></div></td>
+          <td class="this_col_price">
+            <div class="text-right padding_yen">
+              <apex:outputLabel value="{! screenProvisionalQuoteRecord.FirstWarrantyFee}" styleClass="form-control_this mr5" style="border: none;height : 50%;text-align: right" />円
+            </div> 
+          </td>
+        </tr>
+
+        <!-- 火災保険料_年額 -->
+        <tr style="display:{! if(screenProvisionalQuoteRecord.FireInsurancePremiumsFlg && screenProvisionalQuoteRecord.FireInsuranceType == ITEM_PAYMENTTYPE_YEAR, "run-in", "none")}; height: 30px;">
+          <td class="this_col_uchiwake1">
+            <div class="flex-wrap"><div class="flex-wrap justify-between "> 火　災　保　険　料
+              <apex:outputLabel value="(" rendered="{! if(screenProvisionalQuoteRecord.FireInsuranceType != null ,true,false)}"/>
+              <apex:outputLabel value="{!screenProvisionalQuoteRecord.FireInsuranceTypeName} "/>
+              <apex:outputLabel value=")" rendered="{! if(screenProvisionalQuoteRecord.FireInsuranceType != null ,true,false)}"/>     
+            </div></div>
+            
+          </td>
+          <td class="this_col_uchiwake2">
+            <apex:outputPanel rendered="{! if((!screenProvisionalQuoteRecord.Proratedflag || !screenProvisionalQuoteRecord.FireInsurancePremiumDailyFlg), false , true)}">
+              <div class="print_pages_bottom pdl50_this">
+                <apex:outputLabel value="{!screenProvisionalQuoteRecord.ContractMonth}"/>
+              </div>
+            </apex:outputPanel>
+            <apex:outputPanel rendered="{! if((!screenProvisionalQuoteRecord.FireInsurancePremiumDailyFlg), false , true)}">
+              <div class="pdt4 pdl50_this font_min">
+                <apex:outputLabel value="{!screenProvisionalQuoteRecord.ContractNextMonth}"/>
+              </div>
+            </apex:outputPanel>
+          </td>
+
+          <td class="this_col_price">
+            <!-- 金額 -->
+            <apex:outputPanel rendered="{! if((!screenProvisionalQuoteRecord.Proratedflag || !screenProvisionalQuoteRecord.FireInsurancePremiumDailyFlg), false , true)}">
+              <div class="print_pages_bottom text-right padding_yen">
+                <apex:outputLabel value="{! screenProvisionalQuoteRecord.FireInsurancePremiumDaily}" styleClass="form-control_this mr5" style="border: none;height : 50%;text-align: right" />円
+              </div> 
+            </apex:outputPanel>
+            <div class="text-right padding_yen">
+              <apex:outputLabel value="{! screenProvisionalQuoteRecord.FireInsurancePremiums}" styleClass="form-control_this mr5" style="border: none;height : 50%;text-align: right" />円
+            </div> 
+          </td>
+        </tr>
+
+        <tr style="display:{! if(screenProvisionalQuoteRecord.BrokerageFeeFlg, "run-in", "none")}; height: 30px;">
+          <td class="this_col_uchiwake1">
+            <div class="flex-wrap"><div class="flex-wrap justify-between "> 仲　　介　　手　　数　　料 ( 課税 )
+            </div></div>
+            </td>
+          <td class="this_col_uchiwake2">
+            <div></div></td>
+          <td class="this_col_price">
+            <div class="text-right padding_yen">
+              <apex:outputLabel value="{! screenProvisionalQuoteRecord.BrokerageFee}" styleClass="form-control_this mr5"  style="border: none;text-align: right"/>円
+            </div> 
+          </td>
+        </tr>
+
+        <!-- ▼問合せNo0496で追加 -->
+        <!-- 自由項目1 -->
+        <tr style="display:{! if(screenProvisionalQuoteRecord.FreeItemName1 != '', "run-in", "none")}; height: 30px;"> 
+          <td rowspan = "1" class="border_r_none table_uchiwake_left_this pdl15" >
+            <div class="flex-wrap justify-between table_uchiwake_title">
+              <apex:outputLabel value="{!screenProvisionalQuoteRecord.FreeItemName1Pdf}" escape="false"/>
+            </div>
+          </td>
+          <td class="border_l_none table_uchiwake_right_this">
+          </td>
+          <td >
+            <!-- 金額 -->         
+            <div class="text-right padding_yen">
+              <apex:outputLabel value="{! screenProvisionalQuoteRecord.FreeItemFeeDeposit1}" styleClass="form-control_this mr5" style="border: none;height : 50%;text-align: right" />円
+            </div> 
+          </td>
+        </tr>
+        <!-- 自由項目2 -->
+        <tr style="display:{! if(screenProvisionalQuoteRecord.FreeItemName2 != '', "run-in", "none")}; height: 30px;"> 
+          <td rowspan = "1" class="border_r_none table_uchiwake_left_this pdl15" >
+            <div class="flex-wrap justify-between table_uchiwake_title">
+              <apex:outputLabel value="{!screenProvisionalQuoteRecord.FreeItemName2Pdf}" escape="false"/>
+            </div>
+          </td>
+          <td class="border_l_none table_uchiwake_right_this">
+          </td>
+          <td >
+            <!-- 金額 -->         
+            <div class="text-right padding_yen">
+              <apex:outputLabel value="{! screenProvisionalQuoteRecord.FreeItemFeeDeposit2}" styleClass="form-control_this mr5" style="border: none;height : 50%;text-align: right" />円
+            </div> 
+          </td>
+        </tr>
+        <!-- 自由項目3 -->
+        <tr style="display:{! if(screenProvisionalQuoteRecord.FreeItemName3 != '', "run-in", "none")}; height: 30px;"> 
+          <td rowspan = "1" class="border_r_none table_uchiwake_left_this pdl15" >
+            <div class="flex-wrap justify-between table_uchiwake_title">
+              <apex:outputLabel value="{!screenProvisionalQuoteRecord.FreeItemName3Pdf}" escape="false"/>
+            </div>
+          </td>
+          <td class="border_l_none table_uchiwake_right_this">
+          </td>
+          <td >
+            <!-- 金額 -->         
+            <div class="text-right padding_yen">
+              <apex:outputLabel value="{! screenProvisionalQuoteRecord.FreeItemFeeDeposit3}" styleClass="form-control_this mr5" style="border: none;height : 50%;text-align: right" />円
+            </div> 
+          </td>
+        </tr>
+        <!-- 自由項目4 -->
+        <tr style="display:{! if(screenProvisionalQuoteRecord.FreeItemName4 != '', "run-in", "none")}; height: 30px;"> 
+          <td rowspan = "1" class="border_r_none table_uchiwake_left_this pdl15" >
+            <div class="flex-wrap justify-between table_uchiwake_title">
+              <apex:outputLabel value="{!screenProvisionalQuoteRecord.FreeItemName4Pdf}" escape="false"/>
+            </div>
+          </td>
+          <td class="border_l_none table_uchiwake_right_this">
+          </td>
+          <td >
+            <!-- 金額 -->         
+            <div class="text-right padding_yen">
+              <apex:outputLabel value="{! screenProvisionalQuoteRecord.FreeItemFeeDeposit4}" styleClass="form-control_this mr5" style="border: none;height : 50%;text-align: right" />円
+            </div> 
+          </td>
+        </tr>
+        <!-- 自由項目5 -->
+        <tr style="display:{! if(screenProvisionalQuoteRecord.FreeItemName5 != '', "run-in", "none")}; height: 30px;"> 
+          <td rowspan = "1" class="border_r_none table_uchiwake_left_this pdl15" >
+            <div class="flex-wrap justify-between table_uchiwake_title">
+              <apex:outputLabel value="{!screenProvisionalQuoteRecord.FreeItemName5Pdf}" escape="false"/>
+            </div>
+          </td>
+          <td class="border_l_none table_uchiwake_right_this">
+          </td>
+          <td >
+            <!-- 金額 -->         
+            <div class="text-right padding_yen">
+              <apex:outputLabel value="{! screenProvisionalQuoteRecord.FreeItemFeeDeposit5}" styleClass="form-control_this mr5" style="border: none;height : 50%;text-align: right" />円
+            </div> 
+          </td>
+        </tr>
+        <!-- ▲問合せNo0496で追加 -->
+      </table>
+
+      <!-- その他付帯商品 -->
+      <apex:repeat value="{! screenProvisionalQuoteRecord.etceteraAuxiliaryItemList}" var="etceteraAuxiliaryItem">
+
+        <!-- ヘッダー -->
+        <apex:outputPanel rendered="{! (etceteraAuxiliaryItem.pageRow == 1)}">
+          <div style="width:100%; height:125px; page-break-before:always;" />
+          <table class="secondtable mb10 mt10" style="font-size : 10px; width:100%;" >
+            <tr>
+              <th class="back_graydark text-center this_col_bukken">物件名</th>
+              <th class="back_graydark text-center this_col_juukyo">住居表示</th>
+              <th class="back_graydark text-center this_col_keiyakubi">契約開始日</th>
+            </tr>
+            <tr>
+              <td class="text-center this_col_bukken"><apex:outputLabel value="{!screenProvisionalQuoteRecord.PropertyName}"/></td>
+              <td class="text-center this_col_juukyo"><apex:outputLabel value="{!screenProvisionalQuoteRecord.PropertyAddress}"/></td>
+              <td class="text-center this_col_keiyakubi"><apex:outputLabel value="{!screenProvisionalQuoteRecord.ContractStartDate}"/></td>
+            </tr>
+          </table>
+
+          <table class="this_table_uchiwake" style="font-size : 10px;" >
+            <tr>
+              <th class="back_graydark text-center this_col_uchiwake3" colspan = "2">内　　訳</th>
+              <th class="back_graydark text-center this_col_price">金　　額</th>
+            </tr>
+          </table>
+        </apex:outputPanel>
+
+        <!-- ボディ -->
+        <table class="this_table_uchiwake" style="font-size:10px;display:{! if(etceteraAuxiliaryItem.isDisplay, "run-in", "none")};" >
+          <tr style="height:30px;">
+            <td class="this_col_uchiwake1">
+              <div class="flex-wrap"><div class="flex-wrap justify-between ">
+                <apex:outputLabel value="{! etceteraAuxiliaryItem.pdfTitle}"/>
+                <apex:outputLabel value="( {! etceteraAuxiliaryItem.taxType} )" rendered="{! (etceteraAuxiliaryItem.taxType != null)}"/>
+              </div></div>
+            </td>
+
+            <!-- 名称-->
+            <td class="this_col_uchiwake2">
+              <apex:outputLabel value="{! etceteraAuxiliaryItem.pdfName}" escape="false" />
+            </td>
+            <!-- 金額 -->
+            <td class="this_col_price">
+              <div class="text-right padding_yen">
+                <apex:outputLabel value="{! etceteraAuxiliaryItem.fee}" styleClass="form-control_this mr5" style="border: none;text-align: right"/>円
+              </div>
+            </td>
+          </tr>
+        </table>
+      </apex:repeat>
+
+      <table class="this_table_uchiwake" style="font-size:10px;" >
+
+        <!-- 空行 -->
+        <apex:repeat value="{!screenNullDate}" var="notdate">
+          <tr style="height: 30px;">
+            <td class="this_col_uchiwake1">&nbsp;</td>
+            <td class="this_col_uchiwake2">&nbsp;</td>
+            <td class="this_col_price">&nbsp;</td>
+          </tr>
+        </apex:repeat>
+
+        <tr>
+          <td colspan="2" class="text-center back_graydark">小計</td>
+          <td class="text-right "><div class="table_price_under">
+            <apex:outputLabel id="SubtotalAmount" value="{! screenProvisionalQuoteRecord.SubtotalAmount}" style="border: 0;" styleClass="form-control_this mr5" />円
+          </div></td>
+        </tr>
+        <tr>
+          <td colspan="2" class="text-center back_graydark">消費税</td>
+          <td class="text-right table_price_under"><div class="table_price_under">
+            <apex:outputLabel id="ConsumptionTax" value="{! screenProvisionalQuoteRecord.ConsumptionTax}" style="border: 0;" styleClass="form-control_this mr5" />円
+          </div></td>
+        </tr>
+        <tr>
+          <td colspan="2" class="text-center back_graydark">課税対象</td>
+          <td class="text-right table_price_under"><div class="table_price_under">（
+            <apex:outputLabel id="Taxable" value="{! screenProvisionalQuoteRecord.Taxable}" style="border: 0;" styleClass="form-control_this mr5" />円）
+          </div></td>
+        </tr>
+        <tr>
+          <td colspan="2" class="text-center back_graydark">合計金額</td>
+          <td class="text-right table_price_under"><div class="table_price_under">
+            <apex:outputLabel id="TotalAmount" value="{! screenProvisionalQuoteRecord.TotalAmount}" style="border: 0;" styleClass="form-control_this mr5" />円
+            
+          </div></td>
+        </tr>
+
+      </table>
+        
+      <table class="mt10 wd100" style="font-size : 10px;">
+        <tr>
+          <th style="width:15%" class="back_graydark text-center" rowspan = "2">備　　考</th>
+          <td class="pdl30">
+            <apex:outputLabel value="{! screenProvisionalQuoteRecord.Remarks1}" styleClass="form-control_this NameKana" style="border: none;"/>　
+          </td>
+        </tr>
+        <tr>
+          <td class="pdl30">
+            <apex:outputLabel value="{! screenProvisionalQuoteRecord.Remarks2}" styleClass="form-control_this NameKana" style="border: none;"/>　
+          </td>
+        </tr>
+      </table> 
+    </div>
+  </body>
+  <!-- 改ぺーじ -->
+  <div style="page-break-after: always;" />
+
+  <!-- 初回以降 -->
+  <body id="TA1020012">
+    <div class="print_pages" style="width:90%;">
+      <table class=" mb10 mt10" style="font-size : 10px;  width:100%;">
+        <tr>
+          <td style="border: none;">
+              <div class="wd32" style="float:left;">
+                  <apex:image style="float:left;" alt="" url="{! formLogoUrl}" styleClass="print_pages_logo" rendered="{!formLogoIsAlive}" />
+              </div>
+          </td>
+          
+          <td style="border: none;">
+              <div class="font2rem wd32 text-center fontb" style="font-size : 18px;float:left; padding-right:60px;">仮見積り（初回以降）</div>
+          </td>
+
+          <td style="border: none;">
+              <div class="wd32 text-right fontb" style="float:right;"><apex:outputLabel value="発行日：{!screenProvisionalQuoteRecord.IssueDate}"/></div>
+          </td>
+        </tr>
+            
+        <tr>
+          <td style="border: none;">
+              <div class="flex-wrap " style="float:left;">
+                  <div class="print_pages_name"><apex:outputLabel value="{!screenProvisionalQuoteRecord.AccountName}"/> 様</div>
+              </div>
+          </td>
+
+          
+          <td style="border: none;">
+          
+          </td>
+          
+          <td style="border: none;">
+              <div class="flex-wrap " style="float:right;">
+                  
+                  <div class="print_pages_company">
+                    {! screenProvisionalQuoteRecord.CompanyName}
+                    <apex:outputLabel value="(登録番号" rendered="{! if(screenProvisionalQuoteRecord.InvoiceRegistNumber == null , false, true)}"/>
+                    <apex:outputLabel value="{!screenProvisionalQuoteRecord.InvoiceRegistNumber}"/>
+                    <apex:outputLabel value=")" rendered="{! if(screenProvisionalQuoteRecord.InvoiceRegistNumber == null , false, true)}"/><br/>
+                    <apex:outputLabel value="{!screenProvisionalQuoteRecord.brandName}"/> <apex:outputLabel value="{!screenProvisionalQuoteRecord.UserName}"/><br/>
+                    〒<apex:outputLabel value="{!screenProvisionalQuoteRecord.PostalCode}"/><br/>
+                    <apex:outputLabel value="{!screenProvisionalQuoteRecord.Address}"/><br/>
+                    TEL <apex:outputLabel value="{!screenProvisionalQuoteRecord.Phone}"/>　　FAX<apex:outputLabel value="{!screenProvisionalQuoteRecord.Fax}"/>
+                  </div>
+              </div>
+          </td>
+        </tr>
+      </table>
+
+      <table class="secondtable mb10 mt10" style="font-size : 10px; width:100%;" >
+        <tr>
+          <th class="back_graydark text-center this_col_bukken">物件名</th>
+          <th class="back_graydark text-center this_col_juukyo">住居表示</th>
+          <th class="back_graydark text-center this_col_keiyakubi">契約開始日</th>
+        </tr>
+        <tr>
+          <td class="text-center this_col_bukken"><apex:outputLabel value="{!screenProvisionalQuoteRecord.PropertyName}"/></td>
+          <td class="text-center this_col_juukyo"><apex:outputLabel value="{!screenProvisionalQuoteRecord.PropertyAddress}"/></td>
+          <td class="text-center this_col_keiyakubi"><apex:outputLabel value="{!screenProvisionalQuoteRecord.ContractStartDate}"/></td>
+        </tr>
+      </table>
+    
+      <table class="secondtable " style="font-size : 9px; width:100%;">
+        <tr>
+          <th class="back_graydark text-center this_col_uchiwake3" colspan = "2">内　　訳</th>
+          <th class="back_graydark text-center this_col_price">金　　額</th>
+        </tr>
+
+        <tr style="display:{! if(screenProvisionalQuoteRecord.NextRentFeeFlg, "run-in", "none")}; height: 30px;"> 
+          <td class="this_col_uchiwake1">
+            <div class="flex-wrap justify-between "> 家　　賃</div>
+          </td>
+          <td class="this_col_uchiwake2"></td>
+          <td class="this_col_price">
+            <!-- 金額 -->
+            <div class="text-right padding_yen">
+              <apex:outputLabel value="{! screenProvisionalQuoteRecord.NextRentFee}" styleClass="form-control_this mr5" style="border: none;height : 50%;text-align: right" />円
+            </div> 
+          </td>
+        </tr>
+
+        <tr style="display:{! if(screenProvisionalQuoteRecord.NextManagementFeeFlg, "run-in", "none")}; height: 30px;"> 
+          <td class="this_col_uchiwake1">
+            <div class="flex-wrap"><div class="flex-wrap justify-between"> 管　　理　　費
+              <apex:outputLabel value="(" rendered="{! if(screenProvisionalQuoteRecord.ManagementFeeTaxType != null ,true,false)}"/>
+              <apex:outputLabel value="{!screenProvisionalQuoteRecord.ManagementFeeTaxType} "/>
+              <apex:outputLabel value=")" rendered="{! if(screenProvisionalQuoteRecord.ManagementFeeTaxType != null ,true,false)}"/>
+            </div></div>
+          </td>
+          <td class="this_col_uchiwake2"></td>
+          <td class="this_col_price">
+            <!-- 金額 -->
+            <div class="text-right padding_yen">
+              <apex:outputLabel value="{! screenProvisionalQuoteRecord.NextManagementFee}" styleClass="form-control_this mr5" style="border: none;text-align: right" />円
+            </div> 
+          </td>
+        </tr>
+
+        <tr style="display:{! if(screenProvisionalQuoteRecord.NextTownshipFeeFlg, "run-in", "none")}; height: 30px;"> 
+          <td class="this_col_uchiwake1">
+            <div class="flex-wrap"><div class="flex-wrap justify-between "> 町　　会　　費
+              <apex:outputLabel value="(" rendered="{! if(screenProvisionalQuoteRecord.TownshipFeePaymentType != null ,true,false)}"/>
+              <apex:outputLabel value="{!screenProvisionalQuoteRecord.TownshipFeePaymentType}"/>
+              <apex:outputLabel value=")" rendered="{! if(screenProvisionalQuoteRecord.TownshipFeePaymentType != null ,true,false)}"/>
+              <apex:outputLabel value="(" rendered="{! if(screenProvisionalQuoteRecord.TownshipFeeTaxType != null ,true,false)}"/>
+              <apex:outputLabel value="{!screenProvisionalQuoteRecord.TownshipFeeTaxType}"/>
+              <apex:outputLabel value=")" rendered="{! if(screenProvisionalQuoteRecord.TownshipFeeTaxType != null ,true,false)}"/>
+            </div></div>
+          </td>
+          <td class="this_col_uchiwake2"></td>
+          <td class="this_col_price">
+            <!-- 金額 -->
+            <div class="text-right padding_yen">
+              <apex:outputLabel value="{! screenProvisionalQuoteRecord.NextTownshipFee}" styleClass="form-control_this mr5" style="border: none;text-align: right" />円
+            </div> 
+          </td>
+        </tr>
+
+        <tr style="display:{! if(screenProvisionalQuoteRecord.NextWaterFeeFlg, "run-in", "none")}; height: 30px;"> 
+          <td class="this_col_uchiwake1">
+            <div class="flex-wrap"><div class="flex-wrap justify-between"> 水　　道　　代
+              <apex:outputLabel value="(" rendered="{! if(screenProvisionalQuoteRecord.WortFeeTaxType != null ,true,false)}"/>
+              <apex:outputLabel value="{!screenProvisionalQuoteRecord.WortFeeTaxType} "/>
+              <apex:outputLabel value=")" rendered="{! if(screenProvisionalQuoteRecord.WortFeeTaxType != null ,true,false)}"/>  
+            </div></div>
+          </td>
+          <td class="this_col_uchiwake2"></td>
+          <td class="this_col_price">
+            <div class="text-right padding_yen">
+              <apex:outputLabel value="{! screenProvisionalQuoteRecord.NextWaterFee}" styleClass="form-control_this mr5" style="border: none;text-align: right" />円
+            </div>
+          </td>
+        </tr>
+
+        <tr style="display:{! if(screenProvisionalQuoteRecord.NextCatvFeeFlg, "run-in", "none")}; height: 30px;"> 
+          <td class="this_col_uchiwake1">
+            <div class="flex-wrap"><div class="flex-wrap justify-between "> C　　A　　T　　V
+              <apex:outputLabel value="(" rendered="{! if(screenProvisionalQuoteRecord.CATVTaxType != null ,true,false)}"/>
+              <apex:outputLabel value="{!screenProvisionalQuoteRecord.CATVTaxType} "/>
+              <apex:outputLabel value=")" rendered="{! if(screenProvisionalQuoteRecord.CATVTaxType != null ,true,false)}"/>    
+            </div></div>
+          </td>
+          <td class="this_col_uchiwake2"></td>
+          <td class="this_col_price">
+            <div class="text-right padding_yen">
+              <apex:outputLabel value="{! screenProvisionalQuoteRecord.NextCatvFee}" styleClass="form-control_this mr5" style="border: none;text-align: right" />円
+            </div> 
+          </td>
+        </tr>
+
+        <tr style="display:{! if(screenProvisionalQuoteRecord.NextGarbageDisposalFeeFlg, "run-in", "none")}; height: 30px;"> 
+          <td class="this_col_uchiwake1">
+            <div class="flex-wrap">
+            <div class="flex-wrap justify-between "> ゴ　　ミ　　処　　理　　費
+              <apex:outputLabel value="(" rendered="{! if(screenProvisionalQuoteRecord.GarbageDisposalFeePaymentType != null ,true,false)}"/>
+              <apex:outputLabel value="{!screenProvisionalQuoteRecord.GarbageDisposalFeePaymentType} "/>
+              <apex:outputLabel value=")" rendered="{! if(screenProvisionalQuoteRecord.GarbageDisposalFeePaymentType != null ,true,false)}"/>
+              <apex:outputLabel value="(" rendered="{! if(screenProvisionalQuoteRecord.GarbageDisposalFeeTaxType != null ,true,false)}"/>
+              <apex:outputLabel value="{!screenProvisionalQuoteRecord.GarbageDisposalFeeTaxType} "/>
+              <apex:outputLabel value=")" rendered="{! if(screenProvisionalQuoteRecord.GarbageDisposalFeeTaxType != null ,true,false)}"/>
+            </div></div>
+          </td>
+          <td class="this_col_uchiwake2"></td>
+          <td class="this_col_price">
+            <div class="text-right padding_yen">
+              <apex:outputLabel value="{! screenProvisionalQuoteRecord.NextGarbageDisposalFee}" styleClass="form-control_this mr5" style="border: none;text-align: right" />円
+            </div> 
+          </td>
+        </tr>
+
+        <tr style="display:{! if(screenProvisionalQuoteRecord.NextBicycleParkingFeeFlg, "run-in", "none")}; height: 30px;">
+          <td class="this_col_uchiwake1">
+            <div class="flex-wrap"><div class="flex-wrap justify-between "> 駐　　輪　　場　　代
+              <apex:outputLabel value="(" rendered="{! if(screenProvisionalQuoteRecord.BicycleParkingFeeTaxType != null ,true,false)}"/>
+              <apex:outputLabel value="{!screenProvisionalQuoteRecord.BicycleParkingFeeTaxType} "/>
+              <apex:outputLabel value=")" rendered="{! if(screenProvisionalQuoteRecord.BicycleParkingFeeTaxType != null ,true,false)}"/>        
+            </div></div>
+          </td>
+          <td class="this_col_uchiwake2"></td>
+          <td class="this_col_price">
+            <!-- 金額 -->
+            <div class="text-right padding_yen">
+              <apex:outputLabel value="{! screenProvisionalQuoteRecord.NextBicycleParkingFee}" styleClass="form-control_this mr5" style="border: none;  : right" />円
+            </div> 
+
+          </td>
+        </tr>
+
+        <tr style="display:{! if((!screenProvisionalQuoteRecord.Parkingflag || !screenProvisionalQuoteRecord.NextParkingFeeFlg ),"none", "run-in")}">
+          <td class="this_col_uchiwake1">
+            <div class="flex-wrap"><div class="flex-wrap justify-between "> 駐　　車　　場　　代
+              <apex:outputLabel value="(" rendered="{! if(screenProvisionalQuoteRecord.ParkingFeeTaxType != null ,true,false)}"/>
+              <apex:outputLabel value="{!screenProvisionalQuoteRecord.ParkingFeeTaxType} "/>
+              <apex:outputLabel value=")" rendered="{! if(screenProvisionalQuoteRecord.ParkingFeeTaxType != null ,true,false)}"/>    
+            </div></div>
+          </td>
+          <td class="this_col_uchiwake2"></td>
+          <td class="this_col_price">
+            <!-- 金額 -->
+            <div class="text-right padding_yen">
+              <apex:outputLabel value="{! screenProvisionalQuoteRecord.NextParkingFee}" styleClass="form-control_this mr5" style="border: none;text-align: right" />円
+            </div> 
+          </td>
+        </tr>
+
+        <tr style="display:{! if(screenProvisionalQuoteRecord.NextBikeStorageSmallFeeFlg , "run-in", "none")}">
+          <td class="this_col_uchiwake1">
+            <div class="flex-wrap">
+            <div class="flex-wrap justify-between "> バ　イ　ク　置　き　場　代　(小　型)              
+              <apex:outputLabel value="(" rendered="{! if(screenProvisionalQuoteRecord.BikeParkingSmallFeeTaxType != null ,true,false)}"/>
+              <apex:outputLabel value="{!screenProvisionalQuoteRecord.BikeParkingSmallFeeTaxType} "/>
+              <apex:outputLabel value=")" rendered="{! if(screenProvisionalQuoteRecord.BikeParkingSmallFeeTaxType != null ,true,false)}"/>   
+            </div></div>
+          </td>
+          <td class="this_col_uchiwake2"></td>
+          <td class="this_col_price">
+            <div class="text-right padding_yen">
+              <apex:outputLabel value="{! screenProvisionalQuoteRecord.NextBikeStorageSmallFee}" styleClass="form-control_this mr5" style="border: none;text-align: right" />円
+            </div> 
+          </td>
+        </tr>
+
+        <tr style="display:{! if(screenProvisionalQuoteRecord.NextBikeStorageMediumFeeFlg , "run-in", "none")}">
+          <td class="this_col_uchiwake1">
+            <div class="flex-wrap">
+            <div class="flex-wrap justify-between "> バ　イ　ク　置　き　場　代　(中　型)
+              <apex:outputLabel value="(" rendered="{! if(screenProvisionalQuoteRecord.BikeParkingMediumFeeTaxType != null ,true,false)}"/>
+              <apex:outputLabel value="{!screenProvisionalQuoteRecord.BikeParkingMediumFeeTaxType} "/>
+              <apex:outputLabel value=")" rendered="{! if(screenProvisionalQuoteRecord.BikeParkingMediumFeeTaxType != null ,true,false)}"/>  
+            </div></div></td>
+            <td class="this_col_uchiwake2"></td>
+            <td class="this_col_price">
+              <div class="text-right padding_yen">
+              <apex:outputLabel value="{! screenProvisionalQuoteRecord.NextBikeStorageMediumFee}" styleClass="form-control_this mr5" style="border: none;text-align: right" />円
+            </div> 
+          </td>
+        </tr>
+        
+        <tr style="display:{! if(screenProvisionalQuoteRecord.NextBikeStorageLargeFeeFlg, "run-in", "none")}">
+          <td class="this_col_uchiwake1">
+            <div class="flex-wrap">
+            <div class="flex-wrap justify-between "> バ　イ　ク　置　き　場　代　(大　型)
+              <apex:outputLabel value="(" rendered="{! if(screenProvisionalQuoteRecord.BikeParkinLargeFeeTaxType != null ,true,false)}"/>
+              <apex:outputLabel value="{!screenProvisionalQuoteRecord.BikeParkinLargeFeeTaxType} "/>
+              <apex:outputLabel value=")" rendered="{! if(screenProvisionalQuoteRecord.BikeParkinLargeFeeTaxType != null ,true,false)}"/>  
+            </div></div></td>
+          <td class="this_col_uchiwake2"></td>
+          <td class="this_col_price">
+            <div class="text-right padding_yen">
+              <apex:outputLabel value="{! screenProvisionalQuoteRecord.NextBikeStorageLargeFee}" styleClass="form-control_this mr5" style="border: none;text-align: right" />円
+            </div> 
+          </td>
+        </tr>
+
+        <!-- 管理会社指定商品_月型 -->
+        <apex:repeat value="{!screenProvisionalQuoteManageCompayItemMonthList}" var="ProvisionalQuoteManageCompayItemAfterFirst">
+          <tr style="display:{! if (ProvisionalQuoteManageCompayItemAfterFirst.nextDisplayFlg , "run-in", "none")}">
+
+            <td class="this_col_uchiwake1">
+              <div class="flex-wrap"><div class="flex-wrap justify-between ">
+                <apex:outputLabel value="{!ProvisionalQuoteManageCompayItemAfterFirst.ItemName}" />
+                <apex:outputLabel value="(" rendered="{! if(ProvisionalQuoteManageCompayItemAfterFirst.TaxType != null ,true,false)}"/>
+                <apex:outputLabel value="{!ProvisionalQuoteManageCompayItemAfterFirst.TaxType} "/>
+                <apex:outputLabel value=")" rendered="{! if(ProvisionalQuoteManageCompayItemAfterFirst.TaxType != null ,true,false)}"/>   
+              </div></div>
+            </td>
+
+            <td class="this_col_uchiwake2">
+            </td>
+
+            <!-- 金額 -->
+            <td class="this_col_price">
+              <div class="text-right padding_yen">
+                <apex:outputLabel value="{! ProvisionalQuoteManageCompayItemAfterFirst.NextFee}" styleClass="form-control_this mr5" style="border: none;text-align: right" />円
+              </div> 
+            </td>
+          </tr>
+        </apex:repeat>
+        <tr style="display:{! if(screenProvisionalQuoteRecord.NextFeeDepositFlg, "run-in", "none")}">
+          <td class="this_col_uchiwake1">
+            <div class="flex-wrap justify-between "> 保　　証　　料     
+            </div>
+          </td>
+          <td class="this_col_uchiwake2"></td>
+          <td class="this_col_price">
+            <div class="text-right padding_yen">
+              <apex:outputLabel value="{! screenProvisionalQuoteRecord.NextFeeDeposit}" styleClass="form-control_this mr5" style="border: none;text-align: right" />円
+            </div> 
+          </td>
+        </tr>        
+        <tr style="display:{! if(screenProvisionalQuoteRecord.NextFireInsuranceFeeFlg, "run-in", "none")}">
+          <td class="this_col_uchiwake1">
+            <div class="flex-wrap"><div class="flex-wrap justify-between "> 火　　災　　保　　険　　料
+              <apex:outputLabel value="(" rendered="{! if(screenProvisionalQuoteRecord.FireInsuranceType != null ,true,false)}"/>
+              <apex:outputLabel value="{!screenProvisionalQuoteRecord.FireInsuranceTypeName} "/>
+              <apex:outputLabel value=")" rendered="{! if(screenProvisionalQuoteRecord.FireInsuranceType != null ,true,false)}"/>     
+            </div></div>
+          </td>
+          <td class="this_col_uchiwake2"></td>
+          <td class="this_col_price">
+            <div class="text-right padding_yen">
+              <apex:outputLabel value="{! screenProvisionalQuoteRecord.NextFireInsuranceFee}" styleClass="form-control_this mr5" style="border: none;text-align: right" />円
+            </div> 
+          </td>
+        </tr>
+                
+        <!-- ▼問合せNo0496で追加 -->
+        <!-- 自由項目1（初回以降） -->
+        <tr style="display:{! if(screenProvisionalQuoteRecord.NextFreeItemName1 != '', "run-in", "none")}; height: 30px;"> 
+          <td rowspan = "1" class="border_r_none table_uchiwake_left_this pdl15" >
+            <div class="flex-wrap justify-between table_uchiwake_title">
+              <apex:outputLabel value="{!screenProvisionalQuoteRecord.NextFreeItemName1Pdf}" escape="false"/>
+            </div>
+          </td>
+          <td class="border_l_none table_uchiwake_right_this">
+          </td>
+          <td >
+            <!-- 金額 -->         
+            <div class="text-right padding_yen">
+              <apex:outputLabel value="{! screenProvisionalQuoteRecord.NextFreeItemFeeDeposit1}" styleClass="form-control_this mr5" style="border: none;height : 50%;text-align: right" />円
+            </div> 
+          </td>
+        </tr>
+        <!-- 自由項目2（初回以降） -->
+        <tr style="display:{! if(screenProvisionalQuoteRecord.NextFreeItemName2 != '', "run-in", "none")}; height: 30px;"> 
+          <td rowspan = "1" class="border_r_none table_uchiwake_left_this pdl15" >
+            <div class="flex-wrap justify-between table_uchiwake_title">
+              <apex:outputLabel value="{!screenProvisionalQuoteRecord.NextFreeItemName2Pdf}" escape="false"/> 
+            </div>
+          </td>
+          <td class="border_l_none table_uchiwake_right_this">
+          </td>
+          <td >
+            <!-- 金額 -->         
+            <div class="text-right padding_yen">
+              <apex:outputLabel value="{! screenProvisionalQuoteRecord.NextFreeItemFeeDeposit2}" styleClass="form-control_this mr5" style="border: none;height : 50%;text-align: right" />円
+            </div> 
+          </td>
+        </tr>
+        <!-- 自由項目3（初回以降） -->
+        <tr style="display:{! if(screenProvisionalQuoteRecord.NextFreeItemName3 != '', "run-in", "none")}; height: 30px;"> 
+          <td rowspan = "1" class="border_r_none table_uchiwake_left_this pdl15" >
+            <div class="flex-wrap justify-between table_uchiwake_title">
+              <apex:outputLabel value="{!screenProvisionalQuoteRecord.NextFreeItemName3Pdf}" escape="false"/>
+            </div>
+          </td>
+          <td class="border_l_none table_uchiwake_right_this">
+          </td>
+          <td >
+            <!-- 金額 -->         
+            <div class="text-right padding_yen">
+              <apex:outputLabel value="{! screenProvisionalQuoteRecord.NextFreeItemFeeDeposit3}" styleClass="form-control_this mr5" style="border: none;height : 50%;text-align: right" />円
+            </div> 
+          </td>
+        </tr>
+        <!-- 自由項目4（初回以降） -->
+        <tr style="display:{! if(screenProvisionalQuoteRecord.NextFreeItemName4 != '', "run-in", "none")}; height: 30px;"> 
+          <td rowspan = "1" class="border_r_none table_uchiwake_left_this pdl15" >
+            <div class="flex-wrap justify-between table_uchiwake_title">
+              <apex:outputLabel value="{!screenProvisionalQuoteRecord.NextFreeItemName4Pdf}" escape="false"/>
+            </div>
+          </td>
+          <td class="border_l_none table_uchiwake_right_this">
+          </td>
+          <td >
+            <!-- 金額 -->         
+            <div class="text-right padding_yen">
+              <apex:outputLabel value="{! screenProvisionalQuoteRecord.NextFreeItemFeeDeposit4}" styleClass="form-control_this mr5" style="border: none;height : 50%;text-align: right" />円
+            </div> 
+          </td>
+        </tr>
+        <!-- 自由項目5（初回以降） -->
+        <tr style="display:{! if(screenProvisionalQuoteRecord.NextFreeItemName5 != '', "run-in", "none")}; height: 30px;"> 
+          <td rowspan = "1" class="border_r_none table_uchiwake_left_this pdl15" >
+            <div class="flex-wrap justify-between table_uchiwake_title">
+              <apex:outputLabel value="{!screenProvisionalQuoteRecord.NextFreeItemName5Pdf}" escape="false"/>
+            </div>
+          </td>
+          <td class="border_l_none table_uchiwake_right_this">
+          </td>
+          <td >
+            <!-- 金額 -->         
+            <div class="text-right padding_yen">
+              <apex:outputLabel value="{! screenProvisionalQuoteRecord.NextFreeItemFeeDeposit5}" styleClass="form-control_this mr5" style="border: none;height : 50%;text-align: right" />円
+            </div> 
+          </td>
+        </tr>
+        <!-- ▲問合せNo0496で追加 -->
+ 
+
+        <!-- 空行 -->
+        <apex:repeat value="{!screenNullDateAfterFirst}" var="notdateAfterFirst">
+          <tr style="height: 30px;">
+
+            <td class="this_col_uchiwake1">
+              <div class="flex-wrap"><div class="flex-wrap justify-between">
+                <apex:outputLabel value="" />
+              </div>　</div>
+            </td>
+
+            <td class="this_col_uchiwake2">
+              <div class="pdt4 pdl50_this font_min">
+                <apex:outputLabel value=""/>　
+              </div>
+            </td>
+
+            <td class="this_col_price">
+            </td>
+          </tr>
+        </apex:repeat>
+      
+        <tr>
+          <td colspan="2" class="text-center back_graydark">小計</td>
+          <td class="text-right "><div class="table_price_under">
+            <apex:outputLabel id="NextSubTotal" value="{! screenProvisionalQuoteRecord.NextSubTotal}" style="border: 0;" styleClass="form-control_this mr5" />円
+          </div></td>
+        </tr>
+        <tr>
+          <td colspan="2" class="text-center back_graydark">消費税</td>
+          <td class="text-right table_price_under"><div class="table_price_under">
+            <apex:outputLabel id="NextTax" value="{! screenProvisionalQuoteRecord.NextTax}" style="border: 0;" styleClass="form-control_this mr5" />円
+          </div></td>
+        </tr>
+        <tr>
+          <td colspan="2" class="text-center back_graydark">課税対象</td>
+          <td class="text-right table_price_under"><div class="table_price_under">（
+            <apex:outputLabel id="NextTaxationTarget" value="{! screenProvisionalQuoteRecord.NextTaxationTarget}" style="border: 0;" styleClass="form-control_this mr5" />円）
+          </div></td>
+        </tr>
+        <tr>
+          <td colspan="2" class="text-center back_graydark">合計金額</td>
+          <td class="text-right table_price_under"><div class="table_price_under">
+            <apex:outputLabel id="NextTotal" value="{! screenProvisionalQuoteRecord.NextTotal}" style="border: 0;" styleClass="form-control_this mr5" />円
+            
+          </div></td>
+        </tr>
+      </table>
+
+      <table class="mt10 wd100" style="font-size : 10px; ">
+        <tr>
+          <th style="width:15%" class="back_graydark text-center" rowspan = "2">備　　考</th>
+          <td class="pdl30">
+              <apex:outputLabel value="{! screenProvisionalQuoteRecord.NextRemarksRenewalFee}" styleClass="border: none;form-control_this NameKana pdl50_this"/>　
+          </td>
+        </tr>
+        <tr>
+          <td class="pdl30">
+            <apex:outputLabel value="{! screenProvisionalQuoteRecord.NextRemarksShortTermPenaltyFee}" styleClass="border: none;form-control_this NameKana pdl50_this"/>　
+          </td>
+        </tr>
+      </table>
+    </div>        
+  </body>
+</apex:page>

@@ -1,0 +1,55 @@
+<!--部署選択-->
+<apex:component controller="GA101002Modal1Controller" >
+    <apex:attribute name="ParameterClass" type="GA101002Modal1ParameterClass" assignTo="{!Parameter}" description="key"/>
+    
+    <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery-3.6.0.min.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery.blockUI.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/common_screen_util.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.designer_file, 'designer_file/js/modaal.js')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/reset.min.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/foundation.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/style.css')}"/>
+    <apex:stylesheet value="https://use.fontawesome.com/releases/v5.0.6/css/all.css"/>
+    <body style="background-color:#ffffff;">
+        <main id="gh201003">    <!-- 共通の部品を使用 -->
+            <article>
+                <section>
+                    <apex:form id="GA101002Form" >
+                        <apex:pageBlock rendered="{!Parameter.noFirst}">
+                            <apex:outputText rendered="{!init}" />
+                            <apex:pageMessages />
+                            
+                            <div class="flex-wrap justify-between align_center mb10" style="position: relative;right: 5%">
+                                <div>
+                                    <h2 class="fontb font16">部署選択</h2>
+                                    <apex:selectList id="tenposentaku" multiselect="true" size="6" value="{!chooseableSelection}" style="width: 200px">
+                                        <apex:selectOptions value="{!chooseableOptions}"/>
+                                    </apex:selectList>
+                                </div>
+                                <!-- 矢印 -->
+                                <div class="text-center">
+                                    <div class="arrow mt30"><apex:commandLink onclick=" blockUi();" action="{!setSelect}" oncomplete="unblockUi();" rerender="GA101002Form" ><i class="fas fa-caret-right"></i></apex:commandLink></div>
+                                    <div class="arrow"><apex:commandLink onclick="blockUi();" action="{!removeSelect}" oncomplete="unblockUi();" rerender="GA101002Form" ><i class="fas fa-caret-left"></i></apex:commandLink></div>
+                                </div>
+                                <div>
+                                    <h2 class="fontb font16">選択済み</h2>
+                                    <apex:selectList id="sentakuzumi" multiselect="true" size="6" value="{!selectedSelection}" style="width: 200px">
+                                        <apex:selectOptions value="{!selectedOptions}"/>
+                                    </apex:selectList>
+                                </div>
+                                <apex:commandButton style="visibility:hidden;" rerender="dummy"/>
+                            </div>
+                            <!-- 設定ボタン -->
+
+                            
+                            <div class="btn btn-submit btn-primary text-center "><apex:commandButton disabled="{!isOpenError}" 
+                                onclick="blockUi();" action="{!settingSelect}" oncomplete=" if(!{!hasErrorMessage}){closeGA101002View();} unblockUi();" 
+                                rerender="renderedGA101002, GA101002Form" value="設定" styleClass="btn btn-submit btn-primary" />
+                            </div>
+                        </apex:pageBlock>
+                    </apex:form>
+                </section>
+            </article>
+        </main>
+    </body>
+</apex:component>

@@ -1,0 +1,74 @@
+<!--部屋登録-->
+<apex:component controller="GA104006Modal1Controller">
+    <apex:attribute name="ParameterClass" type="GA104006Modal1ParameterClass" assignTo="{!parameter}" description="key" />
+
+    <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/reset.min.css')}" />
+    <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/foundation.css')}" />
+    <apex:stylesheet value="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+    <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/modaal.css')}" />
+    <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/style.css')}" />
+    <apex:stylesheet value="{!URLFOR($Resource.external_file, 'external_file/common_style.css')}" />
+    <apex:stylesheet value="{!URLFOR($Resource.jQuery,'jQuery/jQueryUI/jquery-ui.css')}" />
+
+    <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery-3.6.0.min.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery.blockUI.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.designer_file, 'designer_file/js/modaal.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/common_screen_util.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/input_rules.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jQueryUI/jquery-ui.min.js')}" />
+
+    <apex:form id="GA104006Modal1Form">
+        
+        <apex:pageBlock rendered="{!parameter.noFirst}">
+            <apex:pageMessages />
+            <apex:outputText rendered="{!init}" />
+            <div class="modal-body">
+                <!-- 部屋帖数 -->
+                <div class=" mb10">
+                    <div class="information_title">部屋帖数<apex:commandButton style="visibility:hidden;" rerender="dummy"/></div>
+                    <apex:input type="text" styleClass="form-control"
+                                value="{!screenRecord.RoomFloorSpace}"
+                                onchange="correctInputRules(this,'number',3,2)" />
+                </div>
+                <!-- 部屋タイプ -->
+                <div class=" mb10 wd100">
+                    <div class="information_title">部屋タイプ</div>
+                    <div Class="flex-wrap flex_wrap align_center">
+                        <apex:repeat value="{!roomTypeValueList}" var="roomType">
+                            <!-- チェック状態 -->
+                            <apex:inputCheckbox id="roomTypeCheck" value="{!roomTypeCheckList[roomType]}"
+                                                onchange="onchangeRoomType(this)" />
+                            <!-- 部屋タイプ名 -->
+                            <apex:outputlabel for="roomTypeCheck" value="{!roomTypeNameList[roomType]}" styleClass="serach_check mr10" />
+                        </apex:repeat>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <div class="flex-wrap justify-around flex_wrap">
+                    <apex:commandButton value="登録" styleClass="mb10 message btn btn-primary btn-submit text-center"
+                                        onclick="blockUi();"
+                                        action="{!closeModal}"
+                                        oncomplete="unblockUi(); if({! !hasErrorMessage}){closeDialogModal1();}"
+                                        rerender="GA104006Modal1Form"/>
+                </div>
+            </div>
+        </apex:pageBlock>
+
+        <script type="text/javascript">
+            // 部屋タイプ変更時処理を実行
+            function onchangeRoomType(roomTypeCheckObject){
+                // 同階層のチェックボックス取得
+                var checkList = $(roomTypeCheckObject).siblings('input[id$="roomTypeCheck"]');
+                // 選択変更したチェックボックス以外を未選択に変更
+                for (var i=0; i < checkList.length; i++) {
+                    if (checkList[i].id!=roomTypeCheckObject.id) {
+                        checkList[i].checked = false;
+                    }
+                }
+            }
+        </script>
+
+    </apex:form>
+
+</apex:component>

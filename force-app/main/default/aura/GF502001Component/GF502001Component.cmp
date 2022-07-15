@@ -1,0 +1,13 @@
+<!-- 高校・大学一覧 -->
+<aura:component implements="force:appHostable,flexipage:availableForAllPageTypes" access="global" >
+
+    <!-- lightningページのヘッダを消す -->
+    <ltng:require styles="{!$Resource.external_file + '/external_file/lightningPageNoHeader.css'}"/>
+    
+	<lightning:listView
+    objectApiName="SurroundingFacility__c"
+    listName="MoreHighSchoolAllPage"
+    showSearchBar="true"
+    showActionBar="false"
+    enableInlineEdit="false"/>
+</aura:component>

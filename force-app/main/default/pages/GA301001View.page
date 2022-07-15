@@ -1,0 +1,266 @@
+<!--メール送信保留一覧-->
+<apex:page controller="GA301001Controller" docType="html-5.0" standardStylesheets="false" title="メール送信保留一覧">
+    <head>
+
+        <meta charset="utf-8" />
+
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+        <meta name="format-detection" content="telephone=no" />
+
+        <meta name="robots" content="noindex" />
+
+        <title>メール送信保留一覧</title>
+
+        <apex:includeScript value="{!URLFOR($Resource.jQuery, 'jQuery/jquery-3.6.0.min.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.jQuery, 'jQuery/jquery.blockUI.js')}"/>
+        <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/reset.min.css')}"/>
+        <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/foundation.css')}"/>
+        <apex:stylesheet value="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css"/>    
+        <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/modaal.css')}"/>
+        <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/style.css')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.designer_file,'designer_file/js/modaal.js')}"/> 
+        <apex:includeScript value="{!URLFOR($Resource.external_file, 'external_file/common_screen_util.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.external_file, 'external_file/input_rules.js')}"/>
+        <apex:stylesheet value="{!URLFOR($Resource.external_file, 'external_file/common_style.css')}"/>  
+
+    </head>
+
+    <body>
+
+        <main id="ga301001">
+          <apex:form id="GA301001form">
+            <apex:outputPanel id="message" >
+              <apex:pageMessages />
+            </apex:outputPanel>
+    
+          <article>
+    
+             <section>
+              <section class="" >　                         
+                <h1 class="fontb font2rem" style="float:left">メール送信保留一覧</h1>
+                <!-- 非表示検索ボタン（Enterキー押下時動作用の隠し項目） -->
+                <apex:commandButton styleClass="btn btn-submit btn-primary" value="検索(非表示))" disabled="{!isOpenError}" 
+                onclick="blockUi();"
+                action="{! searchMail}" rerender="accordionScript, message, mailDraft, mailTimeSpecificationSending"
+                oncomplete="unblockUi();if(!{! hasErrorMessage}){}else{gotoTop()}" 
+                status="loadComponent" style="visibility:hidden;"/>      
+              </section>
+                
+    
+                <div class="information_title mt30">店舗名検索</div>
+    
+                <div class="wd285 mb30">
+                <apex:selectList styleClass="form-control" value="{!searchShopID}" size="1" tabindex="1" >
+                  <apex:selectOptions value="{!selectOptionShopList}"/>
+               </apex:selectList>
+    
+               </div>
+    
+               <div class="btn btn-submit btn-primary text-center ">
+                <apex:commandButton styleClass="btn btn-submit btn-primary text-center" value="検索"  disabled="{! isOpenError}" onclick="blockUi();" action="{! searchMail}" oncomplete="unblockUi();if(!{! hasErrorMessage}){}else{gotoTop()}" rerender="accordionScript, message, mailDraft, mailTimeSpecificationSending" tabindex="2" />
+                </div>
+    
+            </section>
+    
+            <section>
+    
+              <h2 class="font18 mt20">検索結果</h2>
+    
+                   <ul id="accordion" class="accordion-defalt">
+    
+                    <li class="default open">
+    
+                     <div class="link"><i class="fa fa-chevron-up"></i>下書き保存</div>
+                     
+    
+                       <ul class="submenu-defalt ensen">
+                        <apex:outputPanel id="mailDraft" >
+    
+                        <li>
+    
+                          <table class="gray" style="height: 550px;">
+    
+                            <tbody>
+    
+                              <tr>
+        
+                                <th class="wd0"></th>
+        
+                                <th class="wd6">宛先</th>
+        
+                                <th class="wd3">件名</th>
+        
+                                <th class="wd5">担当者</th>
+        
+                                <th class="wd4">反響担当者</th>
+        
+                                <th class="wd5">保存日時</th>
+  
+                              </tr>
+
+                              <apex:variable var="num" value="1" />
+                              <apex:repeat value="{!mailDraftList}" var="mailDraft">
+                                <tr>
+          
+                                  <td class="text-center">{!VALUE(num)}</td>
+          
+                                  <td>{!mailDraft.Account__r.NAME}</td>
+          
+                                  <td><apex:commandLink value="{!mailDraft.Subject__c}" onclick=" showPage('GA102004View', '', 'TRUE', 'accountId={!mailDraft.Account__c}&mailDraftId={!mailDraft.ID}');" tabindex="98" rerender="dummy"/> </td>
+          
+                                  <td>{!mailDraft.LastModifiedBy.Name}</td>
+          
+                                  <td>{!mailDraft.Correspond__r.EchoStaff__r.Name}</td>
+          
+                                  <td>
+                                    <!-- <apex:outputtext value="{0, date, yyyy/MM/dd}">
+                                      <apex:param value="{!mailDraft.SystemModStamp}" />
+                                    </apex:outputtext> -->
+                                    <apex:outputField value="{!mailDraft.SystemModStamp}" />
+                                  </td>
+          
+                                </tr>
+                                <apex:variable var="num" value="{!VALUE(num) + 1}" />
+                              </apex:repeat>
+    
+                          </tbody>
+    
+                         </table>
+    
+                        </li>
+                      </apex:outputPanel>
+    
+                  </ul>
+               </li>
+    
+               <li class="default open">
+    
+                     <div class="link"><i class="fa fa-chevron-up"></i>時間指定送信</div>
+    
+                       <ul class="submenu-defalt ensen">
+                        <apex:outputPanel id="mailTimeSpecificationSending" >
+                        <li>
+    
+                          <table class="gray" style="height: 550px;">
+    
+                          <tbody>
+    
+                           <tr>
+    
+                            <th class="wd0"></th>
+    
+                            <th class="wd5">宛先</th>
+    
+                            <th class="wd3">件名</th>
+    
+                            <th class="wd5">担当者</th>
+    
+                            <th class="wd4">反響担当者</th>
+    
+                            <th class="wd5">保存日時</th>
+    
+                            <th class="wd5">送信予定日時</th>
+    
+    
+    
+                           </tr>
+
+                           <apex:variable var="num" value="1" />
+                           <apex:repeat value="{!mailTimeSpecificationSendingList}" var="mailTimeSpecificationSending">
+                           <tr>
+    
+                             <td class="text-center">{!VALUE(num)}</td>
+    
+                             <td>{!mailTimeSpecificationSending.Account__r.NAME}</td>
+    
+                             <td><apex:commandLink value="{!mailTimeSpecificationSending.Subject__c}" onclick=" showPage('GA102004View', '', 'TRUE', 'accountId={!mailTimeSpecificationSending.Account__c}&mailTimeSpecificationSendingId={!mailTimeSpecificationSending.ID}');" tabindex="98" rerender="dummy"/> </td>
+    
+                             <td>{!mailTimeSpecificationSending.LastModifiedBy.Name}</td>
+    
+                             <td>{!mailTimeSpecificationSending.Correspond__r.EchoStaff__r.Name}</td>
+    
+                            <td>
+                              <!-- <apex:outputtext value="{0, date, yyyy/MM/dd}">
+                                <apex:param value="{!mailTimeSpecificationSending.SystemModStamp}" />
+                              </apex:outputtext> -->
+                              <apex:outputField value="{!mailTimeSpecificationSending.SystemModStamp}" />
+                            </td>
+    
+                            <td>
+                              <!-- <apex:outputtext value="{0, date, yyyy/MM/dd}">
+                                <apex:param value="{!mailTimeSpecificationSending.SendingDateTime__c}" />
+                              </apex:outputtext> -->
+                              <apex:outputField value="{!mailTimeSpecificationSending.SendingDateTime__c}" />
+                            </td>
+    
+                           </tr>
+                           <apex:variable var="num" value="{!VALUE(num) + 1}" />
+                          </apex:repeat>
+    
+                          </tbody>
+    
+                         </table>
+    
+                        </li>
+                      </apex:outputPanel>
+                  </ul>
+    
+               </li>
+    
+                  </ul>
+    
+            </section>
+    
+          </article>
+            
+        </apex:form>
+        </main>
+     </body>
+    
+     <apex:outputPanel id="accordionScript" >
+         <script>
+         $(function() {
+             var Accordion = function(el, multiple) {
+                 this.el = el || {};
+                 this.multiple = multiple || false;
+                 
+                 // Variables privadas
+                 var links = this.el.find('.link');
+                 // Evento
+                 links.off('click');//重複登録を防ぐ
+                 links.on('click', {el: this.el, multiple: this.multiple}, this.dropdown)
+                 
+             }
+             
+             Accordion.prototype.dropdown = function(e) {
+                 var $el = e.data.el;
+                 $this = $(this),
+                     $next = $this.next();
+                 
+                 $next.slideToggle();
+                 $this.parent().toggleClass('open');
+                 
+                 if (!e.data.multiple) {
+                 };
+             }
+             
+             var accordion = new Accordion($('#accordion'), false);
+         });
+         
+         $(function() {
+             $('#btn').on('click', function(e) {
+                 var textList = document.getElementById('accordion');
+                 let elements = textList.getElementsByTagName('li');
+                 Array.prototype.forEach.call(elements, function(element) {
+                     element.classList.remove('open','default');
+                     $('.submenu-defalt').fadeOut()
+                 });
+             });
+         });
+         </script>
+     </apex:outputPanel>
+    
+    
+    
+</apex:page>

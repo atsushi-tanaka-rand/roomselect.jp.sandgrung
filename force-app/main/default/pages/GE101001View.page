@@ -1,0 +1,256 @@
+<!-- 業務日報登録 -->
+<apex:page standardStylesheets="false" docType="html-5.0" controller="GE101001Controller" title="業務日報登録">
+    
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="format-detection" content="telephone=no" />
+        <meta name="robots" content="noindex" />
+        <title>業務日報登録</title>
+        
+        <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/reset.min.css')}" />
+        <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/foundation.css')}" />
+        <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/modaal.css')}" />
+        <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/style.css')}" />
+        <apex:stylesheet value="https://use.fontawesome.com/releases/v5.0.6/css/all.css" />
+        <apex:stylesheet value="{!URLFOR($Resource.external_file, 'external_file/common_style.css')}" />
+        <apex:stylesheet value="{!URLFOR($Resource.jQuery,'jQuery/jQueryUI/jquery-ui.css')}" />
+        
+        <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery-3.6.0.min.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery.blockUI.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jQueryUI/jquery-ui.min.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.designer_file,'designer_file/js/modaal.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/common_screen_util.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/input_rules.js')}" />
+        
+        
+        
+    </head>
+    <script type="text/javascript">
+    
+    //保存確認メッセージ
+    async function checkSave(){
+        var message = "{! MSG_COM_V_SAVE}";
+        var retVal = await showConfirm(message);
+        if (retVal) {
+            blockUi();
+            save();
+        }          
+    }
+    
+    //保存完了メッセージ
+    async function alertSaveFinish() {
+        //完了メッセージ
+        await showAlert("{! MSG_COM_I_SAVE}");
+    }
+    </script>
+    
+    <body style="background-color:#ffffff;">
+        
+        <main id="ge101001">
+            <apex:form id="GE101001">   
+                
+                <!-- actionFunction -->
+                <apex:actionFunction action="{! save}"   name="save"
+                                     oncomplete="unblockUi();if(!{! hasErrorMessage}){alertSaveFinish()}else{gotoTop()}" rerender="GE101001" />
+                
+                <apex:pageMessages id="messageArea"/>
+                
+                <article>
+                    
+                    <section>
+                        <section class="" style="display: flex">
+                            <div class="flex-wrap justify-between align_center mb10">
+                                
+                                <h1 class="fontb font2rem">業務日報登録</h1>
+                               
+                            </div>
+                            <apex:commandButton style=" visibility:hidden;" rerender="dummy"/>
+                        </section>
+                        
+                        <div class="border-g-3 mb60">
+                            
+                            <div class="flex-wrap flex_wrap flex-xs-xolumn justify-between">
+                                
+                                <div class="wd33 wd49_md wd100_xs mb10">
+                                    
+                                    <div class="information_title">業務日付</div>
+                                    
+                                    <div class="information_contents"><apex:outputField id="RegistrationReportDate" value="{!dailyReport.ReportDate__c}"/></div>
+                                    
+                                </div>
+                                
+                            </div>
+                            
+                            <div class="flex-wrap flex_wrap flex-xs-xolumn justify-between">
+                                
+                                <div class="wd33 wd49_md wd100_xs mb10">
+                                    
+                                    <div class="information_title">手動メンテ</div>
+                                    
+                                    <div class="information_contents"><apex:outputField id="RegistrationManualMaintenanceCount" value="{!dailyReport.ManualMaintenanceCount__c}"/></div>
+                                    
+                                </div>
+                                
+                                <div class="wd33 wd49_md wd100_xs mb10">
+                                    
+                                    <div class="information_title">自動メンテ数</div>
+                                    
+                                    <div class="information_contents"><apex:outputField id="RegistrationAutoMaintenanceCount" value="{!dailyReport.AutoMaintenanceCount__c}"/></div>
+                                    
+                                </div>
+                                
+                                <div class="wd33 wd49_md wd100_xs mb10">
+                                    
+                                    <div class="information_title">電物</div>
+                                    
+                                    <div class="information_contents"><apex:outputField id="RegistrationElectronic" value="{!dailyReport.Electronic__c}"/></div>
+                                    
+                                </div>
+                                
+                            </div>
+                            
+                            <div class="flex-wrap flex_wrap flex-xs-xolumn justify-between">
+                                
+                                <div class="wd33 wd49_md wd100_xs mb10">
+                                    
+                                    <div class="information_title">物確</div>
+                                    
+                                    <div class="information_contents"><apex:outputField id="RegistrationPropertyConfirmation" value="{!dailyReport.PropertyConfirmation__c}"/></div>
+                                    
+                                </div>
+                                
+                                <div class="wd33 wd49_md wd100_xs mb10">
+                                    
+                                    <div class="information_title">物調</div>
+                                    
+                                    <div class="information_contents"><apex:outputField id="RegistrationPropertyResearch" value="{!dailyReport.PropertyResearch__c}"/></div>
+                                    
+                                </div>
+                                
+                                <div class="wd33 wd49_md wd100_xs mb10">
+                                    
+                                    <div class="information_title">写真入れ</div>
+                                    
+                                    <div class="information_contents"><apex:outputField id="RegistrationPhotoRegist" value="{!dailyReport.PhotoRegist__c}"/></div></div>
+                                
+                            </div>
+                            
+                            <div class="flex-wrap flex_wrap flex-xs-xolumn justify-between">
+                                
+                                <div class="wd33 wd49_md wd100_xs mb10">
+                                    
+                                    <div class="information_title">物確（＋:増/-：減）</div>
+                                    
+                                    <apex:input id="RegistrationaddPropertyConfirmation" styleClass="form-control mr5" type="text" value="{!addPropertyConfirmation}" onchange="correctInputRules(this,'number',3,0);" tabindex="1" />
+                                    
+                                </div>
+                                
+                                <div class="wd33 wd49_md wd100_xs mb10">
+                                    
+                                    <div class="information_title">物調（＋:増/-：減）</div>
+                                    
+                                    <apex:input id="RegistrationaddPropertyResearch" styleClass="form-control mr5" type="text" value="{!addPropertyResearch}" onchange="correctInputRules(this,'number',3,0);" tabindex="2" />
+                                    
+                                </div>
+                                
+                                <div class="wd33 wd49_md wd100_xs mb10">
+                                    
+                                    <div class="information_title">業務改善案</div>
+                                    
+                                    <div class="information_contents"><apex:outputField id="RegistrationImprovementPlan" value="{!dailyReport.ImprovementPlan__c}"/></div>
+                                    
+                                </div>
+                                
+                            </div>
+                            
+                            
+                            
+                        </div>
+                        
+                    </section>
+                    
+                    <section>
+                        
+                        <h2 class="fontb font2rem">業務日報履歴</h2>
+                        
+                        
+                        
+                        <table class="gray nowrap mb30" style="height:320px;">
+                            
+                            <tbody>
+                                
+                                <tr>
+                                    
+                                    <th class="wd1"></th>
+                                    
+                                    <th class="wd5">業者日付</th>
+                                    
+                                    <th class="wd4">手動メンテ数</th>
+                                    
+                                    <th class="wd4">自動メンテ数</th>
+                                    
+                                    <th class="wd4">電物</th>
+                                    
+                                    <th class="wd4">物確</th>
+                                    
+                                    <th class="wd4">物調</th>
+                                    
+                                    <th class="wd4">写真入れ</th>
+                                    
+                                    <th class="wd4">業務改善案</th>
+                                    
+                                </tr>
+                                
+                                <apex:variable var="num" value="0" />
+                                <apex:repeat value="{!dailyReportList}" var="D">
+                                    <tr>
+                                        
+                                        <td class="text-center">
+                                            <apex:commandLink value="選択" onclick="blockUi();" action="{!setSelectDailyReport}"
+                                                              oncomplete="unblockUi();" rerender="GE101001"  tabindex="3" >
+                                                <apex:param value="{!VALUE(num)}" name="selectDailyReportIndex" assignTo="{!selectDailyReportIndex}"/>
+                                            </apex:commandLink>
+                                        </td>
+                                        
+                                        <td>
+                                            <apex:outputText value="{0, date, yyyy/MM/dd}">
+                                                <apex:param value="{!D.ReportDate__c}"/>
+                                            </apex:outputText>
+                                        </td>
+                                        <td><apex:outputText value="{!D.ManualMaintenanceCount__c}"/></td>
+                                        
+                                        <td><apex:outputText value="{!D.AutoMaintenanceCount__c}"/></td>
+                                        
+                                        <td><apex:outputText value="{!D.Electronic__c}"/></td>
+                                        
+                                        <td><apex:outputText value="{!D.PropertyConfirmation__c}"/></td>
+                                        
+                                        <td><apex:outputText value="{!D.PropertyResearch__c}"/></td>
+                                        
+                                        <td><apex:outputText value="{!D.PhotoRegist__c}"/></td>
+                                        
+                                        <td><apex:outputText value="{!D.ImprovementPlan__c}"/></td>
+                                
+                                    </tr>
+                                    <apex:variable var="num" value="{!VALUE(num) + 1}" />
+                                </apex:repeat>
+                            </tbody>
+                            
+                        </table>
+                        
+                        <div class="btn btn-submit btn-primary text-center mt30">
+                            <apex:commandButton styleClass="btn btn-submit btn-primary text-center mt30"
+                                                onclick="checkSave();" value="登録" disabled="{! isOpenError}"
+                                                id="RegistrationButton" rerender="dummy" tabindex="4" />
+                        </div>
+                        
+                        
+                    </section>
+                    
+                </article>
+            </apex:form>
+        </main>
+        
+    </body>
+</apex:page>

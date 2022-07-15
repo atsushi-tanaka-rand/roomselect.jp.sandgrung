@@ -1,0 +1,316 @@
+<!-- 仮見積（お客様向け）_条件入力 -->
+<apex:page docType="html-5.0" standardStylesheets="false" controller="GA102002Controller" title="仮見積">
+  <apex:form id="GA102002" html-novalidate="novalidate">
+
+    <head>
+      <title>仮見積</title>
+      <meta charset="utf-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <meta name="format-detection" content="telephone=no" />
+      <meta name="robots" content="noindex" />
+      <title></title>
+      <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/reset.min.css')}" />
+      <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/foundation.css')}" />
+      <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/modaal.css')}" />
+      <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/style.css')}" />
+      <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery-3.6.0.min.js')}" />
+      <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery.autoKana.js')}" />
+      <apex:includeScript value="{!URLFOR($Resource.designer_file, 'designer_file/js/modaal.js')}" />
+      <apex:stylesheet value="https://use.fontawesome.com/releases/v5.0.6/css/all.css" />
+
+      <apex:stylesheet value="{!URLFOR($Resource.external_file, 'external_file/common_style.css')}" />
+      <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery.blockUI.js')}" />
+      <apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/common_screen_util.js')}" />
+      <apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/input_rules.js')}" />
+      <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jQueryUI/jquery-ui.min.js')}" />
+      <apex:stylesheet value="{!URLFOR($Resource.jQuery,'jQuery/jQueryUI/jquery-ui.css')}" />
+
+
+    </head>
+
+    <body id="ga102002">
+        <!-- actionFunction -->
+        <apex:actionFunction name="remove"
+                action="{! removeEtceteraAuxiliaryItemList}" 
+                oncomplete="unblockUi(); if(!{! hasErrorMessage}) { removeFinish(); } else { gotoTop() }"
+                reRender="GA102002"
+        >
+            <apex:param name="ListIndex" value="" />
+        </apex:actionFunction>
+
+      <apex:commandButton style="visibility:hidden;" reRender="dummy" />
+      <div class="print_pages_pop">
+        <apex:pageMessages id="messageArea" />
+        <div class="wd100 mb10">
+
+          <div class="information_title">契約開始日</div>
+          <div>
+            <div class="posi_re">
+              <apex:input type="date" value="{!HomeMovingDate}" html-min="1700-01-01" html-max="4000-12-31"
+                          styleClass="form-control" onblur="clearValidateErrorValue(this)" 
+                          onkeydown="dateInputKeydownFocusAdjust(this, event)" tabIndex="1">
+
+              </apex:input>
+            </div>
+          </div>
+        </div>
+
+        <div class="mb10 wd100">
+          <div class="information_title">日割り計算</div>
+          <div class="flex-wrap align_center">
+            <apex:inputCheckbox id="IsOtherPet" selected="true" value="{!Proratedflag}" tabIndex="2" />
+            <apex:outputLabel for="IsOtherPet" styleClass="serach_check2" style="width:190px;" value="" />
+            一ヵ月<apex:input type="text" value="{!ProratedCalculationDay}" onchange="correctInputRulesDay(this, '3',0);" styleClass="form-control wd60px ml10 mr5" tabindex="3" />日で計算
+          </div>
+        </div>
+        <div class="mb10 wd100">
+          <div class="information_title">駐車場/駐輪場</div>
+          <div class="flex-wrap flex_wrap align_center ">
+            <div class="wd185 mb10">
+              <apex:inputCheckbox id="ParkingFee" selected="false" value="{!Parkingflag}" tabIndex="4" />
+              <apex:outputLabel for="ParkingFee" styleClass="serach_check2" style="width:190px;" value="駐車場" />
+            </div>
+            <div class="flex-wrap align_center wd185 nowrap mb10">必須数
+              <apex:input type="text" value="{!ParkingNumberRequired}" onchange="correctInputRules(this,'number', '3',0);" styleClass="form-control wd60px ml5 mr5" tabindex="5"/>台分</div>
+            <div class="flex-wrap align_center wd185 nowrap mb10">料金
+              <apex:input type="text" value="{! ParkingFee}" onchange="correctInputRules(this,'currency', '6',0);" styleClass="form-control"  tabIndex="6"/>
+            </div>
+          </div>
+          <div class="flex-wrap flex_wrap align_center mb10">
+            <div class="wd185 mb10">
+              <apex:inputCheckbox id="BicycleParkingFee" value="{!BicycleParkingFlag}" selected="false" tabIndex="7" />
+              <apex:outputLabel for="BicycleParkingFee" styleClass="serach_check2" style="width:190px;" value="駐輪場" />
+            </div>
+            <div class="flex-wrap align_center wd185 nowrap mb10">必須数
+              <apex:input type="text" value="{!BicycleParkingNumberRequired}" onchange="correctInputRules(this,'number', '3',0);" styleClass="form-control wd60px ml5 mr5" tabindex="8"/>台分</div>
+            <div class="flex-wrap align_center wd185 nowrap mb10">料金
+              <apex:input type="text" value="{! BicycleParkingFee}" onchange="correctInputRules(this,'currency', '7',0);" styleClass="form-control"  tabIndex="9"/>
+            </div>
+          </div>
+          <div class="flex-wrap flex_wrap align_center mb10">
+            <div class="wd185 mb10">
+              <apex:inputCheckbox id="BikeParkingSmallFee" value="{!BikeParkingSmallFlag}" selected="false" tabIndex="10" />
+              <apex:outputLabel for="BikeParkingSmallFee" styleClass="serach_check2" style="width:190px;" value="バイク置き場(小型)" />
+            </div>
+            <div class="flex-wrap align_center wd185 nowrap mb10">必須数
+              <apex:input type="text" value="{!BikeParkingSmallNumberRequired}" onchange="correctInputRules(this,'number', '3',0);" styleClass="form-control wd60px ml5 mr5" tabindex="11" />台分</div>
+            <div class="flex-wrap align_center wd185 nowrap mb10">料金
+              <apex:input type="text" value="{! BikeParkingSmallFee}" onchange="correctInputRules(this,'currency', '7',0);" styleClass="form-control"  tabIndex="12"/>
+            </div>
+          </div>
+          <div class="flex-wrap flex_wrap align_center mb10">
+            <div class="wd185 mb10">
+              <apex:inputCheckbox id="BikeParkingMediumFee" value="{!BikeParkingMediumFlag}" selected="false" tabIndex="13" />
+              <apex:outputLabel for="BikeParkingMediumFee" styleClass="serach_check2" style="width:190px;" value="バイク置き場(中型)" />
+            </div>
+            <div class="flex-wrap align_center wd185 nowrap mb10">必須数
+              <apex:input type="text" value="{!BikeParkingMediumNumberRequired}" onchange="correctInputRules(this,'number', '3',0);" styleClass="form-control wd60px ml5 mr5" tabindex="14"/>台分</div>
+            <div class="flex-wrap align_center wd185 nowrap mb10">料金  
+              <apex:input type="text" value="{! BikeParkingMediumFee}" onchange="correctInputRules(this,'currency', '7',0);" styleClass="form-control"  tabIndex="15"/>
+            </div>
+          </div>
+          <div class="flex-wrap flex_wrap align_center mb10">
+            <div class="wd185 mb10">
+              <apex:inputCheckbox id="BikeParkinLargeFee" value="{!BikeParkinLargeFlag}" selected="false" tabIndex="16" />
+              <apex:outputLabel for="BikeParkinLargeFee" styleClass="serach_check2" style="width:190px;" value="バイク置き場(大型)" />
+            </div>
+            <div class="flex-wrap align_center wd185 nowrap mb10">必須数
+              <apex:input type="text" value="{!BikeParkinLargeNumberRequired}" onchange="correctInputRules(this,'number', '3',0);" styleClass="form-control wd60px ml5 mr5" tabindex="17" />台分</div>
+            <div class="flex-wrap align_center wd185 nowrap mb10">料金
+              <apex:input type="text" value="{! BikeParkinLargeFee}" onchange="correctInputRules(this,'currency', '7',0);" styleClass="form-control"  tabIndex="18"/>
+            </div>
+          </div>
+          <div class="mb10">
+            <div class="information_title">保証プラン</div>
+            <div class="posi_re">
+              <apex:selectList size="1" styleClass="form-control" value="{! auxiliaryDepositPlan}" tabindex="19">
+                <apex:selectOptions value="{! SelectAuxiliaryDepositPlanList}"/>
+              </apex:selectList>    
+            </div>
+          </div>
+          <div class="mb10">
+            <div class="information_title">火災保険</div>
+            <div class="posi_re">
+              <apex:selectList size="1" styleClass="form-control" value="{! auxiliaryFireInsurance}" tabindex="20">
+                <apex:selectOptions value="{! SelectAuxiliaryFireInsuranceList}"/>
+              </apex:selectList>    
+            </div>
+          </div>
+          <div class="mb10">
+            <div class="information_title">更新料表記</div>
+            <apex:selectList size="1" styleClass="form-control" value="{! RenewalFeeShow}" tabindex="21">
+              <apex:selectOptions value="{! SelectRenewalFeeShowList}"/>
+            </apex:selectList>    
+          </div>
+          <div class="mb10">
+            <div class="information_title">定額修繕費表記</div>
+            <apex:selectList size="1" styleClass="form-control" value="{! CleaningFeeShow}" tabindex="22">
+                <apex:selectOptions value="{! SelectCleaningFeeShowList}"/>
+              </apex:selectList>    
+          </div>
+          <div class="back_graydark mt30 pd8_5 mb20">付帯商品</div>
+          <div style="width:100%; display:flex; flex-wrap:wrap; flex-direction:column;">
+              <div class="flex-wrap flex_wrap justify-between align-items_end wd100_xs nowrap mb30">
+                  <div class="flex-md-xolumn" style="width:20%">
+                      <div class="information_title">付帯商品種別</div>
+                      <apex:selectList id="EtceteraAuxiliaryItemType" size="1" styleClass="form-control" value="{! screen.etceteraAuxiliaryItemType}" tabindex="23">
+                          <apex:actionSupport event="onchange" action="{!etceteraAuxiliaryItemTypeListChange}" onsubmit="blockUi();" oncomplete="unblockUi();" reRender="EtceteraAuxiliaryItemName,messageArea" />
+                          <apex:selectOptions value="{! SelectEtceteraAuxiliaryItemTypeList}"/>
+              </apex:selectList>    
+            </div>
+                  <div class="flex-md-xolumn" style="width:60%">
+                      <div class="information_title">付帯業者／付帯商品／付帯料金</div>
+                      <apex:selectList id="EtceteraAuxiliaryItemName" size="1" styleClass="form-control" value="{! screen.etceteraAuxiliaryItemName}" tabindex="24">
+                          <apex:selectOptions value="{! SelectEtceteraAuxiliaryItemNameList}"/>
+              </apex:selectList>   
+            </div>
+                  <div style="width:10% justify-content:flex-end;">
+                      <apex:commandButton value=" 追加 "
+                              styleClass="modal btn btn btn-sm btn-normal"
+                              disabled="{! isOpenError}"
+                              onclick="blockUi();"  
+                              oncomplete="unblockUi();if({! hasErrorMessage}){gotoTop()}" 
+                              action="{! addEtceteraAuxiliaryItemList}"
+                              reRender="GA102002"
+                              tabindex="25"
+                      />
+          </div>
+            </div>
+
+              <div class="lock_box" style="width:100%; height:400px;">
+                  <table class="data gray" style="width:100%; height:400px; border-left: 1px #d2d2d2 solid;">
+                      <tr>
+                          <th style="width:120px"></th>
+                          <th style="width:240px">付帯商品種別</th>
+                          <th style="width:1400px">付帯業者／付帯商品</th>
+                      </tr>
+
+                      <apex:variable var="num" value="0" />
+                      <apex:repeat value="{!screen.etceteraAuxiliaryItemList}" var="item" id="etceteraAuxiliaryItemList">  
+                          <tr>
+                              <td>
+                                  <apex:commandButton value="削除"
+                                      onclick="clickRemove({! num})"
+                                      disabled="{! isOpenError}"
+                                      styleClass="modal btn btn btn-sm btn-normal"
+                                      reRender="dummy"
+                                      tabindex="26"
+                                  />
+                              </td>
+                              <td>{! item.auxiliaryItemType}</td>
+                              <td>{! item.auxiliaryItemAccount}/{! item.auxiliaryItemName}</td>
+                          </tr>
+                          <apex:variable var="num" value="{!VALUE(num)+1}" />
+                      </apex:repeat> 
+                  </table>
+            </div>
+          </div>
+        </div>
+
+      </div>
+      <div class="flex-wrap align-center mt30 mb30">
+        <apex:commandButton styleClass="btn btn200 btn-primary text-center mauto_xs wd30 ml5 mr5" 
+            value="保存済みの内容で出力"
+            onclick=" blockUi();" 
+            oncomplete="unblockUi();gotoTop(); 
+            showPage('GA102002View2', '_self', 'true', 
+                      'accountId={!accountId}'
+                    + '&PropertyId={!propertyId}'
+                    + '&SavedOutputFlag=true'
+                    + '&HomeMovingDate={!ProvisionalQuoteRecord.ContractStartDate__c}'
+                    + '&Proratedflag={!ProvisionalQuoteRecord.IsProrated__c}'
+                    + '&ProratedCalculationDay={!ProvisionalQuoteRecord.ProratedMonthDays__c}'
+                    + '&Parkingflag={!ProvisionalQuoteRecord.IsParkingUse__c}'
+                    + '&ParkingNumberRequired={!ProvisionalQuoteRecord.ParkingRequiredNumber__c}'
+                    + '&ParkingFee={!ProvisionalQuoteRecord.ParkingRequiredNumberFee__c}'
+                    + '&BicycleParkingFlag={!ProvisionalQuoteRecord.IsBicycleParkingUse__c}'
+                    + '&BicycleParkingNumberRequired={!ProvisionalQuoteRecord.BicycleParkingRequiredNumber__c}'
+                    + '&BicycleParkingFee={!ProvisionalQuoteRecord.BicycleParkingRequiredNumberFee__c}'
+                    + '&BikeParkingSmallFlag={!ProvisionalQuoteRecord.IsBikeStorageSmallUse__c}'
+                    + '&BikeParkingSmallNumberRequired={!ProvisionalQuoteRecord.BikeStorageSmallRequiredNumber__c}'
+                    + '&BikeParkingSmallFee={!ProvisionalQuoteRecord.BikeStorageSmallRequiredNumberFee__c}'
+                    + '&BikeParkingMediumFlag={!ProvisionalQuoteRecord.IsBikeStorageMediumUse__c}'
+                    + '&BikeParkingMediumNumberRequired={!ProvisionalQuoteRecord.BikeStorageMediumRequiredNumber__c}'
+                    + '&BikeParkingMediumFee={!ProvisionalQuoteRecord.BikeStorageMediumRequiredNumberFee__c}'
+                    + '&BikeParkinLargeFlag={!ProvisionalQuoteRecord.IsBikeStorageLargeUse__c}'
+                    + '&BikeParkinLargeNumberRequired={!ProvisionalQuoteRecord.BikeStorageLargeRequiredNumber__c}'
+                    + '&BikeParkinLargeFee={!ProvisionalQuoteRecord.BikeStorageLargeRequiredNumberFee__c}'
+                    + '&auxiliaryDepositPlan={!ProvisionalQuoteRecord.DepositItem__c}'
+                    + '&auxiliaryFireInsurance={!ProvisionalQuoteRecord.FireInsuranceItem__c}'
+                    + '&AuxiliaryItem1={!ProvisionalQuoteRecord.AuxiliaryItem1__c}'
+                    + '&AuxiliaryItem2={!ProvisionalQuoteRecord.AuxiliaryItem2__c}'
+                    + '&AuxiliaryItem3={!ProvisionalQuoteRecord.AuxiliaryItem3__c}'
+                    + '&AuxiliaryItem4={!ProvisionalQuoteRecord.AuxiliaryItem4__c}'
+                    + '&AuxiliaryItem5={!ProvisionalQuoteRecord.AuxiliaryItem5__c}'
+                    + '&AuxiliaryItem6={!ProvisionalQuoteRecord.AuxiliaryItem6__c}'
+                    + '&AuxiliaryItem7={!ProvisionalQuoteRecord.AuxiliaryItem7__c}'
+                    + '&AuxiliaryItem8={!ProvisionalQuoteRecord.AuxiliaryItem8__c}'
+                    + '&AuxiliaryItem9={!ProvisionalQuoteRecord.AuxiliaryItem9__c}'
+                    + '&AuxiliaryItem10={!ProvisionalQuoteRecord.AuxiliaryItem10__c}'
+                    + '&RenewalFeeShow={!ProvisionalQuoteRecord.RenewalFeeShow__c}'
+                    + '&CleaningFeeShow={!ProvisionalQuoteRecord.CleaningFeeShow__c}')"
+            reRender="GA102002"
+            rendered="{!ProvisionalQuoteDataOutputFlg}"
+            disabled="{!isOpenError}" 
+            tabindex="27"/>
+        <apex:commandButton styleClass="btn btn200 btn-primary text-center mauto_xs wd30 ml5 mr5" 
+            value="仮見積書出力"
+            action="{!checkInput}"
+            oncomplete=" if({!hasErrorMessage}){gotoTop(); return false;}; unblockUi();gotoTop(); 
+                      showPage('GA102002View2', '_self', 'true', '{!openParam}')"
+            reRender="GA102002,messageArea"
+            disabled="{!isOpenError}" 
+            tabindex="28"/>
+      </div>
+
+    </body>
+  </apex:form>
+  <apex:outputPanel id="js">
+    <script language="javascript" type="text/javascript">
+
+        function getJQueryObjectByApexTagId(Id) {
+                return $('[id$=":'+Id+'"]');
+        }
+
+        // 日割り計算（日のみの入力判定）
+        function correctInputRulesDay(Target, maxLength, maxDecimalLength ) {
+          var myTarget = Target;  // 入力規則を確認する対象の項目
+          var myMaxLength = maxLength; // 最大文字数or数値の場合、整数部の最大桁数
+          var myMaxDecimalLength = maxDecimalLength; // 数値の場合、小数部の最大桁数
+        
+          myTarget.value = toHalfWidth(myTarget.value); // 全角数字は半角数字に変換
+          myTarget.value = setNumberString(myTarget.value, myMaxLength, myMaxDecimalLength); // 数値用の修正
+
+          // 空はそのまま
+          if(myTarget.value == '' ){
+            return false;
+          }
+
+          // 31日を超える場合31日に合わせる。
+          if(myTarget.value > 31){
+            myTarget.value = 31;
+          }
+
+          // 数字で1以下であれば1でする。
+          if(myTarget.value < 1){
+            myTarget.value = 1;
+          }
+        }
+
+        // 削除ボタン押下時
+        async function clickRemove(idx) {
+            var retVal = await showConfirm("{! MSG_COM_V_DELETE}");
+            if (retVal) {
+                blockUi();
+                remove(idx);
+            }
+        }
+
+        // 削除完了時
+        async function removeFinish() {
+            // 完了メッセージ
+            await showAlert("{! MSG_COM_I_DELETE}");
+        }
+    </script>
+  </apex:outputPanel>
+</apex:page>

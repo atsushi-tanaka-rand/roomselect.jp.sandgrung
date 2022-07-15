@@ -1,0 +1,813 @@
+<!-- 物件MAP照会 -->
+<apex:page docType="html-5.0" standardStylesheets="false" controller="GA104002Controller" title="物件MAP照会" action="{!deletePropertyMapParameter}" readOnly="false">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="format-detection" content="telephone=no" />
+        <meta name="robots" content="noindex" />
+        <title>物件MAP照会</title>
+        <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/reset.min.css')}" />
+        <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/foundation.css')}" />
+        <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/modaal.css')}" />
+        <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/style.css')}" />
+        <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery-3.6.0.min.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.designer_file, 'designer_file/js/modaal.js')}" />
+        <apex:stylesheet value="https://use.fontawesome.com/releases/v5.0.6/css/all.css" />
+        
+        <apex:stylesheet value="{!URLFOR($Resource.external_file, 'external_file/common_style.css')}" />
+        <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery.blockUI.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/common_screen_util.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/input_rules.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jQueryUI/jquery-ui.min.js')}" />
+        <apex:stylesheet value="{!URLFOR($Resource.jQuery,'jQuery/jQueryUI/jquery-ui.css')}" />
+        
+        <!-- 画面設定 -->
+        <style>
+            html { height: 100%; }
+            body { height: 100%;  width: 90%; margin: auto 5%;}
+            form { height: 100%;}
+            #map { height: 75%;}
+        </style>
+    </head>
+    
+    <!-- Google Maps APIの読み込み -->
+    <script src="http://maps.google.com/maps/api/js?key={!googleMapKey}&language=ja"></script>
+    <body style="background-color:#ffffff;" id="ga102006">
+        <apex:form >
+            <apex:pageMessages id="messages"/>
+                    <section style="display:flex">
+                        <h1 class="fontb font2rem">物件MAP照会</h1>
+                        <apex:commandButton style=" visibility:hidden;" rerender="dummy"/> 
+                    </section>
+                    <apex:outputPanel style="display:none;">
+                    <p>周辺施設</p>
+                    <p>取引先</p>
+                    <apex:outputLabel styleClass="accId" value="{!accId}" />
+                    <p>お客様用フラグ</p>
+                    <apex:outputLabel styleClass="isClient" value="{!isClient}" />
+                    <p>物件</p>
+                    <apex:variable var="propertyIndex" value="0" />
+                    <apex:repeat value="{!propertyListParentList}" var="proList">
+                        <apex:repeat value="{!proList}" var="pro">
+                            <div class="{!pro.Building__c}">
+                                <apex:outputLabel value="{!pro.ID}" styleClass="propertyId"/>
+                                <apex:outputLabel value="{!pro.NAME}" styleClass="propertyName"/>
+                                <apex:outputLabel value="{!pro.LiveStatus__c}" styleClass="propertyLiveStatus"/>
+                                <apex:outputLabel value="{!pro.PhotoCount__c}" styleClass="propertyPhotoCount"/>
+                            </div>
+                            <apex:variable var="propertyIndex" value="{!VALUE(propertyIndex)+1}" />
+                        </apex:repeat>
+                    </apex:repeat>
+                    <p>建物</p>
+                     <apex:variable var="buildIndex" value="0" />
+                         <apex:repeat value="{!buildingListParentList}" var="buildList">
+                             <apex:repeat value="{!buildList}" var="build">
+                             <div class="{!build.id}">
+                                 <apex:outputLabel value="{!build.ID}" styleClass="buildingId{!VALUE(buildIndex)}"/>
+                                 <apex:outputLabel value="{!build.NAME}" styleClass="buildingName{!VALUE(buildIndex)}"/>
+                                 <apex:outputLabel value="{!build.Longitude__c}" styleClass="buildingLongitude{!VALUE(buildIndex)}"/>
+                                 <apex:outputLabel value="{!build.Latitude__c}" styleClass="buildingLatitude{!VALUE(buildIndex)}"/>
+                                 <apex:variable var="buildIndex" value="{!VALUE(buildIndex)+1}" />
+                             </div>
+                         </apex:repeat>
+                     </apex:repeat>
+                     <apex:outputLabel value="{!VALUE(buildIndex)}" styleClass="buildIndex"/>
+                                                                                            
+                     <p>コンビニ</p>
+                     <apex:variable var="conveniIndex" value="0" />
+                     <apex:repeat value="{!convenienceStoreListParentList}" var="conveniList">
+                         <apex:repeat value="{!conveniList}" var="conveni">
+                             <div class="{!conveni.convenienceStore.id}">
+                                <apex:outputLabel value="{!conveni.convenienceStore.NAME}" styleClass="conveniName{!VALUE(conveniIndex)}"/>
+                                 <apex:outputLabel value="{!conveni.convenienceStore.Longitude__c}" styleClass="conveniLongitude{!VALUE(conveniIndex)}"/>
+                                 <apex:outputLabel value="{!conveni.convenienceStore.Latitude__c}" styleClass="conveniLatitude{!VALUE(conveniIndex)}"/>
+                                 <apex:variable var="conveniBuildingIndex" value="0" />
+                                 <apex:repeat value="{!conveni.buildingListParentList}" var="buildingList">
+                                     <apex:repeat value="{!buildingList}" var="building">
+                                         <apex:outputLabel value="{!building.Name}" styleClass="conveniBuildingName{!VALUE(conveniIndex)}-{!VALUE(conveniBuildingIndex)}"/>
+                                         <apex:outputLabel value="{!building.ConvenienceStoreDistance__c}" styleClass="conveniBuildingDistance{!VALUE(conveniIndex)}-{!VALUE(conveniBuildingIndex)}"/>
+                                         <apex:outputLabel value="{!building.ConvenienceStoreWalkTimeFormat__c}" styleClass="conveniBuildingWalkTime{!VALUE(conveniIndex)}-{!VALUE(conveniBuildingIndex)}"/>
+                                         <apex:variable var="conveniBuildingIndex" value="{!VALUE(conveniBuildingIndex)+1}" />
+                                     </apex:repeat>
+                                 </apex:repeat>
+                                 <apex:outputLabel value="{!VALUE(conveniBuildingIndex)}" styleClass="conveniBuildingIndex{!VALUE(conveniIndex)}"/>
+                                 <apex:variable var="conveniIndex" value="{!VALUE(conveniIndex)+1}" />
+                             </div>
+                         </apex:repeat>
+                     </apex:repeat>
+                     <apex:outputLabel value="{!VALUE(conveniIndex)}" styleClass="conveniIndex"/>
+                                                                                                                                                        
+                     <p>スーパー</p>
+                     <apex:variable var="supermarketIndex" value="0" />
+                     <apex:repeat value="{!supermarketListParentList}" var="supermarketList">
+                            <apex:repeat value="{!supermarketList}" var="super">
+                                <div class="{!super.supermarket.id}">
+                                    <apex:outputLabel value="{!super.supermarket.NAME}" styleClass="supermarketName{!VALUE(supermarketIndex)}"/>
+                                    <apex:outputLabel value="{!super.supermarket.Longitude__c}" styleClass="supermarketLongitude{!VALUE(supermarketIndex)}"/>
+                                    <apex:outputLabel value="{!super.supermarket.Latitude__c}" styleClass="supermarketLatitude{!VALUE(supermarketIndex)}"/>
+                                    <apex:variable var="supermarketBuildingIndex" value="0" />
+                                    <apex:repeat value="{!super.buildingListParentList}" var="buildingList">
+                                        <apex:repeat value="{!buildingList}" var="building">
+                                            <apex:outputLabel value="{!building.Name}" styleClass="supermarketBuildingName{!VALUE(supermarketIndex)}-{!VALUE(supermarketBuildingIndex)}"/>
+                                            <apex:outputLabel value="{!building.SupermarketDistance__c}" styleClass="supermarketBuildingDistance{!VALUE(supermarketIndex)}-{!VALUE(supermarketBuildingIndex)}"/>
+                                            <apex:outputLabel value="{!building.SupermarketWalkTimeFormat__c}" styleClass="supermarketBuildingWalkTime{!VALUE(supermarketIndex)}-{!VALUE(supermarketBuildingIndex)}"/>
+                                            <apex:variable var="supermarketBuildingIndex" value="{!VALUE(supermarketBuildingIndex)+1}" />
+                                        </apex:repeat>
+                                    </apex:repeat>
+                                    <apex:outputLabel styleClass="supermarketBuildingIndex{!VALUE(supermarketIndex)}" value="{!VALUE(supermarketBuildingIndex)}"/>
+                                    <apex:variable var="supermarketIndex" value="{!VALUE(supermarketIndex)+1}" />
+                                </div>
+                             </apex:repeat>
+                    </apex:repeat>
+                    <apex:outputLabel value="{!VALUE(supermarketIndex)}" styleClass="supermarketIndex"/>
+                     
+                     <p>病院</p>
+                     <apex:variable var="hospitalIndex" value="0" />
+                     <apex:repeat value="{!hospitalListParentList}" var="hospitalList">
+                         <apex:repeat value="{!hospitalList}" var="hospital">
+                             <div class="{!hospital.hospital.id}">
+                                 <apex:outputLabel value="{!hospital.hospital.NAME}" styleClass="hospitalName{!VALUE(hospitalIndex)}"/>
+                                 <apex:outputLabel value="{!hospital.hospital.Longitude__c}" styleClass="hospitalLongitude{!VALUE(hospitalIndex)}"/>
+                                 <apex:outputLabel value="{!hospital.hospital.Latitude__c}" styleClass="hospitalLatitude{!VALUE(hospitalIndex)}"/>
+                                 <apex:variable var="hospitalBuildingIndex" value="0" />
+                                 <apex:repeat value="{!hospital.buildingListParentList}" var="buildingList">
+                                     <apex:repeat value="{!buildingList}" var="building">
+                                         <apex:outputLabel value="{!building.Name}" styleClass="hospitalBuildingName{!VALUE(hospitalIndex)}-{!VALUE(hospitalBuildingIndex)}"/>
+                                         <apex:outputLabel value="{!building.GeneralHospitalDistance__c}" styleClass="hospitalBuildingDistance{!VALUE(hospitalIndex)}-{!VALUE(hospitalBuildingIndex)}"/>
+                                         <apex:outputLabel value="{!building.GeneralHospitalWalkTimeFormat__c}" styleClass="hospitalBuildingWalkTime{!VALUE(hospitalIndex)}-{!VALUE(hospitalBuildingIndex)}"/>
+                                         <apex:variable var="hospitalBuildingIndex" value="{!VALUE(hospitalBuildingIndex)+1}" />
+                                     </apex:repeat>
+                                </apex:repeat>
+                                <apex:outputLabel styleClass="hospitalBuildingIndex{!VALUE(hospitalIndex)}" value="{!VALUE(hospitalBuildingIndex)}"/>
+                                <apex:variable var="hospitalIndex" value="{!VALUE(hospitalIndex)+1}" />
+                             </div>
+                         </apex:repeat>
+                     </apex:repeat>
+                     <apex:outputLabel value="{!VALUE(hospitalIndex)}" styleClass="hospitalIndex"/>
+                     
+                     <p>小学校</p>
+                     <apex:variable var="primarySchoolIndex" value="0" />
+                     <apex:repeat value="{!primarySchoolListParentList}" var="primarySchoolList">
+                         <apex:repeat value="{!primarySchoolList}" var="primarySchool">
+                             <apex:outputLabel value="{!primarySchool.primarySchool.id}" styleClass="primarySchoolId{!VALUE(primarySchoolIndex)}"/>
+                             <div class="{!primarySchool.primarySchool.id}">
+                                <apex:outputLabel value="{!primarySchool.primarySchool.NAME}" styleClass="primarySchoolName{!VALUE(primarySchoolIndex)}"/>
+                                <apex:outputLabel value="{!primarySchool.primarySchool.Longitude__c}" styleClass="primarySchoolLongitude{!VALUE(primarySchoolIndex)}"/>
+                                <apex:outputLabel value="{!primarySchool.primarySchool.Latitude__c}" styleClass="primarySchoolLatitude{!VALUE(primarySchoolIndex)}"/>
+                                <apex:variable var="primarySchoolBuildingIndex" value="0" />
+                                <apex:repeat value="{!primarySchool.buildingListParentList}" var="buildingList">
+                                    <apex:repeat value="{!buildingList}" var="building">
+                                        <apex:outputLabel value="{!building.Name}" styleClass="primarySchoolBuildingName"/>
+                                        <apex:outputLabel value="{!building.PrimarySchoolDistance1__c}" rendered="{!primarySchool.isPrimarySchool1}" styleClass="primarySchoolBuildingDistance"/>
+                                        <apex:outputLabel value="{!building.PrimarySchoolWalkTimeFormat1__c}" rendered="{!primarySchool.isPrimarySchool1}" styleClass="primarySchoolBuildingWalkTime"/>
+                                        <apex:outputLabel value="{!building.PrimarySchoolDistance2__c}" rendered="{!primarySchool.isPrimarySchool2}" styleClass="primarySchoolBuildingDistance"/>
+                                        <apex:outputLabel value="{!building.PrimarySchoolWalkTimeFormat2__c}" rendered="{!primarySchool.isPrimarySchool2}" styleClass="primarySchoolBuildingWalkTime"/>
+                                        <apex:outputLabel value="{!building.PrimarySchoolDistance3__c}" rendered="{!primarySchool.isPrimarySchool3}" styleClass="primarySchoolBuildingDistance"/>
+                                        <apex:outputLabel value="{!building.PrimarySchoolWalkTimeFormat3__c}" rendered="{!primarySchool.isPrimarySchool3}" styleClass="primarySchoolBuildingWalkTime"/>
+                                        <apex:variable var="primarySchoolBuildingIndex" value="{!VALUE(primarySchoolBuildingIndex)+1}" />
+                                    </apex:repeat>
+                                </apex:repeat>
+                                <apex:outputLabel styleClass="primarySchoolBuildingIndex{!VALUE(primarySchoolIndex)}" value="{!VALUE(primarySchoolBuildingIndex)}"/>
+                                <apex:variable var="primarySchoolIndex" value="{!VALUE(primarySchoolIndex)+1}" />
+                            </div>
+                         </apex:repeat>
+                     </apex:repeat>
+                     <apex:outputLabel value="{!VALUE(primarySchoolIndex)}" styleClass="primarySchoolIndex"/>
+                     
+                     
+                     
+                     <p>中学校</p>
+                     <apex:variable var="juniorHighSchoolIndex" value="0" />
+                     <apex:repeat value="{!juniorHighSchoolListParentList}" var="juniorHighSchoolList">
+                         <apex:repeat value="{!juniorHighSchoolList}" var="juniorHighSchool">
+                             <apex:outputLabel value="{!juniorHighSchool.juniorHighSchool.id}" styleClass="juniorHighSchoolId{!VALUE(juniorHighSchoolIndex)}"/>
+                             <div class="{!juniorHighSchool.juniorHighSchool.id}">
+                                <apex:outputLabel value="{!juniorHighSchool.juniorHighSchool.NAME}" styleClass="juniorHighSchoolName{!VALUE(juniorHighSchoolIndex)}"/>
+                                <apex:outputLabel value="{!juniorHighSchool.juniorHighSchool.Longitude__c}" styleClass="juniorHighSchoolLongitude{!VALUE(juniorHighSchoolIndex)}"/>
+                                <apex:outputLabel value="{!juniorHighSchool.juniorHighSchool.Latitude__c}" styleClass="juniorHighSchoolLatitude{!VALUE(juniorHighSchoolIndex)}"/>
+                                <apex:variable var="juniorHighSchoolBuildingIndex" value="0" />
+                                <apex:repeat value="{!juniorHighSchool.buildingListParentList}" var="buildingList">
+                                    <apex:repeat value="{!buildingList}" var="building">
+                                        <apex:outputLabel value="{!building.Name}" styleClass="juniorHighSchoolBuildingName"/>
+                                        <apex:outputLabel value="{!building.JuniorHighSchoolDistance1__c}" rendered="{!juniorHighSchool.isJuniorHighSchool1}" styleClass="juniorHighSchoolBuildingDistance"/>
+                                        <apex:outputLabel value="{!building.JuniorHighSchoolWalkTimeFormat1__c}" rendered="{!juniorHighSchool.isJuniorHighSchool1}" styleClass="juniorHighSchoolBuildingWalkTime"/>
+                                        <apex:outputLabel value="{!building.JuniorHighSchoolDistance2__c}" rendered="{!juniorHighSchool.isJuniorHighSchool2}" styleClass="juniorHighSchoolBuildingDistance"/>
+                                        <apex:outputLabel value="{!building.JuniorHighSchoolWalkTimeFormat2__c}" rendered="{!juniorHighSchool.isJuniorHighSchool2}" styleClass="juniorHighSchoolBuildingWalkTime"/>
+                                        <apex:outputLabel value="{!building.JuniorHighSchoolDistance3__c}" rendered="{!juniorHighSchool.isJuniorHighSchool3}" styleClass="juniorHighSchoolBuildingDistance"/>
+                                        <apex:outputLabel value="{!building.JuniorHighSchoolWalkTimeFormat3__c}" rendered="{!juniorHighSchool.isJuniorHighSchool3}" styleClass="juniorHighSchoolBuildingWalkTime"/>
+                                        <apex:variable var="juniorHighSchoolBuildingIndex" value="{!VALUE(juniorHighSchoolBuildingIndex)+1}" />
+                                    </apex:repeat>
+                                </apex:repeat>
+                                <apex:outputLabel styleClass="juniorHighSchoolBuildingIndex{!VALUE(juniorHighSchoolIndex)}" value="{!VALUE(juniorHighSchoolBuildingIndex)}"/>
+                                <apex:variable var="juniorHighSchoolIndex" value="{!VALUE(juniorHighSchoolIndex)+1}" />
+                            </div>
+                        </apex:repeat>
+                    </apex:repeat>
+                     <apex:outputLabel value="{!VALUE(juniorHighSchoolIndex)}" styleClass="juniorHighSchoolIndex"/>
+                     
+                     
+                     
+                     <p>高校</p>
+                     <apex:variable var="highSchoolIndex" value="0" />
+                     <apex:repeat value="{!highSchoolListParentList}" var="highSchoolList">
+                         <apex:repeat value="{!highSchoolList}" var="highSchool">
+                            <div class="{!highSchool.highSchool.id}">
+                                <apex:outputLabel value="{!highSchool.highSchool.NAME}" styleClass="highSchoolName{!VALUE(highSchoolIndex)}"/>
+                                <apex:outputLabel value="{!highSchool.highSchool.Longitude__c}" styleClass="highSchoolLongitude{!VALUE(highSchoolIndex)}"/>
+                                <apex:outputLabel value="{!highSchool.highSchool.Latitude__c}" styleClass="highSchoolLatitude{!VALUE(highSchoolIndex)}"/>
+                                <apex:variable var="highSchoolBuildingIndex" value="0" />
+                                <apex:repeat value="{!highSchool.buildingListParentList}" var="buildingList">
+                                    <apex:repeat value="{!buildingList}" var="building">
+                                        <apex:outputLabel value="{!building.Name}" styleClass="highSchoolBuildingName{!VALUE(highSchoolIndex)}-{!VALUE(highSchoolBuildingIndex)}"/>
+                                        <apex:outputLabel value="{!building.HighSchoolDistance__c}" styleClass="highSchoolBuildingDistance{!VALUE(highSchoolIndex)}-{!VALUE(highSchoolBuildingIndex)}"/>
+                                        <apex:outputLabel value="{!building.HighSchoolWalkTimeFormat__c}" styleClass="highSchoolBuildingWalkTime{!VALUE(highSchoolIndex)}-{!VALUE(highSchoolBuildingIndex)}"/>
+                                        <apex:variable var="highSchoolBuildingIndex" value="{!VALUE(highSchoolBuildingIndex)+1}" />
+                                    </apex:repeat>
+                                </apex:repeat>
+                                <apex:outputLabel value="{!VALUE(highSchoolBuildingIndex)}" styleClass="highSchoolBuildingIndex{!VALUE(highSchoolIndex)}"/>
+                                <apex:variable var="highSchoolIndex" value="{!VALUE(highSchoolIndex)+1}" />
+                            </div>
+                        </apex:repeat>
+                    </apex:repeat>
+                     <apex:outputLabel value="{!VALUE(highSchoolIndex)}" styleClass="highSchoolIndex"/>
+                     
+                     <p>大学</p>
+                     <apex:variable var="universityIndex" value="0" />
+                    <apex:repeat value="{!universityListParentList}" var="universityList">
+                         <apex:repeat value="{!universityList}" var="university">
+                            <div class="{!university.university.id}">
+                                <apex:outputLabel value="{!university.university.NAME}" styleClass="universityName{!VALUE(universityIndex)}"/>
+                                <apex:outputLabel value="{!university.university.Longitude__c}" styleClass="universityLongitude{!VALUE(universityIndex)}"/>
+                                <apex:outputLabel value="{!university.university.Latitude__c}" styleClass="universityLatitude{!VALUE(universityIndex)}"/>
+                                <apex:variable var="universityBuildingIndex" value="0" />
+                                <apex:repeat value="{!university.buildingListParentList}" var="buildingList">
+                                    <apex:repeat value="{!buildingList}" var="building">
+                                        <apex:outputLabel value="{!building.Name}" styleClass="universityBuildingName{!VALUE(universityIndex)}-{!VALUE(universityBuildingIndex)}"/>
+                                        <apex:outputLabel value="{!building.UniversityDistance__c}" styleClass="universityBuildingDistance{!VALUE(universityIndex)}-{!VALUE(universityBuildingIndex)}"/>
+                                        <apex:outputLabel value="{!building.UniversityWalkTimeFormat__c}" styleClass="universityBuildingWalkTime{!VALUE(universityIndex)}-{!VALUE(universityBuildingIndex)}"/>
+                                        <apex:variable var="universityBuildingIndex" value="{!VALUE(universityBuildingIndex)+1}" />
+                                    </apex:repeat>
+                                </apex:repeat>
+                                <apex:outputLabel value="{!VALUE(universityBuildingIndex)}" styleClass="universityBuildingIndex{!VALUE(universityIndex)}"/>
+                                <apex:variable var="universityIndex" value="{!VALUE(universityIndex)+1}" />
+                            </div>
+                        </apex:repeat>
+                    </apex:repeat>
+                     <apex:outputLabel value="{!VALUE(universityIndex)}" styleClass="universityIndex"/>
+                     
+                     
+                     
+                     <p>駅</p>
+                     <apex:variable var="stationIndex" value="0" />
+                     <apex:repeat value="{!stationListParentList}" var="stationList">
+                        <apex:repeat value="{!stationList}" var="station">
+                            <apex:outputLabel value="{!station.station.id}" styleClass="stationId{!VALUE(stationIndex)}"/>
+                            <div class="{!station.station.id}">
+                                <apex:outputLabel value="{!station.station.NAME}" styleClass="stationName{!VALUE(stationIndex)}"/>
+                                <apex:outputLabel value="{!station.station.Longitude__c}" styleClass="stationLongitude{!VALUE(stationIndex)}"/>
+                                <apex:outputLabel value="{!station.station.Latitude__c}" styleClass="stationLatitude{!VALUE(stationIndex)}"/>
+                                <apex:variable var="stationBuildingIndex" value="0" />
+                                <apex:repeat value="{!station.buildingListParentList}" var="buildingList">
+                                    <apex:repeat value="{!buildingList}" var="building">
+                                        <apex:outputLabel value="{!building.Name}" styleClass="stationBuildingName"/>
+                                        <apex:outputLabel value="{!building.StationDistance1__c}" rendered="{!station.isStation1}" styleClass="stationBuildingDistance"/>
+                                        <apex:outputLabel value="{!building.StationWalkTimeFormat1__c}" rendered="{!station.isStation1}" styleClass="stationBuildingWalkTime"/>
+                                        <apex:outputLabel value="{!building.StationDistance2__c}" rendered="{!station.isStation2}" styleClass="stationBuildingDistance"/>
+                                        <apex:outputLabel value="{!building.StationWalkTimeFormat2__c}" rendered="{!station.isStation2}" styleClass="stationBuildingWalkTime"/>
+                                        <apex:outputLabel value="{!building.StationDistance3__c}" rendered="{!station.isStation3}" styleClass="stationBuildingDistance"/>
+                                        <apex:outputLabel value="{!building.StationWalkTimeFormat3__c}" rendered="{!station.isStation3}" styleClass="stationBuildingWalkTime"/>
+                                        <apex:variable var="stationBuildingIndex" value="{!VALUE(stationBuildingIndex)+1}" />
+                                    </apex:repeat>
+                                </apex:repeat>
+                                <apex:outputLabel styleClass="stationBuildingIndex{!VALUE(stationIndex)}" value="{!VALUE(stationBuildingIndex)}"/>
+                                <apex:variable var="stationIndex" value="{!VALUE(stationIndex)+1}" />
+                            </div>
+                        </apex:repeat>
+                    </apex:repeat>
+                     <apex:outputLabel value="{!VALUE(stationIndex)}" styleClass="stationIndex"/>
+                     </apex:outputPanel>
+                     
+                     <apex:outputPanel id="checkbox">
+                     <apex:inputCheckbox id="conveniCheckbox" styleClass="conveniCheckbox" value="{!isConveniCheckbox}" tabindex="1">
+                        <apex:actionSupport event="onchange" oncomplete="changeMarkerVisible('コンビニ',{!isConveniCheckbox});" rerender="checkbox, changeIsBatchDisplay" />  
+                     </apex:inputCheckbox>
+                     <apex:outputlabel for="conveniCheckbox" value="コンビニ" styleClass="serach_check2 mr10" />
+
+                     <apex:inputCheckbox id="supermarketCheckbox" styleClass="supermarketCheckbox" value="{!isSupermarketCheckbox}" tabindex="2">
+                        <apex:actionSupport event="onchange" oncomplete="changeMarkerVisible('スーパー',{!isSupermarketCheckbox});" rerender="checkbox, changeIsBatchDisplay" />  
+                     </apex:inputCheckbox>
+                     <apex:outputlabel for="supermarketCheckbox" value="スーパー" styleClass="serach_check2 mr10" />
+
+                     <apex:inputCheckbox id="hospitalCheckbox" styleClass="hospitalCheckbox" value="{!isHospitalCheckbox}" tabindex="3">
+                        <apex:actionSupport event="onchange" oncomplete="changeMarkerVisible('病院',{!isHospitalCheckbox});"  rerender="checkbox, changeIsBatchDisplay" />  
+                     </apex:inputCheckbox>
+                     <apex:outputlabel for="hospitalCheckbox" value="病院" styleClass="serach_check2 mr10" />
+
+                     <apex:inputCheckbox id="primarySchoolCheckbox" styleClass="primarySchoolCheckbox" value="{!isPrimarySchoolCheckbox}" tabindex="4">
+                        <apex:actionSupport event="onchange" oncomplete="changeMarkerVisible('小学校',{!isPrimarySchoolCheckbox});" rerender="checkbox, changeIsBatchDisplay" />  
+                     </apex:inputCheckbox>
+                     <apex:outputlabel for="primarySchoolCheckbox" value="小学校" styleClass="serach_check2 mr10" />
+
+                     <apex:inputCheckbox id="juniorHighSchoolCheckbox" styleClass="juniorHighSchoolCheckbox" value="{!isJuniorHighSchoolCheckbox}" tabindex="5">
+                        <apex:actionSupport event="onchange" oncomplete="changeMarkerVisible('中学校',{!isJuniorHighSchoolCheckbox});" rerender="checkbox, changeIsBatchDisplay" />  
+                     </apex:inputCheckbox>
+                     <apex:outputlabel for="juniorHighSchoolCheckbox" value="中学校" styleClass="serach_check2 mr10" />
+
+                     <apex:inputCheckbox id="highSchoolAndUniversityCheckbox" styleClass="highSchoolAndUniversityCheckbox" value="{!isHighSchoolAndUniversityCheckbox}" tabindex="6">
+                        <apex:actionSupport event="onchange" oncomplete="changeMarkerVisible('高校、大学',{!isHighSchoolAndUniversityCheckbox});" rerender="checkbox, changeIsBatchDisplay" />  
+                     </apex:inputCheckbox>
+                     <apex:outputlabel for="highSchoolAndUniversityCheckbox" value="高校、大学" styleClass="serach_check2 mr10" />
+                     
+                     <apex:inputCheckbox id="stationCheckbox" styleClass="stationCheckbox" value="{!isStationCheckbox}" tabindex="7">
+                        <apex:actionSupport event="onchange" oncomplete="changeMarkerVisible('駅',{!isStationCheckbox});" rerender="checkbox, changeIsBatchDisplay" />  
+                     </apex:inputCheckbox>
+                     <apex:outputlabel for="stationCheckbox" value="駅" styleClass="serach_check2 mr10" />
+                         
+                    </apex:outputPanel>
+                     
+        
+        <div id="map">
+        <!-- Google Mapsの表示場所 -->
+        </div>
+    <apex:outputPanel id="changeIsBatchDisplay">
+        <div class="flex-wrap  flex_wrap justify-between align_center ">
+        <div></div>
+        <apex:commandButton value="注釈一括表示／非表示" styleClass="modal btn-w-2 btn-w-2-l blue" onclick="blockUi();infowindowOpen({!isConveniCheckbox},{!isSupermarketCheckbox},{!isHospitalCheckbox},{!isPrimarySchoolCheckbox},{!isJuniorHighSchoolCheckbox},{!isHighSchoolAndUniversityCheckbox},{!isStationCheckbox});" action="{!changeIsBatchDisplayInfoWindow}" rendered="{!isBatchDisplayInfoWindow}" disabled="{! isOpenError}" rerender="map, changeIsBatchDisplay, messages" oncomplete="unblockUi();" tabindex="8"/>
+        <apex:commandButton value="注釈一括表示／非表示" styleClass="modal btn-w-2 btn-w-2-l blue" onclick="blockUi();infowindowClose();" action="{!changeIsBatchDisplayInfoWindow}" rendered="{! !isBatchDisplayInfoWindow}" disabled="{! isOpenError}" rerender="map, changeIsBatchDisplay, messages" oncomplete="unblockUi();" tabindex="8"/>
+        </div>
+    </apex:outputPanel>
+    </apex:form>
+
+    <!-- Google Mapsの設定 -->
+    <script type="text/javascript" >
+        // 初期設定   
+        var map = null;
+        var infowindow = [];
+        var gmarkers = [];
+        var i = 0;
+
+        var latitudedText = '';
+        var longitudeText = '';
+        var zoomText = '';
+
+        // ロード時                                        
+        function inicializar() { 
+        infowindow = [];
+        gmarkers = [];
+        i = 0;
+        if(latitudedText != '' && longitudeText != '' ){//マップ更新時
+
+            var latlng = map.getCenter();//マップ更新時点の座標を設定
+            latitudedText = latlng.lat();
+            longitudeText = latlng.lng();
+            zoomText = map.getZoom();//マップ更新時点のズーム倍率を設定
+
+        }else{//初回時
+            latitudedText = $('.buildingLatitude0').text().replace('\n', ''); //建物1件目の緯度
+            longitudeText = $('.buildingLongitude0').text().replace('\n', '');//建物1件目の経度
+            zoomText = 13;
+        }
+
+        var option = {
+            zoom: zoomText,                                              // 初期ズームレベル
+            center: new google.maps.LatLng(latitudedText, longitudeText),// 初期表示の座標(緯度,経度)
+            mapTypeId: google.maps.MapTypeId.ROADMAP                     // タイプ (ROADMAP・SATELLITE・TERRAIN・HYBRIDから選択)
+        };
+        
+        //お客様モードかどうかを取得
+        var isClient = $('.isClient').text().replace('\n', '');
+
+        //マップの作成
+        map = new google.maps.Map(document.getElementById("map"), option);//指定のタグに指定の設定で作成
+        // マーカーを生成(建物)
+        for ( var buildingCount = 0; buildingCount<$('.buildIndex').text().replace('\n', ''); buildingCount++ ) {
+            //建物情報を使用できるようにする
+            var buildingIdText = $('.buildingId' + buildingCount).text().replace('\n', '');
+            var buildingNameText = $('.buildingName' + buildingCount).text().replace('\n', '');
+            var buildingLatitudedText = $('.buildingLatitude' + buildingCount).text().replace('\n', '');//建物の緯度
+            var buildingLongitudeText = $('.buildingLongitude' + buildingCount).text().replace('\n', '');//建物の経度
+
+            //取引先Idを使用できるようにする
+            var accountIdText = $('.accId').text().replace('\n', '');
+
+            //建物の物件情報を使用できるようにする
+            var propertyNameTextList = $('.' + buildingIdText + ' .propertyName').text().replace('\n', '').split('\n');            //名前
+            var propertyIdTextList = $('.' + buildingIdText + ' .propertyId').text().replace('\n', '').split('\n');                //物件Id
+            var propertyLiveStatusTextList = $('.' + buildingIdText + ' .propertyLiveStatus').text().replace('\n', '').split('\n');//ステータス
+            var propertyPhotoCountTextList = $('.' + buildingIdText + ' .propertyPhotoCount').text().replace('\n', '').split('\n');//写真枚数
+
+            //建物の吹き出し情報を設定する
+            var buildingHTML = '<a style="color: #0000FF;text-decoration : underline;" onclick="showPage(\'GA104003View\', \'\', \'true\',  \'id='+ buildingIdText +'&accountId=' + accountIdText + '\')">' + buildingNameText + '</a><br/>'; 
+
+            //建物の座標情報を設定する
+            var point = new google.maps.LatLng(buildingLatitudedText, buildingLongitudeText);
+
+
+            //物件の吹き出し情報を設定する
+            var propertyHTML = ''; 
+            var propertyIdTextListLength = propertyIdTextList.length;
+
+
+            for( var propertyCount = 0; propertyCount<propertyIdTextListLength; propertyCount++ ){
+                var propertyPhotoCountText;
+                if(propertyPhotoCountTextList[propertyCount] > 0){
+                    propertyPhotoCountText = '写真：あり';
+                }else{
+                    propertyPhotoCountText = '写真：なし';
+                }
+
+
+                propertyHTML += '<a style="color: #0000FF;text-decoration : underline;" onclick="showPage(\'GA104004View\', \'\', \'true\',  \'id='+ propertyIdTextList[propertyCount] +'&customerFlg='+ isClient +'&accountId='+ accountIdText +'\')">' + propertyNameTextList[propertyCount] + ' ' + propertyLiveStatusTextList[propertyCount] + ' ' + propertyPhotoCountText + '</a><br/>'; 
+
+            }
+
+            //マーカーのアイコンを指定
+            var icon = 'http://maps.google.co.jp/mapfiles/ms/icons/red-dot.png';
+
+            //マーカーを生成
+            var marker = create_maker(point, 'map', buildingHTML + propertyHTML, '建物', true, icon);
+        }
+
+
+        //マーカーを生成(コンビニ)
+            for ( var conveniCnt = 0; conveniCnt<$('.conveniIndex').text().replace('\n', ''); conveniCnt++ ) {
+
+                //コンビニ情報を使用できるようにする
+                var conveniNAMEText = $('.conveniName' + conveniCnt).text().replace('\n', '');            //名前
+                var conveniLongitudeText = $('.conveniLongitude' + conveniCnt).text().replace('\n', '');  //緯度
+                var conveniLatitudeText = $('.conveniLatitude' + conveniCnt).text().replace('\n', '');    //経度
+
+                //コンビニの吹き出し情報を設定する
+                var conveniHTML =  conveniNAMEText; //コンビニ名
+                if(isClient != 'true'){
+                    for(  var conveniBuildingCnt = 0; conveniBuildingCnt<$('.conveniBuildingIndex' + conveniCnt).text().replace('\n', ''); conveniBuildingCnt++ ){//コンビニの吹き出し情報を設定する
+
+                        var conveniBuildingNAMEText = $('.conveniBuildingName' + conveniCnt + '-' + conveniBuildingCnt).text().replace('\n', '');//建物名
+                        var conveniBuildingStoreDistanceText = $('.conveniBuildingDistance' + conveniCnt + '-' + conveniBuildingCnt).text().replace('\n', '');//建物との距離
+                        var conveniBuildingStoreWalkTimeText = $('.conveniBuildingWalkTime' + conveniCnt + '-' + conveniBuildingCnt).text().replace('\n', '');//建物からの所要時間
+
+
+                        conveniHTML += '<br/>' + conveniBuildingNAMEText + 'から:' + Number(conveniBuildingStoreDistanceText).toLocaleString() + 'm(' + conveniBuildingStoreWalkTimeText + ')';//1建物分の情報を追加する
+                    }
+                }
+
+                  //コンビニの座標情報を設定する
+                  var point = new google.maps.LatLng(conveniLatitudeText, conveniLongitudeText);
+
+                  //マーカーのアイコンを指定
+                  var icon = 'http://maps.google.co.jp/mapfiles/ms/icons/blue-dot.png';
+
+                  //マーカーを生成
+                  var marker = create_maker(point, 'map', conveniHTML, 'コンビニ', false, icon);
+            }
+
+        //マーカーを生成(スーパー)
+             for ( var supermarketCnt = 0; supermarketCnt<$('.supermarketIndex').text(); supermarketCnt++ ) {
+
+                  //スーパー情報を使用できるようにする
+                  var supermarketNAMEText = $('.supermarketName' + supermarketCnt).text().replace('\n', '');            //名前
+                  var supermarketLongitudeText = $('.supermarketLongitude' + supermarketCnt).text().replace('\n', '');　//緯度
+                  var supermarketLatitudeText = $('.supermarketLatitude' + supermarketCnt).text().replace('\n', '');    //経度
+
+                  //スーパーの吹き出し情報を設定する
+                  var supermarketHTML =  supermarketNAMEText; //スーパー名
+                  if(isClient != 'true'){
+                    for(  var supermarketBuildingCnt = 0; supermarketBuildingCnt<$('.supermarketBuildingIndex' + supermarketCnt).text(); supermarketBuildingCnt++ ){//スーパーの吹き出し情報を設定する
+                        var supermarketBuildingNAMEText = $('.supermarketBuildingName'+ supermarketCnt + '-' + supermarketBuildingCnt).text().replace('\n', '');//建物名
+                        var supermarketBuildingStoreDistanceText = $('.supermarketBuildingDistance'+ supermarketCnt + '-' + supermarketBuildingCnt).text().replace('\n', '');//建物との距離
+                        var supermarketBuildingStoreWalkTimeText = $('.supermarketBuildingWalkTime'+ supermarketCnt + '-' + supermarketBuildingCnt).text().replace('\n', '');//建物からの所要時間
+                        supermarketHTML += '<br/>' + supermarketBuildingNAMEText + 'から:' + Number(supermarketBuildingStoreDistanceText).toLocaleString() + 'm(' + supermarketBuildingStoreWalkTimeText + ')';//1建物分の情報を追加する
+                    }
+                }
+
+                //スーパーの座標情報を設定する
+                var point = new google.maps.LatLng(supermarketLatitudeText, supermarketLongitudeText);
+
+                //マーカーのアイコンを指定
+                var icon = 'http://maps.google.co.jp/mapfiles/ms/icons/green-dot.png';
+
+                //マーカーを生成
+                var marker = create_maker(point, 'map', supermarketHTML, 'スーパー', false, icon);
+            }
+
+        //マーカーを生成(病院)
+           for ( var hospitalCnt = 0; hospitalCnt<$('.hospitalIndex').text(); hospitalCnt++ ) {
+
+              //病院情報を使用できるようにする
+              var hospitalNAMEText = $('.hospitalName' + hospitalCnt).text().replace('\n', '');            //名前
+              var hospitalLongitudeText = $('.hospitalLongitude' + hospitalCnt).text().replace('\n', '');  //緯度
+              var hospitalLatitudeText = $('.hospitalLatitude' + hospitalCnt).text().replace('\n', '');    //経度
+
+              //病院の吹き出し情報を設定する
+              var hospitalHTML =  hospitalNAMEText; //病院名
+              if(isClient != 'true'){
+                for(  var hospitalBuildingCnt = 0; hospitalBuildingCnt<$('.hospitalBuildingIndex' + hospitalCnt).text(); hospitalBuildingCnt++ ){//病院の吹き出し情報を設定する
+                    var hospitalBuildingNAMEText = $('.hospitalBuildingName'+ hospitalCnt + '-' + hospitalBuildingCnt).text().replace('\n', '');//建物名
+                    var hospitalBuildingStoreDistanceText = $('.hospitalBuildingDistance'+ hospitalCnt + '-' + hospitalBuildingCnt).text().replace('\n', '');//建物との距離
+                    var hospitalBuildingStoreWalkTimeText = $('.hospitalBuildingWalkTime'+ hospitalCnt + '-' + hospitalBuildingCnt).text().replace('\n', '');//建物からの所要時間
+                    hospitalHTML += '<br/>' + hospitalBuildingNAMEText + 'から:' + Number(hospitalBuildingStoreDistanceText).toLocaleString() + 'm(' + hospitalBuildingStoreWalkTimeText + ')';//1建物分の情報を追加する
+                }
+              }
+
+              //病院の座標情報を設定する
+              var point = new google.maps.LatLng(hospitalLatitudeText, hospitalLongitudeText);
+
+              //マーカーのアイコンを指定
+              var icon = 'http://maps.google.co.jp/mapfiles/ms/icons/ltblue-dot.png';
+
+              //マーカーを生成
+              var marker = create_maker(point, 'map', hospitalHTML, '病院', false, icon);
+            }
+
+        //マーカーを生成(小学校)
+            var createdMarkerIdList = new Array();//重複作成防止用のリスト
+            for ( var primarySchoolCnt = 0; primarySchoolCnt<$('.primarySchoolIndex').text(); primarySchoolCnt++ ) {
+                //小学校情報を使用できるようにする
+                var primarySchoolNAMEText = $('.primarySchoolName' + primarySchoolCnt).text().replace('\n', '');            //名前
+                var primarySchoolLongitudeText = $('.primarySchoolLongitude' + primarySchoolCnt).text().replace('\n', '');  //緯度
+                var primarySchoolLatitudeText = $('.primarySchoolLatitude' + primarySchoolCnt).text().replace('\n', '');    //経度
+
+                //小学校の吹き出し情報を設定する
+                var primarySchoolHTML =  primarySchoolNAMEText; //小学校名
+                if(isClient != 'true'){
+                    //すでにマーカー作成済みの学校はマーカーを作成しない
+                    var schoolId = $('.primarySchoolId' + primarySchoolCnt).text().replace('\n', '');
+                    if(createdMarkerIdList.indexOf(schoolId) >= 0){
+                        continue;
+                    }
+                    createdMarkerIdList.push(schoolId);//作成したリストに追加
+                    var primarySchoolBuildingNameList = $('.' + schoolId + ' .primarySchoolBuildingName').text().split('\n');
+                    var primarySchoolBuildingDistanceList = $('.' + schoolId + ' .primarySchoolBuildingDistance').text().split('\n');
+                    var primarySchoolBuildingWalkTimeList = $('.' + schoolId + ' .primarySchoolBuildingWalkTime').text().split('\n');
+
+                    var primarySchoolBuildingNameListLength = primarySchoolBuildingNameList.length;
+                    for(  var primarySchoolBuildingCnt = 0; primarySchoolBuildingCnt<primarySchoolBuildingNameListLength; primarySchoolBuildingCnt++ ){//小学校の吹き出し情報を設定する
+                        var primarySchoolBuildingNAMEText = primarySchoolBuildingNameList[primarySchoolBuildingCnt];//建物名
+                        var primarySchoolBuildingStoreDistanceText = primarySchoolBuildingDistanceList[primarySchoolBuildingCnt];//建物との距離
+                        var primarySchoolBuildingStoreWalkTimeText = primarySchoolBuildingWalkTimeList[primarySchoolBuildingCnt];//建物からの所要時間
+                        if(primarySchoolBuildingNAMEText != ''){
+                            primarySchoolHTML += '<br/>' + primarySchoolBuildingNAMEText + 'から:' + Number(primarySchoolBuildingStoreDistanceText).toLocaleString() + 'm(' + primarySchoolBuildingStoreWalkTimeText + ')';//1建物分の情報を追加する
+                        }
+                    }
+                }
+
+                //小学校の座標情報を設定する
+                var point = new google.maps.LatLng(primarySchoolLatitudeText, primarySchoolLongitudeText);
+
+                //マーカーのアイコンを指定
+                var icon = 'http://maps.google.co.jp/mapfiles/ms/icons/yellow-dot.png';
+
+                //マーカーを生成
+                var marker = create_maker(point, 'map', primarySchoolHTML, '小学校', false, icon);
+            }
+
+        //マーカーを生成(中学校)
+            var createdMarkerIdList = new Array();//重複作成防止用のリスト
+            for ( var juniorHighSchoolCnt = 0; juniorHighSchoolCnt<$('.juniorHighSchoolIndex').text(); juniorHighSchoolCnt++ ) {
+
+                //中学校情報を使用できるようにする
+                var juniorHighSchoolNAMEText = $('.juniorHighSchoolName' + juniorHighSchoolCnt).text().replace('\n', '');            //名前
+                var juniorHighSchoolLongitudeText = $('.juniorHighSchoolLongitude' + juniorHighSchoolCnt).text().replace('\n', '');  //緯度
+                var juniorHighSchoolLatitudeText = $('.juniorHighSchoolLatitude' + juniorHighSchoolCnt).text().replace('\n', '');    //経度
+
+                //中学校の吹き出し情報を設定する
+                var juniorHighSchoolHTML =  juniorHighSchoolNAMEText; //中学校名
+                if(isClient != 'true'){ 
+                    var schoolId = $('.juniorHighSchoolId' + juniorHighSchoolCnt).text().replace('\n', '');
+                    if(createdMarkerIdList.indexOf(schoolId) >= 0){
+                        continue;
+                    }
+                    createdMarkerIdList.push(schoolId);
+
+                    var juniorHighSchoolBuildingNameList = $('.' + schoolId + ' .juniorHighSchoolBuildingName').text().split('\n');
+                    var juniorHighSchoolBuildingDistanceList = $('.' + schoolId + ' .juniorHighSchoolBuildingDistance').text().split('\n');
+                    var juniorHighSchoolBuildingWalkTimeList = $('.' + schoolId + ' .juniorHighSchoolBuildingWalkTime').text().split('\n');
+
+                    var juniorHighSchoolBuildingNameListLength = juniorHighSchoolBuildingNameList.length;
+                    for(  var juniorHighSchoolBuildingCnt = 0; juniorHighSchoolBuildingCnt<juniorHighSchoolBuildingNameListLength; juniorHighSchoolBuildingCnt++ ){//中学校の吹き出し情報を設定する
+                        var juniorHighSchoolBuildingNAMEText = juniorHighSchoolBuildingNameList[juniorHighSchoolBuildingCnt];//建物名
+                        var juniorHighSchoolBuildingStoreDistanceText = juniorHighSchoolBuildingDistanceList[juniorHighSchoolBuildingCnt];//建物との距離
+                        var juniorHighSchoolBuildingStoreWalkTimeText = juniorHighSchoolBuildingWalkTimeList[juniorHighSchoolBuildingCnt];//建物からの所要時間
+                        if(juniorHighSchoolBuildingNAMEText != ''){
+                            juniorHighSchoolHTML += '<br/>' + juniorHighSchoolBuildingNAMEText + 'から:' + Number(juniorHighSchoolBuildingStoreDistanceText).toLocaleString() + 'm(' + juniorHighSchoolBuildingStoreWalkTimeText + ')';//1建物分の情報を追加する
+                         }
+                    }
+                }
+
+            //中学校の座標情報を設定する
+            var point = new google.maps.LatLng(juniorHighSchoolLatitudeText, juniorHighSchoolLongitudeText);
+
+            //マーカーのアイコンを指定
+            var icon = 'http://maps.google.co.jp/mapfiles/ms/icons/purple-dot.png';
+
+            //マーカーを生成
+            var marker = create_maker(point, 'map', juniorHighSchoolHTML, '中学校', false, icon);
+           }
+
+        //マーカーを生成(高校、大学)
+            for ( var highSchoolCnt = 0; highSchoolCnt<$('.highSchoolIndex').text().replace('\n', ''); highSchoolCnt++ ) {
+
+                //高校情報を使用できるようにする
+                var highSchoolNAMEText = $('.highSchoolName' + highSchoolCnt).text().replace('\n', '');            //名前
+                var highSchoolLongitudeText = $('.highSchoolLongitude' + highSchoolCnt).text().replace('\n', '');  //緯度
+                var highSchoolLatitudeText = $('.highSchoolLatitude' + highSchoolCnt).text().replace('\n', '');    //経度
+
+                //高校の吹き出し情報を設定する
+                var highSchoolHTML =  highSchoolNAMEText; //高校名
+                if(isClient != 'true'){
+                    for(  var highSchoolBuildingCnt = 0; highSchoolBuildingCnt<$('.highSchoolBuildingIndex' + highSchoolCnt).text().replace('\n', ''); highSchoolBuildingCnt++ ){//高校の吹き出し情報を設定する
+
+                        var highSchoolBuildingNAMEText = $('.highSchoolBuildingName' + highSchoolCnt + '-' + highSchoolBuildingCnt).text().replace('\n', '');//建物名
+                        var highSchoolBuildingStoreDistanceText = $('.highSchoolBuildingDistance' + highSchoolCnt + '-' + highSchoolBuildingCnt).text().replace('\n', '');//建物との距離
+                        var highSchoolBuildingStoreWalkTimeText = $('.highSchoolBuildingWalkTime' + highSchoolCnt + '-' + highSchoolBuildingCnt).text().replace('\n', '');//建物からの所要時間
+
+
+                        highSchoolHTML += '<br/>' + highSchoolBuildingNAMEText + 'から:' + Number(highSchoolBuildingStoreDistanceText).toLocaleString() + 'm(' + highSchoolBuildingStoreWalkTimeText + ')';//1建物分の情報を追加する
+                    }
+                }
+
+                //高校の座標情報を設定する
+                var point = new google.maps.LatLng(highSchoolLatitudeText, highSchoolLongitudeText);
+                //マーカーのアイコンを指定
+                var icon = 'http://maps.google.co.jp/mapfiles/ms/icons/pink-dot.png';
+            
+                //マーカーを生成
+                var marker = create_maker(point, 'map', highSchoolHTML, '高校、大学', false, icon);
+            }
+
+
+            for ( var universityCnt = 0; universityCnt<$('.universityIndex').text().replace('\n', ''); universityCnt++ ) {
+
+                //大学情報を使用できるようにする
+                var universityNAMEText = $('.universityName' + universityCnt).text().replace('\n', '');            //名前
+                var universityLongitudeText = $('.universityLongitude' + universityCnt).text().replace('\n', '');  //緯度
+                var universityLatitudeText = $('.universityLatitude' + universityCnt).text().replace('\n', '');    //経度
+
+                //大学の吹き出し情報を設定する
+                var universityHTML =  universityNAMEText; //大学名
+                if(isClient != 'true'){
+                    for(  var universityBuildingCnt = 0; universityBuildingCnt<$('.universityBuildingIndex' + universityCnt).text().replace('\n', ''); universityBuildingCnt++ ){//大学の吹き出し情報を設定する
+
+                        var universityBuildingNAMEText = $('.universityBuildingName' + universityCnt + '-' + universityBuildingCnt).text().replace('\n', '');//建物名
+                        var universityBuildingStoreDistanceText = $('.universityBuildingDistance' + universityCnt + '-' + universityBuildingCnt).text().replace('\n', '');//建物との距離
+                        var universityBuildingStoreWalkTimeText = $('.universityBuildingWalkTime' + universityCnt + '-' + universityBuildingCnt).text().replace('\n', '');//建物からの所要時間
+
+
+                        universityHTML += '<br/>' + universityBuildingNAMEText + 'から:' + Number(universityBuildingStoreDistanceText).toLocaleString() + 'm(' + universityBuildingStoreWalkTimeText + ')';//1建物分の情報を追加する
+                    }
+                }
+
+                //大学の座標情報を設定する
+                var point = new google.maps.LatLng(universityLatitudeText, universityLongitudeText);
+                
+                //マーカーのアイコンを指定
+                var icon = 'http://maps.google.co.jp/mapfiles/ms/icons/pink-dot.png';
+                
+                //マーカーを生成
+                var marker = create_maker(point, 'map', universityHTML, '高校、大学', false, icon);
+            }
+
+        //マーカーを生成(駅)
+            var createdMarkerIdList = new Array();//重複作成防止用のリスト
+            for ( var stationCnt = 0; stationCnt<$('.stationIndex').text(); stationCnt++ ) {
+
+               //駅情報を使用できるようにする
+               var stationNAMEText = $('.stationName' + stationCnt).text().replace('\n', '');            //名前
+               var stationLongitudeText = $('.stationLongitude' + stationCnt).text().replace('\n', '');  //緯度
+               var stationLatitudeText = $('.stationLatitude' + stationCnt).text().replace('\n', '');    //経度
+
+               //駅の吹き出し情報を設定する
+               var stationHTML =  stationNAMEText; //駅名
+               if(isClient != 'true'){
+                  var stationId = $('.stationId' + stationCnt).text().replace('\n', '');
+                  if(createdMarkerIdList.indexOf(stationId) >= 0){
+                    continue;
+                  }
+                  createdMarkerIdList.push(stationId);
+                  var stationBuildingNameList = $('.' + stationId + ' .stationBuildingName').text().split('\n');
+                  var stationBuildingDistanceList = $('.' + stationId + ' .stationBuildingDistance').text().split('\n');
+                  var stationBuildingWalkTimeList = $('.' + stationId + ' .stationBuildingWalkTime').text().split('\n');
+
+                  var stationBuildingNameListLength = stationBuildingNameList.length;
+                  for(  var stationBuildingCnt = 0; stationBuildingCnt<stationBuildingNameListLength; stationBuildingCnt++ ){//駅の吹き出し情報を設定する
+                      var stationBuildingNAMEText = stationBuildingNameList[stationBuildingCnt];//建物名
+                      var stationBuildingStoreDistanceText = stationBuildingDistanceList[stationBuildingCnt];//建物との距離
+                      var stationBuildingStoreWalkTimeText = stationBuildingWalkTimeList[stationBuildingCnt];//建物からの所要時間
+                      if(stationBuildingNAMEText != ''){
+                          stationHTML += '<br/>' + stationBuildingNAMEText + 'から:' + Number(stationBuildingStoreDistanceText).toLocaleString() + 'm(' + stationBuildingStoreWalkTimeText + ')';//1建物分の情報を追加する
+                        }
+                    }
+                }
+
+               //駅の座標情報を設定する
+               var point = new google.maps.LatLng(stationLatitudeText, stationLongitudeText);
+                
+                //マーカーのアイコンを指定
+                var icon = 'http://maps.google.co.jp/mapfiles/ms/icons/orange-dot.png';
+
+               //マーカーを生成
+               var marker = create_maker(point, 'map', stationHTML, '駅', false, icon);
+            }
+    }
+
+    //マーカーを生成
+    function create_maker(latlng, label, html, categories, visible, icon) {
+        //マーカーを生成
+        var marker = new google.maps.Marker({position: latlng
+            , map: map
+            , title: label
+            , num: i                //マーカーの番号
+            , visible: visible      //マーカーの表示設定
+            , categories: categories//マーカーの施設種別
+            , icon: {
+                url: icon 
+            }
+        });
+
+        infowindow[i] =  new google.maps.InfoWindow({content: html       //吹き出しの中身
+                                                   , disableAutoPan: true//吹き出し表示時の座標変更をしない
+                                                   , categories: categories//吹き出し元マーカーのカテゴリ
+                                                    });
+
+        //マーカーをクリックした時の処理
+        google.maps.event.addListener(marker, "click", function() {
+            //対象マーカーの吹き出しを表示
+            infowindow[marker.num].open(marker.getMap(), marker);
+
+        });
+
+        gmarkers[i] = marker;//マーカーの設定
+        i++;
+        return marker;
+    }
+
+    //マーカーをクリックした時の処理
+    function map_click(i) {
+        google.maps.event.trigger(gmarkers[i], "click");
+    }
+
+    //吹き出しの一括表示
+    function infowindowOpen(isConveniCheckbox,isSupermarketCheckbox,isHospitalCheckbox,isPrimarySchoolCheckbox,isJuniorHighSchoolCheckbox,isHighSchoolAndUniversityCheckbox,isStationCheckbox) {
+        //吹き出しを開く対象を設定する
+        var checkedcategories = new Array();
+
+        checkedcategories.push('建物');
+
+        if(isConveniCheckbox == true){//チェックボックスがチェックされていれば吹き出しを開く対象にする
+            checkedcategories.push('コンビニ');
+        }
+        if(isSupermarketCheckbox == true){
+            checkedcategories.push('スーパー');
+        }
+        if(isHospitalCheckbox == true){
+            checkedcategories.push('病院');
+        }
+        if(isPrimarySchoolCheckbox == true){
+            checkedcategories.push('小学校');
+        }
+        if(isJuniorHighSchoolCheckbox == true){
+            checkedcategories.push('中学校');
+        }
+        if(isHighSchoolAndUniversityCheckbox == true){
+            checkedcategories.push('高校、大学');
+        }
+        if(isStationCheckbox == true){
+            checkedcategories.push('駅');
+        }
+
+        for(  var openi = 0 ; openi<i ; openi++){
+            if(checkedcategories.indexOf(infowindow[openi].categories) >= 0 || infowindow[openi].categories == '建物'){//チェックボックスがTRUEの吹き出し表示
+                infowindow[openi].open(gmarkers[openi].getMap(), gmarkers[openi]);
+            }
+
+        }
+    }
+
+    //吹き出しの一括非表示
+    function infowindowClose(categories = '') {
+
+        for(  var closei = 0 ; closei<i ; closei++){
+            //カテゴリの指定がされていた場合は、そのカテゴリの吹き出しのみを閉じる
+            if(categories != '' && categories != infowindow[closei].categories){
+                continue;
+            }
+
+            infowindow[closei].close();
+        }
+    }
+
+    //マーカー表示のフィルタリング変更
+    function changeMarkerVisible(categories, visible) {
+        for(  var visiblei = 0 ; visiblei<i ; visiblei++){
+            if(categories == gmarkers[visiblei].categories){//チェックされたカテゴリのマーカー表示を変更する
+                gmarkers[visiblei].setVisible(visible);//マーカー表示を変更
+            }
+        }
+
+        infowindowClose(categories);//吹き出しをすべて閉じる
+    }
+    //ページ読み込み時に初期設定を行う
+     google.maps.event.addDomListener(window, "load", inicializar);
+    </script>
+    </body>
+</apex:page>

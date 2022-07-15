@@ -1,0 +1,366 @@
+<!-- LINEユーザ紐づけ -->
+<apex:page docType="html-5.0" standardStylesheets="false" controller="GL101003Controller" title="LINEユーザ紐づけ">
+	<apex:form id="form" html-novalidate="novalidate">
+		<head>
+			<meta charset="utf-8" />
+			<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+			<meta name="format-detection" content="telephone=no" />
+			<meta name="robots" content="noindex" />
+			<title>LINEユーザ紐づけ"</title>
+			<apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/reset.min.css')}" />
+			<apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/foundation.css')}" />
+			<apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/modaal.css')}" />
+			<apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/style.css')}" />
+			<apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery-3.6.0.min.js')}" />
+			<apex:includeScript value="{!URLFOR($Resource.designer_file, 'designer_file/js/modaal.js')}" />
+			<apex:stylesheet value="https://use.fontawesome.com/releases/v5.0.6/css/all.css" />
+
+			<apex:stylesheet value="{!URLFOR($Resource.external_file, 'external_file/common_style.css')}" />
+			<apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery.blockUI.js')}" />
+			<apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/common_screen_util.js')}" />
+			<apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/input_rules.js')}" />
+			<apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jQueryUI/jquery-ui.min.js')}" />
+			<apex:stylesheet value="{!URLFOR($Resource.jQuery,'jQuery/jQueryUI/jquery-ui.css')}" />
+		</head>
+
+		<!-- 内部CSS -->
+		<style type="text/css">
+			body {
+				padding: 10px 20px;
+			}
+
+			.hiddenBtn {
+				visibility: hidden;
+				width: 0;
+				height: 0;
+			}
+
+			.section {
+				background: #e5e5e5;
+				padding: 5px;
+			}
+
+			.height_320 {
+                height:320px;
+            }
+
+		</style>
+
+		<body>
+			<main>
+				<article>
+					<apex:pagemessages id="messageArea" />
+					<h1 class="fontb font2rem mb10 mt10">
+						LINEユーザ紐づけ
+						<!-- 非表示検索ボタン（Enterキー押下時動作用の隠し項目） -->
+						<apex:commandButton styleclass="hiddenBtn" disabled="{!isOpenError}" onclick="blockUi();searchResultDetailSet();" />
+					</h1>
+
+					<!-- 会員情報部 -->
+					<div class="mb60">
+						<div class="fontb section flex-wrap justify-between align_center">
+							LINE会員情報
+							<!-- お客様登録と紐づけボタン -->
+							<!-- checkLinking('行番号'（明細が存在しないため0を設定）, ボタン押下種別) -->
+							<apex:commandButton styleClass="btn-w-2 btn-w-2_normal blue"
+								value="お客様登録と紐づけ"
+								onclick="checkLinking('0', 2);"
+								disabled="{! isOpenError }"
+							/>
+						</div>
+						<div class="border-g-3">
+							<div class="flex-wrap flex_wrap justify-between">
+								<div class="wd47 wd100_xs">
+									<div class="information_title">LINE ID</div>
+									<div class="information_contents">
+										<apex:outputText value="{! screenLineUserLinking.infoLineId }" />
+									</div>
+								</div>
+								<div class="wd47 wd100_xs">
+									<div class="information_title">LINE名</div>
+									<div class="information_contents">
+										<apex:outputText value="{! screenLineUserLinking.infoLineName }" />
+									</div>
+								</div>
+								<div class="wd47 wd100_xs">
+									<div class="information_title">友達登録日時</div>
+									<div class="information_contents">
+										<apex:outputText value="{! screenLineUserLinking.infoAddFriendDate }" />
+									</div>
+								</div>
+								<div class="wd47 wd100_xs">
+									<div class="information_title">入力されたLINE友達コード</div>
+									<div class="information_contents">
+										<apex:outputText value="{! screenLineUserLinking.infoLineFrirendCd }" />
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<!-- マッチング候補者部 -->
+					<div class="mb60">
+						<div class="fontb section">マッチング候補者一覧</div>
+						<table class="gray nowrap height_320">
+							<tr>
+								<th>お客様名</th>
+								<th>電話番号</th>
+								<th>メールアドレス</th>
+								<th>LINE友達登録コード</th>
+								<th>作成時刻</th>
+								<th></th>
+							</tr>
+							<apex:variable var="index" value="0" />
+							<apex:repeat value="{! screenLineUserLinking.matchCandidateList }" var="matchCandidate">
+								<tr>
+									<td>
+										<!-- リンク押下時、お客様情報詳細画面に遷移 -->
+										<apex:commandLink value="{! matchCandidate.accountName }"
+											onclick="showPage('GA102001View', '', 'true' 
+																, 'AccountId={! matchCandidate.accountId }&Corresponds={! matchCandidate.correspondId}')"
+											rerender="dummy"
+										/>
+									</td>
+									<td>{! matchCandidate.phone }</td>
+									<td>{! matchCandidate.mailaddress }</td>
+									<td>{! matchCandidate.lineFrirendCd }</td>
+									<td>{! matchCandidate.addFriendDate }</td>
+									<td>
+										<!-- 決定ボタン -->
+										<!-- checkLinking('行番号', ボタン押下種別) -->
+										<apex:commandButton value="決定"
+											styleClass="btn btn-info wd100px"
+											onclick="checkLinking('{!index}', 0);"
+										/>
+									</td>
+								</tr>
+								<apex:variable var="index" value="{!VALUE(index) + 1}" />
+							</apex:repeat>
+						</table>
+					</div>
+
+					<!-- 検索条件部 -->
+					<div class="mb60">
+						<div class="fontb section">お客様情報検索</div>
+						<div class="border-g-3">
+							<div class="flex-wrap flex_wrap justify-between">
+								<div class="wd47 wd100_xs mb10">
+									<div class="information_title">お客様名</div>
+									<apex:input type="text"
+										value="{! screenLineUserLinking.condAccountName }"
+										styleClass="form-control"
+										onchange="correctInputRules(this, 'text', 80)"
+									/>
+								</div>
+								<div class="wd47 wd100_xs mb10">
+									<div class="information_title">電話番号</div>
+									<apex:input type="text"
+										value="{! screenLineUserLinking.condPhone }"
+										styleClass="form-control"
+										onchange="correctInputRules(this, 'tel')"
+									/>
+								</div>
+								<div class="wd47 wd100_xs mb10">
+									<div class="information_title">作成日FROM</div>
+									<!-- ▼ 2022.04.20 No0768 対応で変更_不当な日付を空にする -->
+									<apex:input type="date"
+										value="{! screenLineUserLinking.condCreatedDateFrom }"
+										styleClass="form-control"
+										html-min="1700-01-01"
+										html-max="4000-12-31"
+										onblur="clearValidateErrorValue(this)"
+										onkeydown="dateInputKeydownFocusAdjust(this, event)"
+									/>
+									<!-- ▲ 2022.04.20 No0768 対応で変更 -->
+								</div>
+								<div class="wd47 wd100_xs mb10">
+									<div class="information_title">作成日TO</div>
+									<!-- ▼ 2022.04.20 No0768 対応で変更_不当な日付を空にする -->
+									<apex:input type="date"
+										value="{! screenLineUserLinking.condCreatedDateTo }"
+										styleClass="form-control"
+										html-min="1700-01-01"
+										html-max="4000-12-31"
+										onblur="clearValidateErrorValue(this)"
+										onkeydown="dateInputKeydownFocusAdjust(this, event)"
+									/>
+									<!-- ▲ 2022.04.20 No0768 対応で変更 -->
+								</div>
+							</div>
+							<div class="text-center">
+								<!-- 検索ボタン -->
+								<apex:commandButton styleClass="btn btn-submit btn-primary"
+									value="検索"
+									onclick="blockUi(); searchResultDetailSet();"
+									disabled="{! isOpenError }"
+								/>
+							</div>
+						</div>
+					</div>
+
+					<!-- 検索結果部 -->
+					<apex:outputPanel id="searchResultDetail" layout="block" styleClass="mb10">
+						<div class="fontb section">検索結果</div>
+						<table class="gray nowrap height_320">
+							<tr>
+								<th>お客様名</th>
+								<th>電話番号</th>
+								<th>メールアドレス</th>
+								<th>LINE友達登録コード</th>
+								<th>作成時刻</th>
+								<th></th>
+							</tr>
+							<apex:variable var="index" value="0" />
+
+							<apex:repeat value="{! screenLineUserLinking.searchResultList }" var="searchResult">
+								<tr>
+									<td>
+										<!-- リンク押下時、お客様情報詳細画面に遷移 -->
+										<apex:commandLink value="{! searchResult.accountName }"
+											onclick="showPage('GA102001View', '', 'true' 
+														, 'AccountId={! searchResult.accountId }&Corresponds={! searchResult.correspondId}')"
+											rerender="dummy"
+										/>
+									</td>
+									<td>{! searchResult.phone }</td>
+									<td>{! searchResult.mailaddress }</td>
+									<td>{! searchResult.lineFrirendCd }</td>
+									<td>{! searchResult.addFriendDate }</td>
+									<td>
+										<!-- 決定ボタン -->
+										<!-- checkLinking('行番号', ボタン押下種別) -->
+										<apex:commandButton value="決定"
+											styleClass="btn btn-info wd100px"
+											onclick="checkLinking('{!index}', 1);"
+										/>
+									</td>
+								</tr>
+								<apex:variable var="index" value="{!VALUE(index) + 1}" />
+							</apex:repeat>
+						</table>
+					</apex:outputPanel>
+					<!-- マッチング候補、明細の行番号 -->
+					<apex:inputHidden Id="hiddenNum" value="{!ScreenLineUserLinking.detailIndex}" />
+				</article>
+			</main>
+
+			<!-- actionfunction -->
+			<!-- 検索結果の明細検索 -->
+			<apex:actionFunction name="searchResultDetailSet"
+				action="{! searchResultDetailSet}"
+				oncomplete="unblockUi(); if({! hasErrorMessage }){ gotoTop(); };"
+				reRender="searchResultDetail, messageArea"
+			/>
+
+			<!-- マッチング候補者一覧 決定ボタン押下 -->
+			<apex:actionFunction name="linkingDataMatchCandidate"
+				action="{!linkDataMatch}"
+				oncomplete="unblockUi(); if({!hasErrorMessage}){gotoTop(); return false;} linkingProcessFinish('{!correspondIdPressRow}');"
+				reRender="messageArea"
+			/>
+
+			<!-- 検索結果 決定ボタン押下 -->
+			<apex:actionFunction name="linkingDataSearchResult"
+				action="{!linkDataSearch}"
+				oncomplete="unblockUi(); if({!hasErrorMessage}){gotoTop(); return false;} linkingProcessFinish('{!correspondIdPressRow}');"
+				reRender="messageArea"
+			/>
+
+			<!-- お客様登録と紐づけボタン押下 -->
+			<apex:actionFunction name="linkingDataRegisterAccount"
+				action="{!linkDataRegisterAccount}"
+				oncomplete="unblockUi(); if({!hasErrorMessage}){gotoTop(); return false;} linkingProcessFinish('{!correspondIdPressRow}');"
+				reRender="messageArea"
+			/>
+		</body>
+
+		<script language="javascript" type="text/javascript">
+			/**
+			 * 起動処理
+			 */
+			$(function () {
+				gotoTop();
+			});
+
+			/**
+			 * 「apex:commandButton」から「apex:actionFunction」呼び出しており、
+			 * 描画処理の競合を避けるために、「apex:commandButton」の「submit」を停止
+			 * @return {Boolean} false 「false」は「submit」の停止
+			 */
+			$("form").on("submit", function () {
+				// 処理を中断
+				return false;
+			});
+
+			/**
+			 * 紐づけ確認メッセージ
+			 * @param {String} detailIndex 明細の行番号
+			 * @param {Number} detailsType 明細種別
+			 * (0 = マッチング候補者、1 = 検索結果、2 = お客様登録と紐づけ)
+			 * @return {Boolean} false 処理の中断
+			 */
+			async function checkLinking(detailIndex, detailsType) {
+				// 紐づけ実施確認メッセージの表示
+				let message;
+				if (detailsType == 0 || detailsType == 1) {
+					// 取引先との紐づけを行います。よろしいですか？
+					message = "{! message.linkingMessage}";
+				} else {
+					// 取引先の登録と紐づけを行います。よろしいですか？
+					message = "{! message.registerLinkingMessage}";
+				}
+				let retVal = await showConfirm(message);
+				
+				// Cancelが選択された場合、処理を中断
+				if (!retVal) {
+					return false;
+				}
+
+				// 行番号の設定
+				let indexNumber = $("[Id$=hiddenNum]");
+				indexNumber.val(detailIndex);
+
+				blockUi();
+				// マッチングリスト候補者一覧の決定ボタン
+				if (detailsType == 0) {
+					linkingDataMatchCandidate();
+				// 検索結果の決定ボタン
+				} else if (detailsType == 1) {
+					linkingDataSearchResult();
+				// お客様登録と紐づけボタン
+				} else {
+					linkingDataRegisterAccount();
+				}
+
+				return true;
+			}
+
+			/**
+			 * 紐づけ完了処理
+			 * @param {String} detailCorrespond 明細の対応ID
+			 */
+			async function linkingProcessFinish(detailCorrespond) {
+				// 完了メッセージの表示（紐づけ先の対応の数に応じて、表示するメッセージを変更する）
+				if (!detailCorrespond) {
+					// 1件の場合
+					// 紐づけが完了しました。
+					await showAlert("{!message.completionMessage}");
+				} else {
+					// 複数の場合
+					// 紐づけが完了しました。
+					// 紐づけされた取引先には、対応が複数存在します。
+					await showAlert2("{!message.completionMessageCorrespons}");
+				}
+
+				// LINE専用画面に遷移
+				// 画面を別タブで開きなおす（ブラウザバックによる画面が新規登録時の画面になることを防ぐ）
+				showPage("GL101001View", "", "true", "lineMemberId=" + "{!lineMemberId}" + "&correspondId=" + "{!correspondId}");
+
+				// 画面を閉じる（スマートフォンでは行わない）
+				if (!isApplication()) {
+					closePage();
+				}
+			}
+		</script>
+	</apex:form>
+</apex:page>

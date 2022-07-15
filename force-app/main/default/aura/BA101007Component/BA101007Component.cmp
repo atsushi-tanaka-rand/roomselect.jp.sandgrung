@@ -1,0 +1,14 @@
+<aura:component implements="flexipage:availableForRecordHome,force:hasRecordId" access="global" >
+    
+    
+    
+    
+    
+    <lightning:card>
+        <div style="text-align:center;">
+            <lightning:button label="反響一覧" variant="brand" onclick="{!c.showPage2}" />
+            <lightning:button label="対応一覧" variant="brand" onclick="{!c.showPage1}" />
+            <lightning:button label="指定メール一覧" variant="brand" onclick="{!c.showPage3}" />
+        </div>
+    </lightning:card>
+</aura:component>

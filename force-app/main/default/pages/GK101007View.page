@@ -1,0 +1,361 @@
+<!-- 類似物件紹介メール一覧 画面 -->
+<apex:page controller="GK101007Controller" docType="html-5.0" standardStylesheets="false" title="自動追客一覧">
+    
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="format-detection" content="telephone=no" />
+        <meta name="robots" content="noindex" />
+        <title>自動追客一覧</title>
+        
+        <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/reset.min.css')}" />
+        <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/foundation.css')}" />
+        <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/modaal.css')}" />
+        <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/style.css')}" />
+        <apex:stylesheet value="https://use.fontawesome.com/releases/v5.0.6/css/all.css" />
+        <apex:stylesheet value="{!URLFOR($Resource.external_file, 'external_file/common_style.css')}" />
+        <apex:stylesheet value="{!URLFOR($Resource.jQuery,'jQuery/jQueryUI/jquery-ui.css')}" />
+        
+        <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery-3.6.0.min.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery.blockUI.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jQueryUI/jquery-ui.min.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.designer_file, 'designer_file/js/modaal.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/common_screen_util.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/input_rules.js')}" />
+        
+        
+    </head>
+    
+    <body style="background-color:#ffffff;" id="gd701001">
+        <main>
+            <article>
+                <apex:form id="form">
+                    <!-- actionfunction -->
+                    <apex:actionFunction action="{!search}" name="search" rerender="form" />
+                    
+                    <apex:pageMessages id="message"/>
+                        <apex:outputPanel rendered="{!isOpetionPortal}">
+
+                        <section>
+                            
+                            <div class="flex-wrap flex_wrap align-items_end mb10">
+                                <h1 class="fontb font2rem" style="float:left">自動追客一覧</h1>
+                                <!-- 非表示検索ボタン（Enterキー押下時動作用の隠し項目） -->
+                                <apex:commandButton id="hiddenSearchBtn" styleclass="btn btn-submit btn-primary " value="検索(非表示)" disabled="{!isOpenError}"
+                                                    onclick="blockUi();" action="{!search}"
+                                                    oncomplete="unblockUi();if({!hasErrorMessage}){gotoTop()}"
+                                                    reRender="message, searchSection" style="visibility:hidden;" />
+                            </div>
+
+                            <ul id="accordion" class="accordion-defalt">
+                                <li class="default open">
+                                    <div class="link"><i class="fa fa-chevron-up"></i>検索条件</div>
+
+                                    <ul class="submenu-defalt">
+                                                
+                                        <section class="border-g-3">
+                                            
+                                            <div class="flex-wrap  flex_wrap justify-between align_center ">
+                                                        
+                                                <div class=" mb10 l-box wd100_xs">                                                    
+                                                    <div class="information_title">お客様名</div>
+                                                    <div class="">
+                                                        <apex:input type="text" disabled="{! isOpenError}" styleClass="form-control"
+                                                                    value="{!searchName}" onchange="correctInputRules(this,'text', '80')" tabIndex="1" />
+                                                    </div>
+                                                </div>
+
+                                                <div class=" mb10 l-box wd100_xs">                                                    
+                                                    <div class="information_title">電話番号</div>
+                                                    <div class="">
+                                                        <apex:input type="text" disabled="{! isOpenError}" styleClass="form-control"
+                                                                    value="{!searchPhone}" onchange="correctInputRules(this,'tel')" tabIndex="2" />
+                                                    </div>
+                                                </div>
+
+                                                <div class=" mb10 l-box wd100_xs">                                                    
+                                                    <div class="information_title">メールアドレス</div>
+                                                    <div class="">
+                                                        <apex:input type="text" disabled="{! isOpenError}" styleClass="form-control"
+                                                                    value="{!searchEmail}" onchange="correctInputRules(this,'email')" tabIndex="3" />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="flex-wrap  flex_wrap justify-between align_center ">
+                                                
+                                                <div class=" mb10 l-box wd100_xs ">
+                                                    
+                                                    <div class="information_title">反響担当店舗</div>
+                                                    
+                                                    <div class="">
+                                                        <apex:actionRegion >                                    
+                                                            <apex:selectList size="1" value="{!searchEchoShop}" styleClass="form-control" tabindex="4">
+                                                                <apex:selectOptions value="{!selectShopList}"/>
+                                                                <apex:actionSupport event="onchange" action="{!getEchoStaffList}" reRender="EchoStaffBlock" />    
+                                                            </apex:selectList>
+                                                        </apex:actionRegion>
+                                                    </div>
+                                                    
+                                                </div>
+                                                
+                                                <div class=" mb10 l-box wd100_xs ">
+                                                    
+                                                    <div class="information_title">反響担当者</div>
+                                                    
+                                                    <apex:outputPanel id="EchoStaffBlock">
+                                                        <apex:selectList size="1" value="{!searchEchoStaff}" styleClass="form-control" tabindex="5">
+                                                            <apex:selectOptions value="{!selectEchoStaffList}"/>
+                                                        </apex:selectList>
+                                                    </apex:outputPanel>
+                                                    
+                                                </div>
+
+                                                <div class=" mb10 l-box  wd100_xs">
+                                                </div>
+
+                                            </div>
+                                            
+                                            <div class="flex-wrap  flex_wrap justify-between align_center ">
+                                                
+                                                <div class=" mb10 l-box  wd100_xs">
+                                                    
+                                                    <div class="information_title">来店担当店舗</div>
+                                                    
+                                                    <div class="">
+                                                        <apex:actionRegion >                                    
+                                                            <apex:selectList size="1" value="{!searchVisitShop}" styleClass="form-control" tabindex="6" >
+                                                                <apex:selectOptions value="{!selectShopList}"/>
+                                                                <apex:actionSupport event="onchange" action="{!getShopStaffList}" reRender="ShopStaffBlock" />    
+                                                            </apex:selectList>
+                                                        </apex:actionRegion>
+                                                    </div>
+                                                    
+                                                </div>
+                                                
+                                                <div class=" mb10 l-box  wd100_xs">
+                                                    
+                                                    <div class="information_title">来店担当者</div>
+                                                    
+                                                    <apex:outputPanel id="ShopStaffBlock">
+                                                        <apex:selectList size="1" value="{!searchShopStaff}" styleClass="form-control" tabindex="7" >
+                                                            <apex:selectOptions value="{!selectShopStaffList}"/>
+                                                        </apex:selectList>
+                                                    </apex:outputPanel>
+                                                    
+                                                </div>
+
+                                                <div class=" mb10 l-box  wd100_xs">
+                                                </div>
+                                                
+                                            </div>
+
+                                            <div class="text-center mt20">
+                                                <apex:commandButton styleclass="btn btn-submit btn-primary " value="検索" disabled="{!isOpenError}"
+                                                                    onclick="blockUi();" action="{!search}"
+                                                                    oncomplete="unblockUi();if({!hasErrorMessage}){gotoTop()}"
+                                                                    reRender="message, searchSection,"  tabIndex="10" />
+                                            </div>
+                                            
+                                        </section>
+                                    </ul>
+                                </li>
+                            
+                                <li class="default open" >
+                        
+                                    <div class="link posi_re"><i class="fa fa-chevron-up"></i>検索結果
+                                        <div class="ab_btn ab_btn_xs">
+                                            <apex:outputPanel id="buttonBlock" layout="block" styleClass="flex-wrap">
+                                                <apex:commandButton value="配信停止" styleClass="modal btn-w-2 btn-w-2-l blue" disabled="{! isOpenError}" oncomplete="cleckSendStopButton();"
+                                                                                reRender="dummy" tabIndex="10" />
+                                            </apex:outputPanel>
+                                        </div>
+                                    </div>
+            
+                                    <ul class="submenu-defalt">
+                                        <apex:outputPanel id="searchSection" >
+                                            <table class="gray" style="height: 550px;">
+                                                <tbody>
+                                                    <tr>
+                                                        <th class="wd0"></th>
+                                                        <th class="wd4">お客様名</th>
+                                                        <th class="wd4">電話番号</th>
+                                                        <th class="wd4">メール</th>
+                                                        <th class="wd4">自動追客開始日時</th>
+                                                        <th class="wd4">自動追客最新日時</th>
+                                                        <th class="wd4">反響担当者</th>
+                                                        <th class="wd4">来店担当者</th>
+                                                        <th class="wd2">自動追客数</th>
+                                                    </tr>
+                                                    <apex:repeat value="{! screenIntroMailInfoList}" var="introMall">
+                                                        <tr>
+                                                            <td>
+                                                                <apex:inputCheckbox id="sc186"  value="{!introMall.checkbox}" onchange="changeCheck1(this)" />
+                                                                <apex:outputLabel for="sc186" styleClass="serach_check" /> 
+                                                            </td>
+
+                                                            <td>
+                                                                <apex:commandLink value="{!introMall.IntroMailInfo.Account__r.LastName__c} {!introMall.IntroMailInfo.Account__r.FirstName__c}"  reRender="dummy" 
+                                                                    onclick="showPage('GA102001View', '', 'true', 'AccountId={! introMall.IntroMailInfo.Account__r.id}&Corresponds={!introMall.IntroMailInfo.Correspond__r.Id}')">                                                              
+                                                                </apex:commandLink>
+                                                            </td>
+                                                            <td>
+                                                                <apex:outputField value="{!introMall.IntroMailInfo.Account__r.Phone}" />
+                                                            </td>
+                                                            <td>
+                                                                <apex:outputField value="{!introMall.IntroMailInfo.Account__r.Email__c}" />
+                                                            </td>
+                                                            <td>
+                                                                <apex:outputField value="{!introMall.IntroMailInfo.Account__r.IntroMailInfoFirstSendDatetime__c}" />
+                                                            </td>
+                                                            <td>
+                                                                <apex:outputField value="{!introMall.IntroMailInfo.Account__r.IntroMailInfoLastSendDatetime__c}" />
+                                                            </td>
+                                                            <td>
+                                                                <apex:outputField value="{!introMall.IntroMailInfo.Correspond__r.EchoStaff__r.Name}" />
+                                                            </td>
+                                                            <td>
+                                                                <apex:outputField value="{!introMall.IntroMailInfo.Correspond__r.ShopStaff__r.Name}" />
+                                                            </td>
+                                                            <td>
+                                                                <apex:outputField value="{!introMall.IntroMailInfo.Account__r.IntroMailInfoPursuitCount__c}" />
+                                                            </td>
+                                                        </tr>
+                                                    </apex:repeat>
+                                                    
+                                                </tbody>
+                                            </table>
+                                        </apex:outputPanel>
+                                    </ul>
+                                </li>
+                            </ul>  
+
+                        </section>
+                    </apex:outputPanel>
+                    <!-- 配信停止ボタン -->
+                    <apex:actionFunction name="sendStopButton" action="{!sendStopButton}" oncomplete="unblockUi();if({!hasErrorMessage}){gotoTop();}else{alertSendStopFinish();}"
+                    reRender="searchSection, message" />
+
+                </apex:form>
+            </article>
+        </main>
+
+        <script src="/soap/ajax/47.0/connection.js" type="text/javascript"></script>
+        
+        <script>
+            $(function() {
+                
+                var Accordion = function(el, multiple) {
+                    
+                    this.el = el || {};
+                    
+                    this.multiple = multiple || false;
+                    // Variables privadas
+                    
+                    var links = this.el.find('.link');
+                    
+                    // Evento
+                    
+                    links.off('click');//重複登録を防ぐ
+                    links.on('click', {el: this.el, multiple: this.multiple}, this.dropdown)
+                    
+                    // 追加（ボタンでは効かないように）
+                    var btns = links.find('.ab_btn');
+                    btns.on('click', function(e){return false;})
+                    
+                    
+                }
+                                    
+                Accordion.prototype.dropdown = function(e) {
+                    
+                    var $el = e.data.el;
+                    
+                    $this = $(this),
+                        
+                        $next = $this.next();
+                                            
+                    $next.slideToggle();
+                    
+                    $this.parent().toggleClass('open');
+                                            
+                    if (!e.data.multiple) {
+                        
+                        // $el.find('.submenu-defalt').not($next).slideUp().parent().removeClass('open');
+                        
+                    };
+                    
+                }
+                
+                var accordion = new Accordion($('#accordion'), false);
+                
+            });
+
+            $(function() {
+                
+                $('#btn').on('click', function(e) {
+                    
+                    //document.getElementById("accordion").removeClass('open');
+                    
+                    //document.getElementById("accordion").classList.remove("open")
+                    
+                    //$el.find('.submenu-defalt').not($next).slideUp().parent().removeClass('open');
+                    
+                    var textList = document.getElementById('accordion');
+                    
+                    //li02 = textList.getElementsByTagName('li');
+                    
+                    let elements = textList.getElementsByTagName('li');
+                    
+                    Array.prototype.forEach.call(elements, function(element) {
+                        
+                        element.classList.remove('open','default');
+                        
+                        $('.submenu-defalt').fadeOut()
+                        
+                    });
+                    
+                    //for (var j = 0; li02.length; j++) {
+                    
+                    //console.log(li02[j].textContent);
+                    
+                    // li02[j].removeClass("open")
+                    
+                    //}
+                    
+                });
+                
+            });    
+        </script>
+
+        <script>
+
+            // 選択行以外の行のチェックを外す
+            function changeCheck1(CheckObject) {
+                onchangeListCheckBoxSingleSelect(CheckObject);
+            }
+            
+            // 配信停止ボタン
+            async function cleckSendStopButton(){
+                var retVal;
+                message = "{! MSG_COM_V_DELETE_SENDMAILSTATUS}";
+                var retVal = await showConfirm(message);
+                if (retVal) {
+                    blockUi();
+                    sendStopButton();
+                } 
+            }
+
+            //配信停止完了メッセージ
+            async function alertSendStopFinish() {
+                var message = "{!MSG_COM_I_DELETE_SENDMAILSTATUS}";                        
+                //完了メッセージ
+                await showAlert(message);
+                
+                //最上部までスクロール
+                gotoTop();
+            }
+
+        </script>
+    </body>
+    
+</apex:page>

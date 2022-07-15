@@ -1,0 +1,216 @@
+<!-- 対応一覧処理 -->
+<apex:page docType="html-5.0" standardStylesheets="false" controller="GA101001Controller" title="対応一覧">
+    <apex:form id="form" html-novalidate="novalidate">
+
+        <head>
+            <meta charset="utf-8" />
+            <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+            <meta name="format-detection" content="telephone=no" />
+            <meta name="robots" content="noindex" />
+            <title>対応一覧"</title>
+            <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/reset.min.css')}" />
+            <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/foundation.css')}" />
+            <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/modaal.css')}" />
+            <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/style.css')}" />
+            <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery-3.6.0.min.js')}" />
+            <apex:includeScript value="{!URLFOR($Resource.designer_file, 'designer_file/js/modaal.js')}" />
+            <apex:stylesheet value="https://use.fontawesome.com/releases/v5.0.6/css/all.css" />
+
+            <apex:stylesheet value="{!URLFOR($Resource.external_file, 'external_file/common_style.css')}" />
+            <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery.blockUI.js')}" />
+            <apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/common_screen_util.js')}" />
+            <apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/input_rules.js')}" />
+            <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jQueryUI/jquery-ui.min.js')}" />
+            <apex:stylesheet value="{!URLFOR($Resource.jQuery,'jQuery/jQueryUI/jquery-ui.css')}" />
+
+        </head>
+        <script type="text/javascript">
+            $(function(){
+                var email = $("[id$=EventType]").data('mail');
+                var pursuit = $("[id$=EventType]").data('pursuit');
+                var otherStaff = $("[id$=EventType]").data('otherstaff');
+                var autoRecive = $("[id$=EventType]").data('autorecive');
+                let visitReservation = $("[id$=EventType]").data('visitReservation');
+                let propertyIntroductionPossible = $("[id$=EventType]").data('propertyIntroductionPossible');
+                callEach();
+
+                function selectBackgroundColer(Correspond) {
+                    var CorrespondVal = $(Correspond).data('correspodevent');
+                    var StaffFlg = $(Correspond).data('correspondstaff');
+                    var ReplyFlg = $(Correspond).data('correspondreply');
+                    if(CorrespondVal == email || 
+                       CorrespondVal == otherStaff || 
+                       CorrespondVal == propertyIntroductionPossible ||
+                       // ▼ 2021.11.24 LINE連携対応より、"LINE追加"と"LINE受信"の追加と修正
+                       (CorrespondVal == pursuit && StaffFlg == false)||
+                       CorrespondVal == '{! EVENT_LINE_FRIEND_ADD }' ||
+                       CorrespondVal == '{! EVENT_LINE_RECEIVE }') {
+                       // ▲ 2021.11.24
+                        return '#f2dede;';
+                    } else if (CorrespondVal == autoRecive ||
+                              (CorrespondVal == pursuit && ReplyFlg == true)) {
+                        return '##ffffcc;';
+                    } else if (CorrespondVal == visitReservation) {
+                        return '#e0ffef';
+                    }
+                    return '#ffffff;';
+                }
+
+                function callEach() {
+                    $("[id$=recordList]").each(function(index, element){
+                        $(this).css('background-color', selectBackgroundColer(this));
+                    });
+                }
+            });
+            //# sourceURL=sample.js
+        </script>
+        <body style="background-color:#ffffff;">
+            <main id="ga102003">
+                <article>
+                    <section>
+                        <apex:pagemessages />
+                        <div class="flex-wrap justify-between align_center mb10">
+                            <h1 class="fontb font2rem" style="float:left">対応一覧</h1>
+                                <!-- 非表示検索ボタン（Enterキー押下時動作用の隠し項目） -->
+                                <apex:commandButton styleClass="btn btn-submit btn-primary" value="検索(非表示))" disabled="{!isOpenError}" 
+                                onclick="blockUi();"
+                                action="{!getCorrespondList}" rerender="form"
+                                oncomplete="unblockUi();if(!{! isOpenError}){gotoTop()}"
+                                status="loadComponent" style="visibility:hidden;"/>      
+                        </div>
+                        <div class="border-g-3 mb60">
+                            <div class="flex-wrap  flex_wrap justify-between align_center ">
+                                <!-- ▼ 2021.11.24 LINE連携対応より、tabIndex属性を削除 -->
+                                <div class=" mb10 wd32 wd49_md wd100_xs">
+                                    <div>店舗</div>
+                                    <apex:actionRegion >                                    
+                                        <apex:selectList styleClass="form-control" size="1" value="{!shopsName}" >
+                                            <apex:selectOptions value="{!selectVisitShopList}"></apex:selectOptions>
+                                            <apex:actionSupport event="onchange" action="{!getStaffList}" reRender="renovationBlock" />    
+                                        </apex:selectList>
+                                    </apex:actionRegion>
+                                </div>
+                                <apex:outputPanel id="renovationBlock" layout="block" styleClass="mb10 wd32 wd49_md wd100_xs">
+                                    <div>担当者</div>
+                                    <apex:selectList styleClass="form-control" size="1" value="{!ShopStaff}" >
+                                        <apex:selectOptions value="{!selectShopStaffList}" />
+                                    </apex:selectList>
+                                </apex:outputPanel>
+                                <div class=" mb10 wd32 wd49_md wd100_xs">
+                                    <div>対象種別</div>
+                                    <apex:selectList styleClass="form-control" size="1" value="{!recordType}" >
+                                        <apex:selectOptions value="{!recordTypeList}" />
+                                    </apex:selectList>
+                                </div>
+                                <!-- ▲ 2021.11.24 -->
+                            </div>
+                            <div class="text-center ">
+                                <!-- ▼ 2021.11.24 LINE連携対応より、tabIndex属性を削除 -->
+                                <apex:commandButton styleClass="btn btn-submit btn-primary text-center mauto_xs" value="検索" 
+                                    onclick="blockUi();" disabled="{!isOpenError}" 
+                                    action="{!getCorrespondList}" rerender="form"
+                                    oncomplete="unblockUi();if(!{! isOpenError}){gotoTop()};callEach();"
+                                    status="loadComponent"
+                                />
+                                <!-- ▲ 2021.11.24 -->
+                            </div>
+                        </div>
+                    </section>
+                    <section>
+                        <h2 class="fontb font2rem">検索結果</h2>
+                        <input type ="hidden" data-mail="{!EVENT_EMAIL}" data-pursuit="{!EVENT_PURSUIT_VIEWED}" data-otherstaff="{!EVENT_OTHERSTAFFSUPPORTED}" data-autorecive="{!EVENT_AUTO_RECIVE}" data-visit-reservation="{!EVENT_VISIT_RESERVATION}" data-property-introduction-possible="{!EVENT_PROPERTY_INTRODUCTION_POSSIBLE}" id="EventType"/>
+                        <table class="gray" style="height:520px;">
+                            <tbody>
+                                <tr>
+                                    <th class="wd4">お客様名</th>
+                                    <th class="wd4">電話番号</th>
+                                    <th class="wd2">対象種別</th>
+                                    <th class="wd4">ステータス</th>
+                                    <th class="wd5">イベント</th>
+                                    <th class="wd5">イベント時刻</th>
+                                    <th class="wd5">メモ</th>
+                                    <th class="wd5">担当者</th>
+                                    <th class="wd2">お客様紐づけ</th>
+                                </tr>
+                                <apex:variable var="num" value="0" />
+                                <apex:repeat value="{!screenTargetRecordList}" var="Correspond">
+                                    <!-- イベントが「メール受信」またはイベントが「他スタッフ対応」または「イベントが 閲覧ありで、スタッフ対応フラグがfalse（他スタッフ）の場合」色を赤くし、「自動返信」または「イベントが 閲覧ありで、自動返信後追客フラグがtrueの場合」色を黄色にする -->
+                                    <tr id="recordList" data-correspodevent="{!Correspond.Event}" data-correspondstaff="{!Correspond.staffSupportedFlg}" data-correspondreply="{!Correspond.AutomaticReplyAfterPursuitFlg}">
+                                        <td>
+                                            <!-- お客様名リンクで対応番号と取引先IDを引数として渡す -->
+                                            <apex:commandLink value="{!Correspond.AccountIdName}" onclick="showPage('GA102001View', '', 'true', 
+                                             'AccountId={!Correspond.AccountIdParentId}&Corresponds={!Correspond.Id}')"
+                                             reRender="dummy">
+                                                <apex:param value="{!VALUE(num)}" name="correspondIndex" assignTo="{!correspondIndex}" />
+                                            </apex:commandLink>
+                                        </td>
+                                        <td><apex:outputText value="{!Correspond.AccountIdPhone}" /></td>
+                                        <td>
+                                            <apex:outputText value="{!Correspond.RecordType}"/>
+                                        </td>
+
+                                        <td><apex:outputText value="{!Correspond.Status}" /></td>
+                                        <td>
+                                            <!-- ▼ 2021.11.24 LINE連携対応より、"LINE追加"と"LINE受信"時はリンクで表示するよう修正 -->
+                                            <!-- リンク部 -->
+                                            <apex:commandLink value="{! Correspond.Event }"
+                                                              onclick="showPage('GL101001View', '', 'true', 'lineMemberId={! Correspond.lineMemberId }&correspondId={! Correspond.Id }')"
+                                                              rendered="{! OR(Correspond.Event == EVENT_LINE_FRIEND_ADD, Correspond.Event == EVENT_LINE_RECEIVE) }"
+                                                              reRender="dummy" />
+                                            <!-- ラベル部 -->
+                                            <apex:outputText value="{!Correspond.Event}" rendered="{! AND(Correspond.Event != EVENT_LINE_FRIEND_ADD, Correspond.Event != EVENT_LINE_RECEIVE) }" />
+                                            <!-- ▲ 2021.11.24 -->
+                                        </td>
+                                        <td><apex:outputText value="{!Correspond.EventDateTime}" /></td>
+                                        <td><apex:outputText value="{!Correspond.Memo}" /></td>
+                                        <td><apex:outputText value="{!Correspond.shopStaffName}" /><apex:outputText value="{!Correspond.shopStaffDepartment}" /></td>
+
+                                        <td>
+                                            <!-- ▼ 2021.11.24 LINE連携対応より、"LINE追加"でLINE会員と取引先が未紐づけ時の処理を追加・修正 -->
+                                            <!-- お客様紐づけで対応IDを渡す。 -->
+                                            <apex:outputPanel rendered="{! !Correspond.isUnlinkedLineMember }" layout="none" >
+                                                <!-- 紐づけ済 -->
+                                                <apex:outputText value="紐づけ済" rendered="{! Correspond.AccountIdParentId != null }"/>
+
+                                                <!-- 対応と取引先の未紐づけ -->
+                                                <apex:commandLink value="未紐づけ"
+                                                                  rendered="{! Correspond.AccountIdParentId == null }"
+                                                                  onclick="showPage('GA105001View', '', 'true', 'Id={!Correspond.Id}')"
+                                                                  reRender="dummy">
+                                                    <apex:param value="{!VALUE(num)}" name="correspondIndex" assignTo="{!correspondIndex}" />
+                                                </apex:commandLink>
+                                            </apex:outputPanel>
+
+                                            <!-- LINE会員と取引先の未紐づけ -->
+                                            <apex:commandLink value="未紐づけ"
+                                                              rendered="{! Correspond.isUnlinkedLineMember }"
+                                                              onclick="showPage('GL101003View', '', 'true', 'lineMemberId={! Correspond.lineMemberId }&correspondId={! Correspond.Id }')"
+                                                              reRender="dummy">
+                                            </apex:commandLink>
+                                            <!-- ▲ 2021.11.24 -->
+
+
+                                            <!-- 顧客 -->
+                                            <!-- <apex:commandLink value="未紐づけ" rendered="{! IF(Correspond.AccountIdParentId==null && Correspond.RecordType=='CustomerRecordType', TRUE, FALSE)}"
+                                             oncomplete="showPage('GA105001View', '', 'true', 
+                                             'Corresponds={!screenTargetRecordList[correspondIndex].Id}')">
+                                                <apex:param value="{!VALUE(num)}" name="correspondIndex" assignTo="{!correspondIndex}" />
+                                            </apex:commandLink> -->
+                                            <!-- 業者 -->
+                                            <!-- <apex:commandLink value="未紐づけ" rendered="{! IF(Correspond.AccountIdParentId==null && Correspond.RecordType=='SupplierRecordType', TRUE, FALSE)}"
+                                             oncomplete="showPage('GD101005view', '', 'true', 
+                                             'Id={!screenTargetRecordList[correspondIndex].Id}')">
+                                                <apex:param value="{!VALUE(num)}" name="correspondIndex" assignTo="{!correspondIndex}" />
+                                            </apex:commandLink> -->
+                                        </td>
+                                        <apex:variable var="num" value="{!VALUE(num)+1}" />
+                                    </tr>
+                                </apex:repeat>
+                            </tbody>
+                        </table>
+                    </section>
+                </article>
+            </main>
+        </body>
+    </apex:form>
+</apex:page>

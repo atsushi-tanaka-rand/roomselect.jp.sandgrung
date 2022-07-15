@@ -1,0 +1,67 @@
+<!--駅名選択画面-->
+<apex:component controller="GA104007Controller" >
+    <apex:attribute name="ParameterClass" type="GA104007ParameterClass" assignTo="{!Parameter}" description="key"/>
+    <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery-3.6.0.min.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery.blockUI.js')}"/>    
+    <apex:includeScript value="{!URLFOR($Resource.designer_file, 'designer_file/js/modaal.js')}"/>   
+    <apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/common_screen_util.js')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/reset.min.css')}"/> 
+    <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/foundation.css')}"/>
+    <apex:stylesheet value="https://use.fontawesome.com/releases/v5.0.6/css/all.css"/>   
+    <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/style.css')}"/> 
+    <body style="background-color:#ffffff;" id="ga104007">
+        <main>
+            <article>
+                <apex:form id="GA104007Form" >
+                    <apex:pageBlock rendered="{!Parameter.noFirst}">
+                        <apex:outputText rendered="{!init}" />
+                        <apex:pageMessages />
+                        <section class="post-pop">
+                            <section style="display:flex">
+                                <h1 class="fontb font2rem">駅名検索</h1>
+                                <apex:commandButton style=" visibility:hidden;" rerender="dummy"/> 
+                            </section>
+                           
+                            <section>
+                                <table class="gray">
+                                    <tbody>
+                                        <tr>
+                                            <th class="">
+                                                <!--▼　2022.04.08 No.782 disabled処理追加-->
+                                                <apex:inputCheckbox id="sc" value="{!isTrainRouteChecked}" 
+                                                    styleClass="stationHeadCheck" 
+                                                    disabled="{!Parameter.singleChoice}" 
+                                                    onchange="listCheckBoxAllChange(this, '.stationHeadCheck',  '.stationCheck');" />
+                                                <apex:outputlabel styleClass="serach_check" style="width: 200px;" for="sc" value="{!Parameter.selectedTrainRoute.NAME}" rendered="{! !isOpenError}" /> 
+                                                <!--▲　2022.04.08 No.782 disabled処理追加-->
+                                            </th>
+                                        </tr>
+                                    </tbody>
+                                    <tbody style="height:200px; overflow-y:scroll; display:block;" >
+                                        <tr>
+                                            <td>
+                                                <apex:repeat value="{!DisplayStationList}" var="D" >
+                                                    <apex:inputCheckbox id="sc" value="{!D.isSelected}" styleClass="stationCheck"  onchange="headCheckBoxChange(this, '.stationHeadCheck',  '.stationCheck');"/>
+                                                    <apex:outputlabel styleClass="serach_check" style="width: 200px;" for="sc" value="{!D.stationName}" /> 
+                                                </apex:repeat>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <div class="btn btn-submit btn-primary text-center " style="margin-top: 20px;">
+                                    <apex:commandButton disabled="{! isOpenError}" onclick="blockUi();" action="{!settingSelect}" oncomplete=" if(!{!hasErrorMessage}){closeGA104007View();} unblockUi();" rerender="renderedGA104007, GA104007Form" value="設定" styleClass="btn btn-submit btn-primary modal mb10" />  
+                                </div>
+                                
+                            </section>
+                        </section>       
+                    </apex:pageBlock>
+                </apex:form>
+            </article>
+        </main>
+    </body>
+    <script>
+    function AllChecked(){
+        changeAllChecked();
+    }
+    </script>
+</apex:component>

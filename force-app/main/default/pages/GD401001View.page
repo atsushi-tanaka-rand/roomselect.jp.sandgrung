@@ -1,0 +1,949 @@
+<!-- ポータル連携一覧画面 -->
+<apex:page controller="GD401001Controller" docType="html-5.0" standardStylesheets="false" title="ポータル連携一覧">
+    <script type="text/javascript">
+    
+    //保存確認メッセージ
+    async function checkSave(){
+        var message = "{! MSG_COM_V_SAVE}";
+        var retVal = await showConfirm(message);
+        if (retVal) {
+            blockUi();
+            registerProperty();
+        }          
+    }
+
+    //一括確認メッセージ
+    async function checkBulkConfirmation(){
+        var message = "{! MSG_COM_V_BULKREGISTRATION}";
+        var retVal = await showConfirm(message);
+        if (retVal) {
+            blockUi();
+            temporaryCheckedProperty();
+        }          
+    }
+
+    //保存(一括確認)完了メッセージ
+    async function alertSaveFinish(message) {
+        //完了メッセージ
+        await showAlert(message);
+    }
+    </script>
+    
+    <apex:form id="form">
+        <html lang="ja">
+            
+            <div class="flex-wrap flex_wrap align-items_end mt10 mb30" />
+            
+            <head>
+                <meta charset="utf-8" />
+                <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+                <meta name="format-detection" content="telephone=no" />
+                <meta name="robots" content="noindex" />
+                <title>ポータル連携一覧</title>
+                
+                <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/reset.min.css')}" />
+                <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/foundation.css')}" />
+                <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/modaal.css')}" />
+                <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/style.css')}" />
+                <apex:stylesheet value="https://use.fontawesome.com/releases/v5.0.6/css/all.css" />
+                <apex:stylesheet value="{!URLFOR($Resource.external_file, 'external_file/common_style.css')}" />
+                <apex:stylesheet value="{!URLFOR($Resource.jQuery,'jQuery/jQueryUI/jquery-ui.css')}" />
+                
+                <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery-3.6.0.min.js')}" />
+                <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery.blockUI.js')}" />
+                <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jQueryUI/jquery-ui.min.js')}" />
+                <apex:includeScript value="{!URLFOR($Resource.designer_file, 'designer_file/js/modaal.js')}" />
+                <apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/common_screen_util.js')}" />
+                <apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/input_rules.js')}" />
+                 
+                <!-- ｃｓｓ -->
+                <style type="text/css">
+                    #gd401001 input[type="radio"] {
+                    display: inline;
+                    }
+                    /** 店舗の未掲載サイトメッセージ */
+                    .unlisted_site_msg_of_shop{
+                        height:30px;
+                        display: flex;
+                        align-items: center;
+                        color: #fe0000;
+                    }  
+                </style>
+            </head>
+            
+        </html>
+        
+        <body id="gd401001">
+            <main>
+                <article>
+                    <section class="">
+                        
+                        <!-- actionFunction -->
+                        <apex:actionFunction action="{! registerProperty}" name="registerProperty"
+                                             oncomplete="sortSetting(); unblockUi(); if(!{! hasErrorMessage}){alertSaveFinish('{! MSG_COM_I_SAVE}')}else{gotoTop()}"
+                                             reRender="searchSection, buttun, postingJS, messageArea" />
+                        <apex:actionFunction action="{! temporaryCheckedProperty}" name="temporaryCheckedProperty"
+                                             oncomplete="sortSetting(); unblockUi(); if(!{! hasErrorMessage}){alertSaveFinish('{! MSG_COM_BULKREGISTRATION}')}else{gotoTop()}"
+                                             reRender="searchSection, buttun, postingJS, messageArea" />
+                        
+                        <apex:pageMessages id="messageArea" />
+                        
+                        <h1 class="fontb font2rem" style="margin-bottom: 10px float:left">ポータル連携一覧</h1>
+                            <!-- 非表示検索ボタン（Enterキー押下時動作用の隠し項目） -->
+                            <apex:commandButton styleClass="btn btn-submit btn-primary" value="検索(非表示))" disabled="{!isOpenError}" 
+                            onclick="blockUi();"
+                            action="{!search}" 
+                            reRender="searchSection, buttun, postingJS, messageArea" 
+                            oncomplete="sortSetting(); unblockUi(); if({!hasErrorMessage}){gotoTop()}"
+                            status="loadComponent" style="visibility:hidden;"/>      
+                        <section>
+                            <div class="border-g pd20 pd20_xs">
+                                
+                                <div class="back_graydark pd3 mb20">物件検索</div>
+                                
+                                <apex:outputPanel id="required">
+                                    <div class="border_bottom mb20">必須</div>
+                                    
+                                    <div class="flex-wrap  flex_wrap justify-between">                
+                                        
+                                        <div class=" mb10 wd20 wd49_md wd100_xs">
+                                            
+                                            <div class="information_title">店舗</div>
+                                            <apex:selectList styleClass="form-control" size="1" value="{!shopsName}" tabIndex="1">
+                                                <apex:selectOptions value="{!selectShopList}"></apex:selectOptions>
+                                            </apex:selectList>
+                                            
+                                        </div>
+                                        
+                                        <!-- 必須のラジオボタン -->
+                                        <div class=" mt30 wd55 wd49_md wd100_xs">
+                                            
+                                            <apex:selectRadio styleClass="displayRadio" value="{! propertyType}" tabIndex="2">
+                                                <apex:selectOptions value="{! IsPropertyTypeRadioButton}" />
+                                                <apex:actionSupport event="onchange" rerender="required" />
+                                            </apex:selectRadio>
+                                            
+                                        </div>
+                                        
+                                        <apex:outputPanel layout="block" styleClass=" mb10 wd20 wd49_md wd100_xs" rendered="{!propertyType = 'パノラマ掲載物件'}">
+                                            
+                                            <div class="information_title">ポータルサイト</div>
+                                            <apex:selectList styleClass="form-control" size="1" value="{!portalSite}" tabIndex="3">
+                                                <apex:selectOptions value="{!selectPortalSiteList}"></apex:selectOptions>
+                                            </apex:selectList>
+                                            
+                                        </apex:outputPanel>
+                                        <!-- パノラマ掲載物件選択リストが出ていない場合の代わりのdiv -->
+                                        <apex:outputPanel layout="block" styleClass=" mb10 wd20 wd49_md wd100_xs" rendered="{!propertyType != 'パノラマ掲載物件'}"/>
+                                    </div>
+                                    
+                                </apex:outputPanel>
+                                
+                                <div class="border_bottom mt30 mb30">任意</div>
+                                
+                                <div class="flex-wrap  flex_wrap mb20">
+                                    
+                                    <div class=" mb10 wd32 wd49_md wd100_xs">
+                                        
+                                        <div class="information_title">物件ID
+                                            <small>※物件IDが入力された場合、以降の条件は無視されます。</small>
+                                        </div>
+                                        <apex:input type="text" styleClass="form-control" value="{!propertyId}" onchange="correctInputRules(this,'text', '255')"
+                                                    tabIndex="4" />
+                                        
+                                    </div>
+                                    
+                                </div>
+                                
+                                <div class="flex-wrap  flex_wrap justify-between  ">
+                                    
+                                    <div class=" mb10 wd32 wd49_md wd100_xs">
+                                        
+                                        <div class="information_title">地区</div>
+                                        <apex:selectList styleClass="form-control" size="1" value="{!propertyDistrict}" tabIndex="5">
+                                            <apex:selectOptions value="{!selectPropertyDistrictList}"></apex:selectOptions>
+                                            <apex:actionSupport event="onchange" action="{!changeDistrict}" rerender="amountLowerLimit, amountUpperLimit" />
+                                        </apex:selectList>
+                                        
+                                    </div>
+                                    
+                                    <div class=" mb10 wd32 wd49_md wd100_xs">
+                                        
+                                        <apex:outputPanel id="amountLowerLimit">
+                                            <div class="information_title">取扱い物件 金額(下限)</div>
+                                            <div class="information_contents">
+                                                <apex:outputText value="{0, number, ###,###,###}">
+                                                    <apex:param value="{!amountLowerLimit}" />
+                                                </apex:outputText>
+                                            </div>
+                                        </apex:outputPanel>
+                                        
+                                    </div>
+                                    
+                                    <div class=" mb10 wd32 wd49_md wd100_xs">
+                                        
+                                        <apex:outputPanel id="amountUpperLimit">
+                                            <div class="information_title">取扱い物件 金額(上限)</div>
+                                            <div class="information_contents">
+                                                <apex:outputText value="{0, number, ###,###,###}">
+                                                    <apex:param value="{!amountUpperLimit}" />
+                                                </apex:outputText>
+                                            </div>
+                                        </apex:outputPanel>
+                                        
+                                    </div>
+                                    
+                                </div>
+                                
+                                
+                                <div class="flex-wrap  flex_wrap justify-between align_center ">
+                                    
+                                    <div class=" mb10 wd32 wd49_md wd100_xs">
+                                        
+                                        <div class="information_title">物件名</div>
+                                        <apex:input type="text" styleClass="form-control" value="{!propertyName}" onchange="correctInputRules(this,'text', '255')"
+                                                    tabIndex="6" />
+                                        
+                                    </div>
+                                    
+                                    <div class=" mb10 wd32 wd49_md wd100_xs">
+                                        
+                                        <div class="information_title">住所(丁目まで)</div>
+                                        <apex:input type="text" styleClass="form-control" value="{!propertyAddress}" onchange="correctInputRules(this,'text', '255')"
+                                                    tabIndex="7" />
+                                        
+                                    </div>
+                                    
+                                    <div class=" mb10 wd32 wd49_md wd100_xs">
+                                        
+                                        <div class="information_title">元付業者名</div>
+                                        <apex:input type="text" styleClass="form-control" value="{!formerSupplier}" onchange="correctInputRules(this,'text', '255')"
+                                                    tabIndex="8" />
+                                        
+                                    </div>
+                                    
+                                    
+                                </div>
+                                
+                                <!-- 点数のラジオボタン -->
+                                <div class="flex-wrap flex_wrap align-items_end mt10 mb30">
+                                    
+                                    点数
+                                    <apex:selectRadio styleClass="displayRadio" value="{! propertyScore}" tabIndex="9">
+                                        <apex:selectOptions value="{! IsPropertyScoreRadioButton}" />
+                                    </apex:selectRadio>
+                                    
+                                    <apex:inputCheckbox id="r35" value="{!panoramaPostingProperty}" tabIndex="10" />
+                                    <apex:outputLabel for="r35" styleClass="serach_check">パノラマ登録物件</apex:outputLabel>
+                                    
+                                </div>
+                                
+                                <div class="btn btn-submit btn-primary text-center ">
+                                    <apex:commandButton styleclass="btn btn-submit btn-primary " value="検索" onclick="blockUi();" action="{!search}" oncomplete="sortSetting(); unblockUi(); if({!hasErrorMessage}){gotoTop()}"
+                                                        reRender="searchSection, buttun, postingJS, messageArea" tabIndex="11" disabled="{!isOpenError}"/>
+                                </div>
+                                
+                                <apex:outputPanel id="searchSection">
+                                    
+                                    <div class="back_graydark posi_re pd3 mt60">検索結果
+                                        
+                                        <apex:outputPanel id="buttun">
+                                            
+                                            <div class="ab_btn ab_btn_xs2">
+                                                
+                                                <div class="flex-wrap flex_wrap">
+                                                    
+                                                    <apex:outputPanel layout="block" styleClass="flex-wrap" rendered="{!propertyAndPortalRecordListCount > 0}">
+                                                        
+                                                        <apex:commandButton value="SUUMO　all" styleClass="modal btn-w-2 btn-w-2_normal blue" disabled="{! isOpenError}"
+                                                                            onclick="checkAllSuumo()"  reRender="dummy" tabIndex="12" />
+                                                        
+                                                        <apex:commandButton value="HOME’S　all" styleClass="modal btn-w-2 blue" disabled="{! isOpenError}"
+                                                                            onclick="checkAllHomes()"  reRender="dummy" tabIndex="13" />
+                                                        
+                                                        <apex:commandButton value="at home　all" styleClass="modal btn-w-2 btn-w-2_normal blue" disabled="{! isOpenError}"
+                                                                            onclick="checkAllAtHome()" reRender="dummy" tabIndex="14" />
+
+														<!-- ▼ 2022.03.22 CHINTAI本対応 CHINTAI allを追加 -->
+														<apex:commandButton value="CHINTAI all" styleClass="modal btn-w-2 btn-w-2_normal blue" disabled="{! isOpenError}"
+																			onclick="checkAllChintai()" reRender="dummy" tabIndex="14" />
+														<!--  ▲ 2022.03.22 CHINTAI本対応 -->
+
+                                                    </apex:outputPanel>
+                                                    
+                                                    <apex:outputPanel layout="block" styleClass="flex-wrap" rendered="{!propertyAndPortalRecordListCount > 0}">
+                                                        
+                                                        <apex:commandButton value="登録" styleClass="modal btn-w-2 btn-w-2_normal blue" disabled="{! isOpenError}" onclick="checkSave();"
+                                                                            reRender="dummy" tabIndex="15" />
+                                                        
+                                                        <apex:outputPanel layout="block" styleClass="flex-wrap" rendered="{!(lastPropertyCount > 0) || (latestPropertyCount > 0)}">
+                                                            <apex:commandButton value="一括確認" styleClass="modal btn-w-2 blue" disabled="{! isOpenError}" onclick="checkBulkConfirmation();"
+                                                                                reRender="dummy" tabIndex="16" />
+                                                        </apex:outputPanel>
+                                                        
+                                                        <apex:commandButton value="一括確認物件一覧" styleClass="modal btn-w-2 btn-w-2_normal blue" disabled="{! isOpenError}" oncomplete="showPage('TD401001View', '_self', 'false', 'targetShopsName={!targetShopsName}'); "
+                                                                            reRender="dummy" tabIndex="17" />
+                                                        
+                                                    </apex:outputPanel>
+                                                    
+                                                </div>
+                                                
+                                            </div>
+                                        </apex:outputPanel>
+                                        
+                                    </div>
+
+                                    <!-- 店舗の未掲載サイトメッセージ -->
+                                    <div class="unlisted_site_msg_of_shop">
+                                        <apex:outputText value="{!unlistedSiteMsgOfShop}" /> 
+                                    </div>
+
+                                    <div class="flex-wrap  flex_wrap">
+                                        
+                                        <table class="none_table font10_xs">
+                                            
+                                            <tr>
+                                                
+                                                <th></th>
+                                                <th>物件数</th>
+                                                <th>SUUMO</th>
+                                                <th>HOME’S</th>
+                                                <th>at home</th>
+												<th>CHINTAI</th> <!-- 2022.03.22 CHINTAI本対応 項目を追加 -->
+                                                
+                                            </tr>
+                                            
+                                            <tr>
+                                                
+                                                <th>総物件数</th>
+                                                <td>
+                                                    <apex:outputText value="{!allPropertyCount}" />件</td>
+                                                <td>
+                                                    <apex:outputText value="{!allSuumoPropertyCount}" />件</td>
+                                                <td>
+                                                    <apex:outputText value="{!allHomesPropertyCount}" />件</td>
+                                                <td>
+                                                    <apex:outputText value="{!allAtHomePropertyCount}" />件</td>
+
+												<!--  ▼ 2022.03.22 CHINTAI本対応 項目を追加 -->
+												<td>
+													<apex:outputText value="{!allChintaiPropertyCount}" />件</td>
+												<!-- // ▲ 2022.03.22 CHINTAI本対応  -->
+                                                
+                                            </tr>
+                                            
+                                            <tr>
+                                                
+                                                <th>パノラマ登録件数</th>
+                                                <td>
+                                                    <apex:outputText value="{!allPropertyPanoramaCount}" />件</td>
+                                                <td>
+                                                    <apex:outputText value="{!allSuumoPropertyPanoramaCount}" />件</td>
+                                                <td>
+                                                    <apex:outputText value="{!allHomesPropertyPanoramaCount}" />件</td>
+                                                <td>
+                                                    <apex:outputText value="{!allAtHomePropertyPanoramaCount}" />件</td>
+
+												<!--  ▼ 2022.03.22 CHINTAI本対応 項目を追加 -->
+												<td>
+													<apex:outputText value="{!allChintaiPropertyPanoramaCount}" />件</td>
+												<!-- // ▲ 2022.03.22 CHINTAI本対応  -->
+
+                                            </tr>
+                                            
+                                            <tr>
+                                                
+                                                <th>パノラマ掲載件数</th>
+                                                <td>
+                                                    <apex:outputText value="{!propertyPanoramaCount}" />件</td>
+                                                <td>
+                                                    <apex:outputText value="{!suumoPropertyPanoramaCount}" />件</td>
+                                                <td>
+                                                    <apex:outputText value="{!homesPropertyPanoramaCount}" />件</td>
+                                                <td>
+                                                    <apex:outputText value="{!atHomePropertyPanoramaCount}" />件</td>
+
+												<!--  ▼ 2022.03.22 CHINTAI本対応 項目を追加 -->
+												<td>
+													<apex:outputText value="{!chintaiPropertyPanoramaCount}" />件</td>
+												<!-- // ▲ 2022.03.22 CHINTAI本対応  -->
+                                                
+                                            </tr>
+                                            
+                                            <tr>
+                                                
+                                                <th>検索結果物件数</th>
+                                                <td>
+                                                    <apex:outputText value="{!searchedPropertyCount}" />件</td>
+                                                <td>
+                                                    <apex:outputText value="{!searchedSuumoPropertyCount}" />件</td>
+                                                <td>
+                                                    <apex:outputText value="{!searchedHomesPropertyCount}" />件</td>
+                                                <td>
+                                                    <apex:outputText value="{!searchedAtHomePropertyCount}" />件</td>
+
+												<!--  ▼ 2022.03.22 CHINTAI本対応 項目を追加 -->
+												<td>
+													<apex:outputText value="{!searchedChintaiPropertyCount}" />件</td>
+												<!-- // ▲ 2022.03.22 CHINTAI本対応  -->
+                                                
+                                            </tr>
+                                            
+                                        </table>
+                                        
+                                        <table class="none_table font10_xs">
+                                            
+                                            <tr>
+                                                
+                                                <th></th>
+                                                
+                                                <th>物件数</th>
+                                                
+                                            </tr>
+                                            
+                                            <tr>
+                                                
+                                                <th class="flex-wrap align_center">
+                                                    <div class="g1 mr5"></div>濃いグレーの物件はあと1日で掲載が落ちます。</th>
+                                                
+                                                <td>
+                                                    <apex:outputText value="{!lastPropertyCount}" />件</td>
+                                                
+                                            </tr>
+                                            
+                                            <tr>
+                                                
+                                                <th class="flex-wrap align_center">
+                                                    <div class="g2 mr5"></div>グレーの物件はあと2、3日で掲載が落ちます。</th>
+                                                
+                                                <td>
+                                                    <apex:outputText value="{!latestPropertyCount}" />件</td>
+                                                
+                                            </tr>
+                                            
+                                        </table>
+                                        
+                                    </div>
+                                    
+                                    <div class="flex-wrap flex_wrap mt20">
+                                        <!-- ページ選択リスト -->
+                                        <div style="width:200px;">
+                                            <apex:selectList styleClass="form-control" size="1" value="{!selectPageIndex}" rendered="{! pageCount > 1}">
+                                                <apex:selectOptions value="{!pageingList}" />
+                                            </apex:selectList>
+                                        </div>
+                                        <!-- 選択ページの表示ボタン -->
+                                        <apex:commandButton value="表示" styleClass="modal btn-w-2 btn-w-2_normal blue ml10" style="padding-left:10px; padding-right:10px;"
+                                                            rendered="{! pageCount > 1}" disabled="{! isOpenError}"
+                                                            onclick="blockUi();" action="{!selectPage}" oncomplete="sortSetting(); unblockUi(); if({!hasErrorMessage}){gotoTop()}"
+                                                            reRender="searchSection, postingJS, messageArea" tabIndex="18" />
+                                    </div>
+
+                                    <table class="gray mb30 mt20 nowrap" style="height:523px;" id="searchResultTable" >
+                                        
+                                        <tbody>
+                                            
+                                            <tr>
+                                                <th data-rowNumberCol="true"></th>
+                                                
+                                                <th data-resettingRowNumberCol="true">
+                                                    物件名<img url="" class="sort sortOrderImage" />
+                                                </th>
+                                                
+                                                <th>
+                                                    住所<img url="" class="sort sortOrderImage" />
+                                                </th>
+                                                
+                                                <th>
+                                                    現況<img url="" class="sort sortOrderImage" />
+                                                </th>
+                                                
+                                                <th>
+                                                    引渡年月<img url="" class="sort sortOrderImage" />
+                                                </th>
+                                                
+                                                <th data-sortType="number">
+                                                    写真<img url="" class="sort sortOrderImage" />
+                                                </th>
+                                                
+                                                <th data-sortType="number">
+                                                    ラベル<br/>未設定<img url="" class="sort sortOrderImage" />
+                                                </th>
+                                                
+                                                <th>
+                                                    パノラマ<img url="" class="sort sortOrderImage" />
+                                                </th>
+                                                
+                                                <th>
+                                                    自社管理<br/>修正日<img url="" class="sort sortOrderImage" />
+                                                </th>
+                                                
+                                                <th data-sortType="number">
+                                                    点数<img url="" class="sort sortOrderImage" />
+                                                </th>
+                                                
+                                                <th data-colSortable="false">
+                                                    掲載先
+                                                </th>
+                                                
+                                                <th data-colSortable="false">
+                                                    パノラマ掲載先
+                                                </th>
+                                            </tr>
+                                            
+                                            <apex:variable var="num" value="0" />
+                                            <apex:repeat value="{! propertyAndPortalRecordList}" var="p">
+                                                <tr style="background-color: {! p.bkColor}">
+                                                    <td class="text-center">
+                                                        <apex:outputlabel value="{!VALUE(num)+1}" />
+                                                    </td>
+                                                    
+                                                    <td><!-- 物件名 -->
+                                                        <apex:inputHidden id="resettingRowNumber" value="{!p.showIndex}" />
+                                                        <apex:commandLink value="{!p.propertyRecord.Building__r.Name}{!p.propertyRecord.Name}"
+                                                                          onclick="showPage('GA104006View', '', 'true', 'propertyId={!p.propertyRecord.Id}')"
+                                                                          rerender="dummy"
+                                                                          />
+                                                    </td>
+                                                    
+                                                    <td><!-- 住所 -->
+                                                        <apex:outputText value="{!p.propertyRecord.Building__r.Address__c}" />
+                                                    </td>
+                                                    
+                                                    <td><!-- 現況 -->
+                                                        <apex:outputText value="{!p.propertyRecord.LiveStatus__c}" />
+                                                    </td>
+                                                    
+                                                    <td><!-- 引渡年月 -->
+                                                        <apex:outputText value="{!p.propertyRecord.DeliveryDateView__c}" />
+                                                    </td>
+                                                    
+                                                    <td><!-- 写真 -->
+                                                        <apex:outputText value="{!p.propertyRecord.PhotoCount__c}" />
+                                                    </td>
+                                                    
+                                                    <td><!-- ラベル未設定 -->
+                                                        <apex:outputText value="{!p.propertyRecord.PhotoTagNonSettingCount__c}" />
+                                                    </td>
+                                                    
+                                                    <td><!-- パノラマ -->
+                                                        <apex:outputText value="{!if(P.propertyRecord.PropertyPanoramaCount__c >0, '有', '無')}" />
+                                                    </td>
+                                                    
+                                                    <td><!-- 自社管理修正日 -->
+                                                        <apex:outputText value="{0, date, yyyy/MM/dd}">
+                                                            <apex:param value="{!p.propertyRecord.OwnCompanyManageModDate__c +9/24}"></apex:param>
+                                                        </apex:outputText>
+                                                    </td>
+                                                    
+                                                    <td><!-- 点数 -->
+                                                        <apex:outputText value="{!p.propertyRecord.Score__c}" />
+                                                    </td>
+                                                    
+                                                    <td>
+                                                        <div id="postingCheckBlock" class="flex-wrap nowrap" data-isUpdate="false">
+                                                            <!-- 掲載先 -->
+                                                            <apex:inputCheckbox id="suumo1" disabled="{! p.IsDisableSuumo}" value="{! p.portalPropertyRecord.IsSuumo__c}"
+                                                                                onchange="if (!changePosting(this)) {showUpdateWeightErrorMessage();}"
+                                                                                html-data-initValue="{! p.portalPropertyRecord.IsSuumo__c}"
+                                                                                />
+                                                            <apex:outputLabel for="suumo1" styleclass="serach_check mr5" style="cursor:default;">SUUMO</apex:outputLabel>
+                                                            
+                                                            <apex:inputCheckbox id="homes1" disabled="{! p.IsDisableHomes}" value="{! p.portalPropertyRecord.IsHomes__c}"
+                                                                                onchange="if (!changePosting(this)) {showUpdateWeightErrorMessage();}"
+                                                                                html-data-initValue="{! p.portalPropertyRecord.IsHomes__c}"
+                                                                                />
+                                                            <apex:outputLabel for="homes1" styleclass="serach_check mr5" style="cursor:default;">HOME’S</apex:outputLabel>
+                                                            
+                                                            <apex:inputCheckbox id="athome1" disabled="{! p.IsDisableAtHome}" value="{! p.portalPropertyRecord.IsAtHome__c}"
+                                                                                onchange="if (!changePosting(this)) {showUpdateWeightErrorMessage();}"
+                                                                                html-data-initValue="{! p.portalPropertyRecord.IsAtHome__c}"
+                                                                                />
+                                                            <apex:outputLabel for="athome1" styleclass="serach_check mr5" style="cursor:default;">at home</apex:outputLabel>
+
+															<!--  ▼ 2022.03.22 CHINTAI本対応 掲載先にCHINTAIを追加 -->
+															<apex:inputCheckbox id="chintai1" disabled="{! p.IsDisableChintai}" value="{! p.portalPropertyRecord.IsChintaiNet__c}"
+																				onchange="if (!changePosting(this)) {showUpdateWeightErrorMessage();}"
+																				html-data-initValue="{! p.portalPropertyRecord.IsChintaiNet__c}"
+																				/>
+															<apex:outputLabel for="chintai1" styleclass="serach_check" style="cursor:default;">CHINTAI</apex:outputLabel>
+															<!-- // ▲ 2022.03.22 CHINTAI本対応  -->
+
+														</div>
+                                                    </td>
+                                                    
+                                                    <td>
+                                                        <div id="panoramaCheckBlock" class="flex-wrap" data-isUpdate="false">
+                                                            <!-- パノラマ掲載先 -->
+                                                            <apex:inputCheckbox id="suumo2" value="{! p.isSuumoPanoramaPropertyCheck}"
+                                                                                disabled="{!((p.propertyRecord.SuumoPanoramaShop__c != null) && (p.propertyRecord.SuumoPanoramaShop__c != targetShopsName)) || (p.propertyRecord.PropertyPanoramaCount__c= 0)}"
+                                                                                onchange="changePanorama(this)"
+                                                                                html-data-initValue="{! p.isSuumoPanoramaPropertyCheck}"
+                                                                                />
+                                                            <apex:outputLabel for="suumo2" styleclass="serach_check mr5" style="cursor:default;">SUUMO</apex:outputLabel>
+                                                            
+                                                            <apex:inputCheckbox id="homes2" value="{! p.isHomesPanoramaPropertyCheck}"
+                                                                                disabled="{!((p.propertyRecord.HomesPanoramaShop__c != null) && (p.propertyRecord.HomesPanoramaShop__c != targetShopsName)) || (p.propertyRecord.PropertyPanoramaCount__c= 0)}"
+                                                                                onchange="changePanorama(this)"
+                                                                                html-data-initValue="{! p.isHomesPanoramaPropertyCheck}"
+                                                                                />
+                                                            <apex:outputLabel for="homes2" styleclass="serach_check mr5" style="cursor:default;">HOME’S</apex:outputLabel>
+                                                            
+                                                            <apex:inputCheckbox id="athome2" value="{! p.isAtHomePanoramaPropertyCheck}"
+                                                                                disabled="{!p.propertyRecord.AtHomePanoramaShop__c != targetShopsName}"
+                                                                                onchange="changePanorama(this)"
+                                                                                html-data-initValue="{! p.isAtHomePanoramaPropertyCheck}"
+                                                                                />
+                                                            <apex:outputLabel for="athome2" styleclass="serach_check mr5" style="cursor:default;">at home</apex:outputLabel>
+															 
+															<!--  ▼ 2022.03.22 CHINTAI本対応 パノラマ掲載先にCHINTAIを追加 -->
+															<apex:inputCheckbox id="chintai2" value="{! p.isChintaiPanoramaPropertyCheck}"
+																				disabled="{! p.IsDisableChintaiPanoramaPosting  || (p.propertyRecord.PropertyPanoramaCount__c= 0)}"
+																				onchange="changePanorama(this)"
+																				html-data-initValue="{! p.isChintaiPanoramaPropertyCheck}"
+																				/>
+															<apex:outputLabel for="chintai2" styleclass="serach_check" style="cursor:default;">CHINTAI</apex:outputLabel>
+															<!-- // ▲ 2022.03.22 CHINTAI本対応  -->
+
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                <apex:variable var="num" value="{!VALUE(num) + 1}" />
+                                            </apex:repeat>
+                                        </tbody>
+                                    </table>
+                                </apex:outputPanel>
+                            </div>
+                        </section>
+                    </section>
+                </article>
+            </main>
+            
+            <script>
+            // 画面起動時
+            window.addEventListener('load', function(){
+                // ソート用矢印画像の設定
+                sortOrderImageSrc = new Map([
+                    [-1,"{!URLFOR($Resource.designer_file, 'designer_file/images/arrow_down.png')}"]
+                    ,[0,"{!URLFOR($Resource.designer_file, 'designer_file/images/arrow_none.png')}"]
+                    ,[1,"{!URLFOR($Resource.designer_file, 'designer_file/images/arrow_up.png')}"]
+                ]);
+                // ソートイベント設定
+                sortSetting();
+            },false);
+
+            // ソートイベント設定
+            function sortSetting() {
+                setSortableTable('searchResultTable');
+            }
+
+            $(function () {
+                
+                var Accordion = function (el, multiple) {
+                    this.el = el || {};
+                    this.multiple = multiple || false;
+                    
+                    // Variables privadas
+                    var links = this.el.find('.link');
+                    
+                    // Evento
+                    links.on('click', { el: this.el, multiple: this.multiple }, this.dropdown)
+                }
+                
+                Accordion.prototype.dropdown = function (e) {
+                    var $el = e.data.el;
+                    $this = $(this),
+                        $next = $this.next();
+                    $next.slideToggle();
+                    $this.parent().toggleClass('open');
+                    
+                    
+                    
+                    if (!e.data.multiple) {
+                        // $el.find('.submenu-defalt').not($next).slideUp().parent().removeClass('open');
+                    };
+                }
+                var accordion = new Accordion($('#accordion'), false);
+            });
+            
+            
+            
+            $(function () {
+                $('#btn').on('click', function (e) {
+                    
+                    var textList = document.getElementById('accordion');
+                    
+                    let elements = textList.getElementsByTagName('li');
+                    
+                    Array.prototype.forEach.call(elements, function (element) {
+                        element.classList.remove('open', 'default');
+                        $('.submenu-defalt').fadeOut()
+                    });
+                });
+            });
+            
+            </script>
+            
+            <apex:outputPanel id="postingJS">
+                <script>
+                    var checkWeight = 0; // 登録重みの合計
+                    var updateMaxWeight = {!CHECKBOXWEIGHT_MAX};
+                    var postingUpdateWeight = {!CHECKBOXWEIGHT_PORTALPROPERTY};
+                    var panoramaUpdateWeight = {!CHECKBOXWEIGHT_PROPERTY};
+
+                    // SUUMO 全チェック処理
+                    function checkAllSuumo() {
+                        if (!checkAllPosting('suumo1')) {
+                            showUpdateWeightErrorMessage();
+                        }
+                    }
+                    // HOMES 全チェック処理
+                    function checkAllHomes() {
+                        if (!checkAllPosting('homes1')) {
+                            showUpdateWeightErrorMessage();
+                        }
+                    }
+                    // atHome 全チェック処理
+                    function checkAllAtHome() {
+                        if (!checkAllPosting('athome1')) {
+                            showUpdateWeightErrorMessage();
+                        }
+                    }
+
+					// ▼ 2022.03.22 CHINTAI本対応 全チェック処理にCHINTAIを追加
+					// CHINTAI 全チェック処理
+					function checkAllChintai() {
+						if (!checkAllPosting('chintai1')) {
+							showUpdateWeightErrorMessage();
+						}
+					}
+					// ▲ 2022.03.22 CHINTAI本対応 
+
+                    // 全チェック処理（id指定）
+                    function checkAllPosting(targetId) {
+                        var isUpdateWeightOver = false;
+                        $(document.getElementById("searchResultTable")).find("[id$='" + targetId + "']").each(function() {
+
+                            //活性の場合に選択状態にする
+                            if (!$(this).prop('disabled')) {
+                                $(this).prop('checked', true);
+                            }
+
+                            if (!changePosting(this, false)) {
+                                // 更新上限超過
+                                isUpdateWeightOver = true;
+                                return false; // break
+                            }
+                        });
+                        if (isUpdateWeightOver) {
+                            // 更新上限超過
+                            return false;
+                        }
+                        return true;
+                    }
+
+                    // 更新対象チェックと、更新の重みの増減処理
+                    function changeIsUpdate(element) {
+
+                        // 親ブロック取得（check=>div）
+                        var targetDiv = element.parentElement;
+                        // パノラマかどうか取得
+                        var isPanorama = $(targetDiv).find("[id$='suumo2'], [id$='homes2'], [id$='athome2'], [id$='chintai2']").length > 0;
+
+                        // 更新フラグ退避
+                        var prevIsUpdate = targetDiv.getAttribute('data-isUpdate');
+                        // 更新フラグ判定
+                        var isUpdate = updatejudge(targetDiv);
+                        if (isUpdate != (prevIsUpdate=='true')) {
+                            // 更新フラグに変動があった
+
+                            if (isUpdate) {
+                                // 更新対象になった
+
+                                // 更新の重み超過判定
+                                if ((isPanorama && checkWeight + panoramaUpdateWeight <= updateMaxWeight)
+                                 || (!isPanorama && checkWeight + postingUpdateWeight <= updateMaxWeight)) {
+                                    // 超過しない
+
+                                    // 更新フラグ反映
+                                    targetDiv.setAttribute('data-isUpdate', 'true');
+                                    // 重みを加算
+                                    if (isPanorama) {
+                                        checkWeight += panoramaUpdateWeight;
+                                    } else {
+                                        checkWeight += postingUpdateWeight;
+                                    }
+
+                                } else {
+                                    // 超過
+
+                                    // チェック状態を元に戻す（）
+                                    $(element).prop('checked', !$(element).prop('checked'));
+
+                                    return false;
+
+                                }
+
+                            } else {
+                                // 更新対象ではなくなった
+
+                                // 更新フラグ反映
+                                targetDiv.setAttribute('data-isUpdate', 'false');
+                                // 更新の重みを減算
+                                if (isPanorama) {
+                                    checkWeight -= panoramaUpdateWeight;
+                                } else {
+                                    checkWeight -= postingUpdateWeight;
+                                }
+                            }
+
+                        }
+
+                        return true;
+                    }
+
+                    // 掲載先/パノラマ掲載先の更新判定
+                    function updatejudge(blockElement) {
+                        var selecter = '';
+                        if ($(blockElement).prop('id') == 'postingCheckBlock') {
+                            selecter = "[id$='suumo1'], [id$='homes1'], [id$='athome1'], [id$='chintai1']"; // 2022.03.22 CHINTAI本対応 項目追加
+                        } else {
+                            selecter = "[id$='suumo2'], [id$='homes2'], [id$='athome2'], [id$='chintai2']"; // 2022.03.22 CHINTAI本対応 項目追加
+                        }
+                        var isUpdate = false;
+                        // チェック変更が１つでもあるか確認
+                        $(blockElement).find(selecter).each(function () {
+                            if (isCheckChange(this)) {
+                                isUpdate = true;
+                            }
+                        });
+                        // 判定値返却
+                        return isUpdate;
+                    }
+
+                    // チェック変更有無取得（初期表示状態からの変更有無）
+                    function isCheckChange(element) {
+                        if ($(element).prop('checked') != (element.getAttribute('data-initValue')=='true')) {
+                            return true;
+                        }
+                        return false;
+                    }
+
+                    // 更新上限超過エラーメッセージ表示処理
+                    async function showUpdateWeightErrorMessage() {
+                        await showAlert('更新可能上限に達しました。一度更新を行ってください。');
+                    }
+
+                    // 掲載先変更
+                    function changePosting(element, isShowMessage) {
+                        if (isShowMessage == null) {
+                            isShowMessage = true;
+                        }
+                        if (changeIsUpdate(element)) {
+                            // 更新上限内
+
+                            // パノラマ連動チェック解除
+                            if (!checkLinkPanorama(element)) {
+                                // 更新上限超過
+console.log(checkWeight);
+                                return false;
+                            }
+                        } else {
+                            // 更新上限超過
+console.log(checkWeight);
+                            return false;
+                        }
+console.log(checkWeight);
+                        return true;
+                    }
+                    // 掲載先変更時のパノラマ掲載先チェック変更処理
+                    function checkLinkPanorama(element) {
+                        // チェックを付けた時は処理不要
+                        if ($(element).prop('checked')) {
+                            return true;
+                        }
+                        var id = $(element).prop('id');
+                        id = id.split(':')[id.split(':').length - 1];   //「:」区切りで一番最後の文字列を取得 ※id取得小細工
+                        var targetId;
+                        if (id == 'suumo1') { targetId = 'suumo2'; }
+                        if (id == 'homes1') { targetId = 'homes2'; }
+                        if (id == 'athome1') { targetId = 'athome2'; }
+						if (id == 'chintai1') { targetId = 'chintai2'; } // 2022.03.22 CHINTAI本対応 項目追加
+                        // 対象行取得（check=>div=>td=>tr=>rowIndex）
+                        var targetIndex = element.parentElement.parentElement.parentElement.rowIndex;
+                        // 対象パノラマチェック取得
+                        var panoramaElement = $(document.getElementById("searchResultTable")).find('tbody tr').eq(targetIndex).find("input[id$='" + targetId + "']")[0];
+                        var prevChecked = $(panoramaElement).prop('checked');
+                        // 非活性でなければチェックを外す
+                        if (prevChecked) {
+                            if (panoramaElement.getAttribute('disabled') != 'disabled') {
+                                $(panoramaElement).prop('checked', false);
+                                if (!changeIsUpdate(panoramaElement)) {
+                                    // 更新上限超過
+
+                                    // 掲載先のチェック状態も戻す
+                                    $(element).prop('checked', true);
+                                    changeIsUpdate(element);
+
+                                    return false;
+                                }
+                            }
+                        }
+                        return true;
+                    }
+
+                    // パノラマ掲載先
+                    function changePanorama(element) {
+                        if (changeIsUpdate(element)) {
+                            // 更新上限内
+
+                            // 掲載先連動チェック処理
+                            if (!checkLinkPosting(element)) {
+                                // 更新上限超過
+                                showUpdateWeightErrorMessage();
+                            }
+                        } else {
+                            // 更新上限超過
+                            showUpdateWeightErrorMessage();
+                        }
+console.log(checkWeight);
+                    }
+                    // パノラマ掲載先変更時の掲載先チェック変更処理
+                    function checkLinkPosting(element) {
+                        // チェックを外した時は処理不要
+                        if (!$(element).prop('checked')) {
+                            return true;
+                        }
+                        var id = $(element).prop('id');
+                        id = id.split(':')[id.split(':').length - 1];   //「:」区切りで一番最後の文字列を取得 ※id取得小細工
+                        var targetId;
+                        if (id == 'suumo2') { targetId = 'suumo1'; }
+                        if (id == 'homes2') { targetId = 'homes1'; }
+                        if (id == 'athome2') { targetId = 'athome1'; }
+						if (id == 'chintai2') { targetId = 'chintai1'; } // 2022.03.22 CHINTAI本対応 項目追加
+                        // 対象行取得（check=>div=>td=>tr=>rowIndex）
+                        var targetIndex = element.parentElement.parentElement.parentElement.rowIndex;
+                        // 対象パノラマチェック取得
+                        var targetElement = $(document.getElementById("searchResultTable")).find('tbody tr').eq(targetIndex).find("input[id$='" + targetId + "']")[0];
+                        var prevChecked = $(targetElement).prop('checked');
+                        // チェックを付ける
+                        if (!prevChecked) {
+                            $(targetElement).prop('checked', true);
+                            if (!changeIsUpdate(targetElement)) {
+                                // 更新上限超過
+
+                                // 掲載先のチェック状態も戻す
+                                $(element).prop('checked', false);
+                                changeIsUpdate(element);
+
+                                return false;
+                            }
+                        }
+                        return true;
+                    }
+                </script>
+            </apex:outputPanel>
+            
+        </body>
+    </apex:form>
+</apex:page>

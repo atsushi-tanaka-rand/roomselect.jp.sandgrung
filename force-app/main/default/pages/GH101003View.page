@@ -1,0 +1,337 @@
+<!--ユーザー異動登録-->
+<apex:page controller="GH101003Controller" standardStylesheets="false" docType="html-5.0" title="ユーザー異動登録">
+
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="format-detection" content="telephone=no" />
+        <meta name="robots" content="noindex" />
+        <title>ユーザー異動登録</title>
+        <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/reset.min.css')}" />
+        <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/foundation.css')}" />
+        <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/modaal.css')}" />
+        <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/style.css')}" />
+        <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery-3.6.0.min.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.designer_file, 'designer_file/js/modaal.js')}" />
+        <apex:stylesheet value="https://use.fontawesome.com/releases/v5.0.6/css/all.css" />
+
+        <apex:stylesheet value="{!URLFOR($Resource.external_file, 'external_file/common_style.css')}" />
+        <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery.blockUI.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/common_screen_util.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/input_rules.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jQueryUI/jquery-ui.min.js')}" />
+        <apex:stylesheet value="{!URLFOR($Resource.jQuery,'jQuery/jQueryUI/jquery-ui.css')}" />
+
+        <script type="text/javascript">
+        //削除確認メッセージ
+        async function checkDelete(){
+            var message = "{! MSG_COM_V_DELETE}";
+            var retVal = await showConfirm(message);
+            if (retVal) {
+                blockUi();
+                targetRecordDelete();
+            }                       
+        }
+        
+        //保存確認メッセージ
+        async function checkSave(){
+          var message = "{! MSG_COM_V_SAVE}";
+          var retVal = await showConfirm(message);
+          if (retVal) {
+                blockUi();
+                save();
+          }          
+        }
+        
+        //削除完了メッセージ
+        async function alertDeleteFinish(){
+          //完了メッセージ
+          await showAlert("{! MSG_COM_I_DELETE}");
+        } 
+        
+        //保存完了メッセージ
+        async function alertSaveFinish(){
+          //完了メッセージ
+          await showAlert("{! MSG_COM_I_SAVE}");          
+        }    
+        </script>
+
+    </head>
+    <apex:form id="form">
+        <!-- actionfunction -->
+        <apex:actionFunction action="{!closeNewShopTransferModal}" name="closeNewShopTransferModal" rerender="shopTransferList" />
+        <apex:actionFunction action="{! saveShopTransferInfo}"   name="save"
+                             oncomplete="unblockUi();if(!{! hasErrorMessage}){alertSaveFinish()  }else{gotoTop()}" reRender="messageArea, shopTransferList" />
+        <apex:actionFunction action="{! deleteShopTransferInfo}" name="targetRecordDelete"
+                             oncomplete="unblockUi();if(!{! hasErrorMessage}){alertDeleteFinish()}else{gotoTop()}" reRender="messageArea, shopTransferList"/>
+
+    <body id="gh101003">
+
+        <main>
+    
+          <article>
+
+            <apex:pageMessages id="messageArea" />
+    
+            <div  class="">
+            <section style="display:flex">
+              <h1 class="fontb font2rem mb20">ユーザー異動登録</h1>
+              <apex:commandButton style=" visibility:hidden;" rerender="dummy"/> 
+            </section>
+           
+    
+    
+            <div class=" ">
+    
+             <div class="flex-wrap flex_wrap align-items_end justify-between back_graydark pdr30 pdl30 pdt10px pdb10px pdr10_xs pdl10_xs">
+    
+                <h2 class="fontb font18">ユーザー店舗</h2>
+    
+                <div class="flex-wrap">
+                  <apex:commandButton value="新規" styleClass="modal btn-w-2  btn-w-2-r blue " style="padding:0px 14px;"  action="{! openNewShopTransferModal}" onclick="blockUi();" disabled="{!isOpenError}"
+                                      status="loadComponent" oncomplete="unblockUi(); jQuery('#dialog-modal1').dialog('open');" reRender="dialogPanel1" />
+                  <apex:commandButton value="削除" styleClass="modal btn-w-2  btn-w-2-r blue " style="padding:0px 14px;" onclick="checkDelete()" disabled="{!isOpenError}"
+                                      reRender="dummy" />
+    
+                </div>
+    
+             </div>
+    
+           </div>
+    
+           </div>
+    
+    
+    
+             <div class="site-content ">
+             <apex:outputPanel id="shopTransferList">
+             <div class="border-g-t-none  pdr30 pdl30  pdr10_xs pdl10_xs">
+    
+                      <table class="gray mb30 nowrap mt30" style="height:550px;">
+    
+                        <tbody>
+    
+                         <tr>
+    
+                            <th>ユーザー名</th>
+     
+                            <th>組織名</th>
+     
+                            <th>開始日</th>
+     
+                            <th>終了日</th>
+     
+                            <th>入退社・異動情報</th>
+     
+                            <th>役職</th>
+    
+                         </tr>
+                         <apex:variable var="num" value="0" />
+                         <apex:repeat value="{!shopTransferInfoRecordList}" var="s" >
+                         <tr>
+    
+                           <td><!-- ユーザー名 -->
+                              <apex:inputCheckbox id="sc6" value="{! s.shopTransferCheck}"/><apex:outputLabel for="sc6" styleClass="serach_check3 mr5"></apex:outputLabel>
+                              <apex:commandLink value="{! s.stringStaffName }" action="{! editShopTransferModal}" reRender="dialogPanel1" onclick="blockUi();"
+                                                          status="loadComponent" oncomplete="unblockUi(); jQuery('#dialog-modal1').dialog('open');">
+                                <apex:param value="{!VALUE(num)}" name="stInfoIndex" assignTo="{!stInfoIndex}" />   
+                              </apex:commandLink>
+                           </td>
+    
+                           <td><!-- 組織階層 -->
+                            　<apex:outputText value="{! s.stringOrganizationName }" />
+                           </td>
+    
+                           <td><!-- 開始日 -->
+                            　<apex:outputText value="{0, date, yyyy/MM/dd}">
+                            　<apex:param value="{! s.shopTransferRecord.StartDate__c}"></apex:param>
+                          　　</apex:outputText>
+                           </td>
+                           　
+                           <td><!-- 終了日 -->
+                            　<apex:outputText value="{0, date, yyyy/MM/dd}">
+                            　<apex:param value="{! s.shopTransferRecord.EndDate__c}"></apex:param>
+                          　　</apex:outputText>
+                           </td>
+    
+                           <td><!-- 入退社・異動情報 -->
+                              <apex:outputText value="{! s.shopTransferRecord.StatusType__c }" />
+                           </td>
+
+                           <td><!-- 役職 -->
+                            <apex:outputText value="{!if(s.shopTransferRecord.IsShopStaffType__c =true, '管理職', '一般社員')}" />
+                           </td>                         
+    
+                         </tr>
+                         <apex:variable var="num" value="{!VALUE(num)+1}" />
+                         </apex:repeat>
+    
+    
+        
+                         </tbody>
+    
+                     </table>  
+                    </div>           
+                    </apex:outputPanel>
+    
+               </div>
+
+               <div class="flex-wrap justify-center flex-xs-xolumn  mt60">
+                <apex:commandButton value="保存" styleClass="btn btn-submit btn-primary" disabled="{! isOpenError}"
+                                    onclick="checkSave()" rerender="dummy"/>
+               </div>
+     
+          </article>
+    
+        </main>    
+    
+    
+        <script>
+    
+        /* $(function() {
+    
+            $('table').resizableColumns();
+    
+        }); */
+    
+    $(function() {
+    
+        var Accordion = function(el, multiple) {
+    
+            this.el = el || {};
+    
+            this.multiple = multiple || false;
+    
+    
+    
+            // Variables privadas
+    
+            var links = this.el.find('.link');
+    
+            // Evento
+    
+            links.on('click', {el: this.el, multiple: this.multiple}, this.dropdown)
+    
+        }
+    
+    
+    
+        Accordion.prototype.dropdown = function(e) {
+    
+            var eventClass = event.target.className;
+    
+            if(eventClass != "modal btn-w-2 btn-w-2_normal blue"){
+    
+                var $el = e.data.el;
+    
+                $this = $(this),
+    
+                $next = $this.next();
+    
+    
+    
+            $next.slideToggle();
+    
+            $this.parent().toggleClass('open');
+    
+    
+    
+            if (!e.data.multiple) {
+    
+               // $el.find('.submenu-defalt').not($next).slideUp().parent().removeClass('open');
+    
+            };
+    
+            }
+    
+    
+    
+        }
+    
+    
+    
+        var accordion = new Accordion($('#accordion'), false);
+    
+    });
+    
+    
+    
+    $(function() {
+    
+        $('#btn').on('click', function(e) {
+    
+            //document.getElementById("accordion").removeClass('open');
+    
+            //document.getElementById("accordion").classList.remove("open")
+    
+            //$el.find('.submenu-defalt').not($next).slideUp().parent().removeClass('open');
+    
+    
+    
+    
+    
+            var textList = document.getElementById('accordion');
+    
+            //li02 = textList.getElementsByTagName('li');
+    
+            let elements = textList.getElementsByTagName('li');
+    
+            Array.prototype.forEach.call(elements, function(element) {
+    
+              element.classList.remove('open','default');
+    
+              $('.submenu-defalt').fadeOut()
+    
+            });
+    
+    
+    
+    
+    
+            //for (var j = 0; li02.length; j++) {
+    
+              //console.log(li02[j].textContent);
+    
+             // li02[j].removeClass("open")
+    
+            //}
+    
+        });
+    
+    });
+
+          //新規ユーザー異動ダイアログを表示
+          jQuery(function () {
+              // モーダル幅の設定用
+              var clientWidth = 0; 
+              if(document.body.clientWidth > 1000){
+                  clientWidth = 1000;
+              }else{
+                  clientWidth = document.body.clientWidth;
+              }
+              jQuery("#dialog-modal1").dialog({
+                  modal: true,
+                  autoOpen: false,
+                  width: clientWidth,
+              });
+          });
+          
+          //新規ユーザー異動モーダルを閉じる際の処理
+          function closeGH101003Modal1View() {
+              jQuery("#dialog-modal1").dialog("close");
+              closeNewShopTransferModal();
+          }
+    
+    </script>
+    
+     </body>
+    </apex:form>
+
+    <!-- 【モーダルダイアログ新規ユーザー異動】 -->
+    <div id="dialog-modal1" title="">
+      <apex:outputPanel id="dialogPanel1">
+          <c:GH101003Modal1View ParameterClass="{!GH101003Modal1Parameter}" />
+      </apex:outputPanel>
+    </div>
+
+</apex:page>

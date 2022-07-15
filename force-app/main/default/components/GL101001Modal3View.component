@@ -1,0 +1,560 @@
+<!-- ファイル送信 -->
+<apex:component controller="GL101001Modal3Controller" allowDML="true">
+	<apex:attribute name="ParameterClass" type="GL101001Modal3ParameterClass" assignTo="{!parameter}" description="key" />
+
+	<apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/reset.min.css')}" />
+	<apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/foundation.css')}" />
+	<apex:stylesheet value="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+	<apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/modaal.css')}" />
+	<apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/style.css')}" />
+	<apex:stylesheet value="{!URLFOR($Resource.external_file, 'external_file/common_style.css')}" />
+	<apex:stylesheet value="{!URLFOR($Resource.jQuery,'jQuery/jQueryUI/jquery-ui.css')}" />
+
+	<apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery-3.6.0.min.js')}" />
+	<apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery.blockUI.js')}" />
+	<apex:includeScript value="{!URLFOR($Resource.designer_file, 'designer_file/js/modaal.js')}" />
+	<apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/common_screen_util.js')}" />
+	<apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/input_rules.js')}" />
+	<apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jQueryUI/jquery-ui.min.js')}" />
+
+	<!-- 内部CSS -->
+	<style>
+		.image-div {
+			margin-top: 20px;
+			position: relative;
+			height: 270px;
+			width: 100%;
+		}
+
+		.selected-image {
+			position: absolute;
+			right: 0;
+			left: 0;
+			margin: auto;
+		}
+
+		.selected-movie {
+			height: 1px;
+			width: 1px;
+			visibility: hidden;
+		}
+
+		.selected-file-label {
+			min-width: 132px;
+		}
+
+		.selected-file-flie {
+			display: none;
+		}
+	</style>
+
+	<apex:form >
+		<apex:pageBlock rendered="{! parameter.noFirst }">
+			<apex:outputText rendered="{! init }" />
+			<apex:pageMessages id="messageArea" />
+
+			<!-- 画像表示部 -->
+			<div id="imageDiv" class="image-div">
+				<canvas id="selectedImage" class="selected-image"></canvas>
+				<video id="selectedMovie" class="selected-movie" width="300" height="250"></video>
+			</div>
+
+			<!-- 画面操作部 -->
+			<div class="flex-wrap justify-between flex_wrap mt10">
+				<!-- ファイル選択 -->
+				<div class="wd100 mb20 flex-wrap align_center">
+					<label for="selectedFile" class="btn btn-sm btn-normal mr20 selected-file-label" style="{! IF(isOpenError, 'background-color: #ddd;', '') }">
+						ファイルから選択
+						<input id="selectedFile" type="file" onchange="chgSelectedFile(this);" onclick="if({! isOpenError }){return false;}" class="selected-file-flie"
+						/>
+					</label>
+					<div id="attachmentFileDiv"></div>
+				</div>
+
+				<!-- ファイル送信 -->
+				<div class="wd45 wd100_xs text-center mb10">
+					<apex:commandButton id="saveBtn" value="送信" styleClass="btn btn-submit btn-primary" onclick="chkSendFile();" disabled="{! isOpenError }"
+					/>
+				</div>
+
+				<!-- 閉じる -->
+				<div class="wd45 wd100_xs text-center mb10">
+					<apex:commandButton value="キャンセル" styleClass="btn btn-submit btn-primary" onclick="closeDialogModal3();" />
+				</div>
+			</div>
+
+			<!-- パラメータ付与用隠し項目 -->
+			<apex:inputHidden id="hideMessage" value="{! parameter.message }" />
+			<apex:inputHidden id="hideFileName" value="{! parameter.fileName }" />
+			<apex:inputHidden id="hideFilePath" value="{! parameter.filePath }" />
+			<apex:inputHidden id="hideThumbnailName" value="{! parameter.thumbnailName }" />
+			<apex:inputHidden id="hideThumbnailPath" value="{! parameter.thumbnailPath }" />
+
+			<!-- actionFunction -->
+			<apex:actionFunction name="clickSendFile" oncomplete="sendFileProcess('{! parameter.filePath }', '{! parameter.thumbnailName }')"
+			/>
+			<!-- blockUI表示、プロパティ反映用 -->
+		</apex:pageBlock>
+	</apex:form>
+
+	<!-- 内部JS -->
+	<script>
+		// 拡張子
+		const MOVIE_EXTENSION_ARY = convApexAryToJsAry("{! videoExtension }");
+		const PICTURE_EXTENSION_ARY = convApexAryToJsAry("{! imgExtension }");
+
+		/**
+		 * submitイベントの停止
+		 */
+		$("input[type='submit']").on("click", function () {
+			return false;
+		});
+
+		/**
+		 * ファイル選択値変更時処理
+		 * @param {Object} selectedVal 選択値
+		 */
+		async function chgSelectedFile(selectedVal) {
+
+			// 選択ファイルの取得
+			let fileInfo = selectedVal.files[0]; 		 // ファイル情報
+			let extension = getExtension(fileInfo.name); // 拡張子
+
+			// 既存添付ファイルの削除
+			deleteAttachmentFile();
+
+			// 選択不可ファイルチェック
+			let contentTypeMap = convApexMapToJsMap("{! s3ContentTypeMap }");
+			if (!contentTypeMap.get(extension)) {
+				// ファイルの選択情報を削除
+				$("#selectedFile").val("");
+
+				await showAlert('{! msgs.errNotSelectedExtension }');
+				return;
+			}
+
+			// 拡張子に応じたファイル情報を表示
+			if (MOVIE_EXTENSION_ARY.includes(extension)) {
+				dispMovieFile(fileInfo);
+			} else if (PICTURE_EXTENSION_ARY.includes(extension)) {
+				dispImageFile(fileInfo);
+			}
+
+			// 添付ファイル情報の作成と表示
+			let attachment = $("<a>", { text: fileInfo.name });
+			attachment.on("click", clickDeleteAttachmentFile);
+			$("#attachmentFileDiv").append(attachment);
+		}
+
+		/**
+		 * 添付ファイルの削除押下
+		 */
+		async function clickDeleteAttachmentFile() {
+			// 削除確認チェック
+			if (await showConfirm("{! msgs.DeleteCompleted }")) {
+				// 添付ファイルの削除
+				deleteAttachmentFile();
+
+				// ファイルの選択情報を削除
+				$("#selectedFile").val("");
+			}
+		}
+
+		/**
+		 * 添付ファイルの削除
+		 */
+		async function deleteAttachmentFile() {
+			// 添付ファイル名の削除
+			$("#attachmentFileDiv").children().remove();
+
+			// canvas画像の削除
+			let canvas = $("#selectedImage")[0];
+			let ctx = canvas.getContext("2d");
+			ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+			// 動画の削除
+			$("#selectedMovie").attr("src", "");
+		}
+
+		/**
+		 * 画像ファイルの表示
+		 * @param {Object} pictureFile 画像ファイル
+		 */
+		async function dispImageFile(pictureFile) {
+			// canvas情報
+			let canvas = $("#selectedImage")[0];
+			let ctx = canvas.getContext("2d");
+
+			// 画像ファイルのURL情報の取得後処理
+			let reader = new FileReader();
+			reader.onload = function (event) {
+				let imageFile = new Image();
+				imageFile.src = reader.result;
+
+				// 画像ファイルの読み込み処理
+				imageFile.onload = function () {
+					// canvas表示用のサイズ調整
+					let magnification = 250 / imageFile.naturalHeight;
+					canvas.width = imageFile.naturalWidth * magnification;
+					canvas.height = imageFile.naturalHeight * magnification;
+
+					ctx.drawImage(imageFile, 0, 0, canvas.width, canvas.height);
+				};
+				imageFile.src = event.target.result;
+			};
+
+			reader.readAsDataURL(pictureFile);
+		}
+
+		/**
+		 * 動画ファイルの表示
+		 * @param {Object} movieFile 動画ファイル
+		 */
+		function dispMovieFile(movieFile) {
+			// 動画ファイルの取得
+			let selectedMovie = document.getElementById("selectedMovie");
+			selectedMovie.src = URL.createObjectURL(movieFile);
+
+			// 動画ファイルの調整
+			selectedMovie.onloadedmetadata = function () {
+				// video表示用のサイズ調整
+				let magnification = 250 / selectedMovie.videoHeight;
+				selectedMovie.width = selectedMovie.videoWidth * magnification;
+				selectedMovie.height = selectedMovie.videoHeight * magnification;
+
+				// 動画ファイルの1秒時点の画像ファイルをAmazonS3に送信
+				setTimeout(setThumbnailImage, 1000);
+			};
+			selectedMovie.load();
+		}
+
+		/**
+		 * サムネイル画像の表示
+		 * @return {Boolean} true:成功、false:失敗
+		 */
+		function setThumbnailImage() {
+			try {
+				// 動画ファイルの読み込み
+				let selectedMovie = document.getElementById("selectedMovie");
+				let cap = new cv.VideoCapture(selectedMovie);
+
+				// Matの作成
+				src = new cv.Mat(selectedMovie.height, selectedMovie.width, cv.CV_8UC4);
+				dst = new cv.Mat();
+
+				// 画像ファイルの取得
+				cap.read(src);
+				cv.cvtColor(src, dst, cv.COLOR_RGBA2RGB);
+
+				// Canvasに出力
+				cv.imshow("selectedImage", dst);
+
+				// Matの削除
+				src.delete();
+				dst.delete();
+
+			} catch (e) {
+				showAlert("{! msgs.errGetThumbnail }");
+				console.error(e.message);
+			}
+		}
+
+		/**
+		 * ファイル送信確認
+		 */
+		async function chkSendFile() {
+			// ファイル未選択チェック
+			if ($("#attachmentFileDiv").children().length === 0) {
+				await showAlert("{! msgs.noSelectedFile }");
+				return;
+			}
+
+			// 送信実施チェック
+			if (!(await showConfirm("{! msgs.sendFileConfirm }"))) {
+				return;
+			}
+
+			blockUi();
+
+			// ファイルパラメータの設定
+			setFileParam();
+
+			// ファイル送信押下処理
+			clickSendFile();
+		}
+
+		/**
+		 * ファイルパラメータの設定
+		 */
+		async function setFileParam() {
+			// 選択されたファイル情報の取得
+			let selectedFile = $("#selectedFile").prop("files")[0]; // ファイル情報
+			let extension = getExtension(selectedFile.name); 		// 拡張子
+
+			// ファイルパラメータの設定
+			let selectedFileSaveName = getSendFileSysDate() + "." + extension;
+			let s3FileName = selectedFile.name;
+			if (s3FileName.length > 50) {
+				s3FileName = selectedFileSaveName;
+			}
+
+			$("[id$=hideFileName]").val(s3FileName);
+			$("[id$=hideFilePath]").val("{! s3FileStorageURL }" + selectedFileSaveName);
+
+			// 拡張子に応じたパラメータを設定
+			if (MOVIE_EXTENSION_ARY.includes(extension)) {
+				// サムネイル画像
+				let thumbnailName = getSendFileSysDate() + "Thumbnail" + ".jpg";
+				$("[id$=hideThumbnailName]").val(thumbnailName);
+				$("[id$=hideThumbnailPath]").val("{! s3FileStorageURL }" + thumbnailName);
+
+			} else if (!PICTURE_EXTENSION_ARY.includes(extension)) {
+				// 画像ファイル以外
+				$("[id$=hideMessage]").val(selectedFile.name);
+
+			}
+		}
+
+		/**
+		 * ファイル送信処理
+		 * @param {String} sendSelectedFilePath 選択ファイルの送信先パス
+		 * @param {String} thumbnailImageName   サムネイル画像名
+		 */
+		async function sendFileProcess(sendSelectedFilePath, thumbnailImageName) {
+			// 選択されたファイル情報の取得
+			let selectedFile = $("#selectedFile").prop("files")[0];
+			let s3FileName = getFileName(sendSelectedFilePath);
+
+			// 選択されたファイルの送信
+			if (!(await sendFileToAmazonS3(selectedFile, s3FileName))) {
+				unblockUi();
+				await showAlert("{! msgs.errFileuploadAll }");
+				return;
+			}
+
+			// サムネイル画像の送信
+			if (!(await sendThumbnailImage(thumbnailImageName))) {
+				unblockUi();
+				return;
+			}
+
+			// ファイル送信モーダルの終了
+			closeDialogModal3();
+
+			// ファイルのLINE送信処理
+			sendFileLineProcess();
+		}
+
+		/**
+		 * サムネイル画像の送信
+		 * @param {String} fileName ファイル名
+		 * @return {Boolean} true:成功、false:失敗
+		 */
+		async function sendThumbnailImage(fileName) {
+			// MIMEの取得
+			let contentTypeMap = convApexMapToJsMap("{! s3ContentTypeMap }");
+			let fileMime = contentTypeMap.get(getExtension(fileName));
+
+			// 動画ファイル選択時のサムネイル自動作成チェック
+			if (!fileName) {
+				return true;
+			}
+
+			// サムネイル画像のData URLからBase64のデータ部分をデコード
+			let imageFile = document.getElementById("selectedImage");
+			let base64 = imageFile.toDataURL(fileMime);
+			let base64Data = base64.split(",")[1];
+			let decodeStr = window.atob(base64Data);
+
+			// メモリの確保
+			let buff = new ArrayBuffer(decodeStr.length);
+			let dataAry = new Uint8Array(buff);
+
+			// バイナリデータの生成
+			for (let idx = 0; idx < decodeStr.length; idx++) {
+				dataAry[idx] = decodeStr.charCodeAt(idx);
+			}
+			let blob = new Blob([dataAry], { type: fileMime });
+
+			// AmazonS3にサムネイルを送信
+			if (!(await sendFileToAmazonS3(blob, fileName))) {
+				unblockUi();
+				await showAlert("{! msgs.errFileuploadContain }");
+				return false;
+			}
+
+			return true;
+		}
+
+		/**
+		 * AmazonS3へのファイル送信
+		 * @param {Object} selectedFile 選択されたファイル
+		 * @param {String} s3FileName   S3ファイル名
+		 * @return {Boolean} true:成功、false:失敗
+		 */
+		async function sendFileToAmazonS3(selectedFile, s3FileName) {
+			try {
+				// S3認証情報の取得
+				let contentTypeMap = convApexMapToJsMap("{! s3ContentTypeMap }");
+				let signatureMap = convApexMapToJsMap("{! s3SignatureMap }");
+				let policyMap = convApexMapToJsMap("{! s3PolicyMap }");
+
+				// 拡張子に応じた認証情報の取得
+				let extension = getExtension(s3FileName);
+				let contentType = contentTypeMap.get(extension);
+				let signature = signatureMap.get(extension);
+				let policy = policyMap.get(extension);
+				let encodeFileName = encodeURI(getFileName(selectedFile.name));
+
+				// 認証情報
+				let fd = new FormData();
+				fd.append("acl", "public-read"); 							// アクセスコントロールリスト
+				fd.append("x-amz-algorithm", "AWS4-HMAC-SHA256"); 			// 署名用ハッシュアルゴリズム
+				fd.append("Content-Type", contentType);						// コンテンツタイプ
+				fd.append("Content-Disposition", "attachment;filename*=UTF-8''" + encodeFileName); // ダウンロード方法
+				fd.append("success_action_status", "200"); 					// 正常終了時のステータスコード
+				fd.append("x-amz-signature", signature); 					// 署名
+				fd.append("policy", policy); 								// S3ポリシー
+                fd.append("key", "{! s3FileStorageDomein }" + s3FileName);	// key（格納パス）
+                fd.append("x-amz-credential", "{! s3Credential }"); 		// 認証情報スコープ
+                fd.append("x-amz-date", "{! s3Timestamp }"); 				// 署名作成用日付
+				fd.append("file", selectedFile);							// ファイル
+
+				// XMLHttpRequestの設定
+				let xhr = new XMLHttpRequest();
+
+				// XMLHttpRequestの通信状態チェック
+				let isSuccess = true;
+				xhr.onreadystatechange = function () {
+					if (xhr.readyState == 4) {
+						if ((xhr.status < 200 || xhr.status >= 300) && xhr.status != 304) {
+							isSuccess = false;
+							console.error("{! msgs.errXmlHttpRequest }".replace("{0}", xhr.status));
+						}
+					}
+				};
+
+				// S3へファイル送信
+				xhr.open("POST", "{! s3Path }", false);
+				xhr.send(fd);
+
+				// 送信結果チェック
+				if (!isSuccess) {
+					return false;
+				}
+			} catch (e) {
+				// iPhoneでは必ず送信エラーが発生する為、例外を握りつぶす
+				// ※送信処理の正否は後続のLINE送信処理で確認する
+				console.error(e.message);
+			}
+
+			return true;
+		}
+
+		/**
+		 * 送信ファイル用システム日付の取得
+		 * @return {String} システム日付（"yyyyMMddHHmmssSSS"形式）
+		 */
+		function getSendFileSysDate() {
+			// システム日付の取得
+			let sysDate = new Date();
+			let filsSysdate =
+				sysDate.getFullYear().toString() +
+				("00" + (sysDate.getMonth() + 1)).slice(-2) +
+				("00" + sysDate.getDate()).slice(-2) +
+				("00" + sysDate.getHours()).slice(-2) +
+				("00" + sysDate.getMinutes()).slice(-2) +
+				("00" + sysDate.getSeconds()).slice(-2) +
+				("000" + sysDate.getMilliseconds()).slice(-3);
+
+			return filsSysdate;
+		}
+
+		/**
+		 * 拡張子の取得
+		 * @param {Object} fileName ファイル名
+		 * @return {String} 拡張子
+		 */
+		function getExtension(fileName) {
+
+			// 実施チェック
+			if (!fileName) {
+				return '';
+			}
+
+			let periodIdx = fileName.lastIndexOf(".");
+			let extension = fileName.substr(periodIdx + 1).toLowerCase();
+
+			return extension;
+		}
+
+		/**
+		 * ファイル名の取得
+		 * @param {String} filePath ファイルパス
+		 * @return {String} ファイル名
+		 */
+		function getFileName(filePath) {
+
+			// 実施チェック
+			if (!filePath) {
+				return '';
+			}
+
+			let fileNameIdx = filePath.lastIndexOf("/");
+			let fileName = filePath.substr(fileNameIdx + 1);
+
+			return fileName;
+		}
+
+		/**
+		 * Apexマップ値をJSマップ値に変換
+		 * @param {String} apexMap Apexマップ
+		 * @return {Map<string:string>} JSマップ
+		 */
+		function convApexMapToJsMap(apexMap) {
+			let jsMap = new Map();
+
+			// マップ値用
+			let keyValuePair;
+			let mapKey;
+			let mapVal;
+
+			// JSマップ値の取得
+			apexMap.split(",").forEach(function (value) {
+				// "{}"と半角スペースを除去
+				value = value.replace(/{|}/g, "");
+				value = value.trim();
+
+				// keyとvalueの設定（※"="は値にも存在する為、分割後に再結合）
+				keyValuePair = value.split("=");
+				mapKey = keyValuePair.shift();
+				mapVal = keyValuePair.join("=");
+
+				jsMap.put(mapKey, mapVal);
+			});
+
+			return jsMap;
+		}
+
+		/**
+		 * Apex配列値をJS配列値に変換
+		 * @param {String} apexAry Apex配列
+		 * @return {Array<String>} JS配列
+		 */
+		function convApexAryToJsAry(apexAry) {
+
+			// JSマップ値の取得
+			let jsAry = new Array();
+			apexAry.split(",").forEach(function (value) {
+
+				// "{}"と半角スペースを除去
+				value = value.replace(/\[|\]/g, "");
+				value = value.trim();
+
+				jsAry.push(value);
+			});
+
+			return jsAry;
+		}
+	</script>
+</apex:component>

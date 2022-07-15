@@ -1,0 +1,19 @@
+<!-- 標準形式用CSV -->
+<apex:page controller="TA102004Controller" contentType="text/csv;charset=Shift_JIS;#{!URLENCODE(csvName)}">
+    <!-- ヘッダ -->
+    <apex:variable var="headerIndex" value="0" />
+    <apex:repeat value="{!csvData.itemList}" var="item">
+        <apex:outputText value="{!IF(VALUE(headerIndex)>0,',','')}" />
+        <apex:outputText value="{!item.header}" />
+        <apex:variable var="headerIndex" value="{!VALUE(headerIndex)+1}" />
+    </apex:repeat>
+    <!-- 改行 -->
+    <apex:outputText value="{!breakString}" escape="false" />
+    <!-- データ（1レコード） -->
+    <apex:variable var="valueIndex" value="0" />
+    <apex:repeat value="{!csvData.itemList}" var="item">
+        <apex:outputText value="{!IF(VALUE(valueIndex)>0,',','')}" />
+        <apex:outputText value="{!item.value}" />
+        <apex:variable var="valueIndex" value="{!VALUE(valueIndex)+1}" />
+    </apex:repeat>
+</apex:page>

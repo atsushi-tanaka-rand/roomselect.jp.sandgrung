@@ -1,0 +1,18 @@
+<apex:component >
+    <apex:attribute name="url" type="String" description="key" />
+        <head>
+            <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jQueryUI/jquery-ui.min.js')}" />
+            <apex:includeScript value="{!URLFOR($Resource.jQuery, 'jQuery/jquery-qrcode-master/jquery.qrcode.min.js')}"/>
+
+        </head>
+        <body>
+        <div id="output"></div>
+        
+        <script type="text/javascript">
+            jQuery(function(){
+                jQuery('#output').qrcode("{!url}");
+            })
+        </script>
+        
+        </body>
+</apex:component>

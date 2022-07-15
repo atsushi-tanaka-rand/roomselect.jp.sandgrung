@@ -1,0 +1,54 @@
+<!--郵便番号・住所検索モーダル画面-->
+<apex:component controller="privacyHandling">    
+
+        <style type="text/css">
+            .infomationArea > p {
+                margin-top:    0px;
+                margin-bottom: -2px;
+            }
+        </style>
+
+   
+        <div>個人情報の取扱について(賃貸・売買・管理)</div>
+                                        
+        <div class="privacy-box">
+            <div class="div_top"></div>
+            
+            <div class="posi_re text-center font18 mb30 fontb">
+                <div class="ab_left"><apex:image alt="" url="{!formLogoUrl}"/></div>
+                個人情報の取扱について(賃貸・売買・管理)
+            </div>
+
+            <!-- 個人情報取扱に関する基本姿勢 -->
+            <div class="mb30 infomationArea">
+                <apex:outputField value="{!fixPhrase.PersonalInformation__c}"/>
+            </div>
+
+            <div class="flex-wrap flex-xs-xolumn">
+                <div>【各種お問合せ・相談窓口】</div>
+                <div>
+                    <table>
+                        <tr>
+                            <th>　住所　</th>
+                            <td>{! addressSignature}</td>
+                        </tr>
+                        <tr>
+                            <th>　電話番号　</th>
+                            <td>{! phonSignature}</td>
+                        </tr>
+                        <tr>
+                            <th>　FAX　</th>
+                            <td>{! faxSignature}</td>
+                        </tr>
+                        <tr>
+                            <th>　担当者　</th>
+                            <td>{! staffSignature}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            
+            
+            <div class="div_bottom"></div>
+        </div>
+</apex:component>

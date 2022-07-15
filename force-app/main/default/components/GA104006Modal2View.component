@@ -1,0 +1,85 @@
+<!--文例選択-->
+<apex:component controller="GA104006Modal2Controller">
+    <apex:attribute name="ParameterClass" type="GA104006Modal2ParameterClass" assignTo="{!parameter}" description="key" />
+
+    <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/reset.min.css')}" />
+    <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/foundation.css')}" />
+    <apex:stylesheet value="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+    <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/modaal.css')}" />
+    <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/style.css')}" />
+    <apex:stylesheet value="{!URLFOR($Resource.external_file, 'external_file/common_style.css')}" />
+    <apex:stylesheet value="{!URLFOR($Resource.jQuery,'jQuery/jQueryUI/jquery-ui.css')}" />
+
+    <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery-3.6.0.min.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery.blockUI.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.designer_file, 'designer_file/js/modaal.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/common_screen_util.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/input_rules.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jQueryUI/jquery-ui.min.js')}" />
+
+    <apex:form id="GA104006Modal2Form">
+
+        <apex:pageBlock rendered="{!parameter.noFirst}">
+            <apex:pageMessages />
+            <apex:outputText rendered="{!init}" />
+            <div class="modal-body">
+                <apex:outputPanel id="maxSizeAlert" style="block">
+                    <apex:outputLabel style="color:red;"
+                        value="{!maxSizeAlertMsg}"
+                        rendered="{!isMaxSizeAlert}"><br/></apex:outputLabel>
+                </apex:outputPanel>
+                <!-- フォルダ -->
+                <div class=" mb10 wd100">
+                    <div class="information_title">フォルダ<apex:commandButton style="visibility:hidden;" rerender="dummy"/></div>
+                    <div>
+                        <!-- 選択リスト -->
+                        <apex:selectList styleClass="form-control" size="1"
+                                        value="{!screenRecord.selectFolder}">
+                            <apex:selectOptions value="{!selectFolderList}" />
+                            <apex:actionSupport event="onchange"
+                                                onsubmit="blockUi();"
+                                                action="{!changeFolder}"
+                                                oncomplete="unblockUi();"
+                                                reRender="maxSizeAlert, exampleSentenceName, exampleSentence" />
+                        </apex:selectList>
+                    </div>
+                </div>
+                <!-- 文例名 -->
+                <div class=" mb10 wd100">
+                    <div class="information_title">文例名</div>
+                    <!-- 選択リスト -->
+                    <apex:selectList id="exampleSentenceName" styleClass="form-control" size="1"
+                                    value="{!screenRecord.selectExampleSentence}">
+                        <apex:selectOptions value="{!screenRecord.Folder[screenRecord.selectFolder]}" />
+                        <apex:actionSupport event="onchange"
+                                            onsubmit="blockUi();"
+                                            action="{!changeExampleSentence}"
+                                            oncomplete="unblockUi();"
+                                            reRender="maxSizeAlert, exampleSentence" />
+                    </apex:selectList>
+                </div>
+                <!-- 文例 -->
+                <div class=" mb10 wd100">
+                    <div class="information_title">文例</div>
+                    <!-- 選択リスト -->
+                    <apex:outputPanel layout="block"
+                                    styleClass="form-control" style="height:100%;padding-top:20px;padding-bottom:20px;">
+                        <apex:outputText id="exampleSentence" escape="false"
+                                        value="{!screenRecord.ExampleSentence[screenRecord.selectExampleSentence]}" />
+                    </apex:outputPanel>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <div class="flex-wrap justify-around flex_wrap">
+                    <apex:commandButton value="選択" styleClass="mb10 message btn btn-primary btn-submit text-center"
+                                        onclick="blockUi();"
+                                        action="{!closeModal}"
+                                        oncomplete="unblockUi(); if({! !hasErrorMessage}){closeDialogModal2();}"
+                                        rerender="GA104006Modal2Form"/>
+                </div>
+            </div>
+        </apex:pageBlock>
+
+    </apex:form>
+
+</apex:component>

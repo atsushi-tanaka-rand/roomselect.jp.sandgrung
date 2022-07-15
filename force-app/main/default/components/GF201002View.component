@@ -1,0 +1,93 @@
+<!--付帯商品登録のモーダル画面 view画面-->
+
+<apex:component controller="GF201002Controller">
+    <apex:attribute name="ParameterClass" type="GF201002ParameterClass" assignTo="{!Parameter}" description="key"/>
+    
+    <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery-3.6.0.min.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery.blockUI.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/common_screen_util.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.designer_file, 'designer_file/js/modaal.js')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/reset.min.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/foundation.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/style.css')}"/>
+    <apex:stylesheet value="https://use.fontawesome.com/releases/v5.0.6/css/all.css"/>
+    
+    <apex:form id="GF201002Form" >
+        <apex:pageBlock rendered="{!Parameter.noFirst}">
+            <apex:pageMessages />
+            <apex:outputText rendered="{!init}" />
+            
+            <body id="gf101002">
+                <main>
+                    <article>
+                        <section class="">
+                            <section style="display:flex">
+                                <h1 class="fontb font2rem">付帯商品登録</h1>
+                                <apex:commandButton style=" visibility:hidden;" rerender="dummy"/> 
+                            </section>
+                            <section>
+                                <div class="mt30"> 
+                                    <div class="">
+                                        <div class="flex-wrap  flex_wrap justify-between align_center ">
+                                            
+                                            <div class=" mb10 wd47 wd100_xs">
+                                                <div class="information_title">付帯業者</div>
+                                                <div class="information_contents" style="margin-bottom:0">
+                                                    <apex:outputText value="{! modalParameter.auxiliaryCompany}" />
+                                                </div>
+                                            </div>
+                                            
+                                            <div class=" mb10 wd47 wd100_xs">
+                                                <div class="information_title">課税区分</div>
+                                                <apex:selectRadio value="{! modalParameter.auxiliaryItemFeeTaxType}" styleClass="displayRadio"  >
+                                                    <apex:selectOptions value="{! auxiliaryItemFeeTaxTypeRadioButton}" />
+                                                </apex:selectRadio>
+                                            </div>
+                                            
+                                            <div class=" mb10 wd47 wd100_xs">
+                                                <div class="information_title">商品名</div>
+                                                <apex:input type="text" styleClass="form-control" value="{! modalParameter.itemName }" onchange="correctInputRules(this,'text','80')"  />
+                                            </div>
+                                            
+                                            <div class=" mb10 wd47 wd100_xs">
+                                                <div class="information_title">原価</div>
+                                                <apex:input type="text" styleClass="form-control" value="{! modalParameter.auxiliaryItemFeeCost }" onchange="correctInputRules(this,'currency','7',0)"  />
+                                            </div>
+                                            
+                                            <div class="mb10 wd47 wd100_xs">
+                                                <div class="information_title">商品区分</div>
+                                                <apex:selectList styleClass="form-control" size="1" value="{! modalParameter.auxiliaryItemType }" >
+                                                    <apex:selectOptions value="{! selectAuxiliaryItemTypeList }" />
+                                                </apex:selectList>
+                                            </div>
+                                            
+                                            <div class="mb10 wd47 wd100_xs">
+                                                <div class="information_title">料金</div>
+                                                <apex:input type="text" styleClass="form-control" value="{! modalParameter.auxiliaryItemFee }" onchange="correctInputRules(this,'currency',7,0)" />
+                                            </div>
+                                            
+                                            <div class=" mb10 wd47 wd100_xs">
+                                                <div class="information_title">備考</div>
+                                                <apex:input type="text" styleClass="form-control" value="{! modalParameter.remarks }" onchange="correctInputRules(this,'text','255')" />
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+
+                        </section>
+                    </article>
+                </main>
+            </body>
+            
+            <div class="flex-wrap justify-around flex_wrap">
+                <div class="flex-wrap justify-center flex-xs-xolumn  mt60">
+                    <div class="btn  btn-cancel text-center mauto_xs mr5">
+                        <apex:commandButton styleClass="mb10 message btn btn-primary btn-submit text-center" value="設定" onclick="blockUi();" action="{! closeModal}" oncomplete="unblockUi(); if({! !hasErrorMessage}){closeGF201002View();}" rerender="GF201002Form" tabIndex="107" />
+                    </div>
+                </div>
+            </div>
+        </apex:pageBlock>
+    </apex:form> 
+</apex:component>

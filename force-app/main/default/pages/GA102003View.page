@@ -1,0 +1,255 @@
+<!--名寄せ画面-->
+
+<apex:page docType="html-5.0" standardStylesheets="false" controller="GA102003Controller" title="名寄せ">
+    
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="format-detection" content="telephone=no" />
+        <meta name="robots" content="noindex" />
+        <title>名寄せ</title>
+        <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/reset.min.css')}" />
+        <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/foundation.css')}" />
+        <apex:stylesheet value="https://use.fontawesome.com/releases/v5.0.6/css/all.css" />
+        <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/modaal.css')}" />
+        <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/style.css')}" />
+        <apex:stylesheet value="{!URLFOR($Resource.external_file, 'external_file/common_style.css')}" />
+        <apex:stylesheet value="{!URLFOR($Resource.jQuery,'jQuery/jQueryUI/jquery-ui.css')}" />
+        
+        <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery-3.6.0.min.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery.blockUI.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.designer_file, 'designer_file/js/modaal.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/common_screen_util.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/input_rules.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jQueryUI/jquery-ui.min.js')}" />
+        
+        <script type="text/javascript">
+        
+        //名寄せ不要確認メッセージ
+        async function checkMerge() {
+            var message = "{!MSG_COM_V_EXECUTE_NON_MERGE}";
+            var retVal = await showConfirm(message);
+            if ( retVal ) {
+                blockUi();
+                margeCompleted();
+            }
+            
+        }
+        
+        //名寄せ不要完了メッセージ
+        async function alertMerge() {
+            
+            //完了メッセージ
+            await showAlert("{!MSG_COM_I_NON_MERGE_END}");
+            
+            //画面を閉じる
+            closePage();
+            
+        }
+        
+        //名寄せ実行確認メッセージ
+        async function checkMergeDone(index) {
+            var message = "{!MSG_COM_V_EXECUTE_MERGE}";
+            if (await showConfirm(message)) {
+                blockUi();
+                $('.mergeSelectedIndex').val(index);
+                mergeAccounts();
+            }
+        }
+        
+        //名寄せ実行完了メッセージ
+        async function alertMergeDone() {
+            //完了メッセージ
+            await showAlert("{!MSG_COM_I_MERGE_END}");
+            if ("{!isDeleteIntroMail}" == "true"){
+                await showAlert("{!MSG_COM_I_MERGE_END_SENDSTOP}");
+            }
+            
+            //画面を閉じる
+            closePage();
+        }
+        
+        </script>
+        
+        
+    </head>
+    
+    <body style="background-color:#ffffff;">
+        <main id="ga102003">
+            <article>
+                <apex:form id="form">
+                    <apex:pageMessages id="messageArea"/>
+                    
+                    <!-- actionFunction -->
+                    <apex:actionFunction action="{! margeCompleted}" name="margeCompleted"
+                                         oncomplete="unblockUi();if(!{! hasErrorMessage}){alertMerge()}else{gotoTop()}"
+                                         reRender="messageArea"/>
+                    <apex:actionFunction name="mergeAccounts" action="{!mergeAccounts}" oncomplete="unblockUi();if(!{! hasErrorMessage}){alertMergeDone()}else{gotoTop()}"
+                                         reRender="messageArea"  />
+                    <!-- 隠し項目 -->
+                    <apex:input styleClass="mergeSelectedIndex" style="display:none" value="{!mergeSelectedIndex}" /> <!-- 名寄せ対象のインデックス -->
+                   
+                    <section>
+                        <section style="display:flex">
+                            <h1 class="fontb font3rem" style="margin-bottom: 10px">名寄せ</h1>
+                            <apex:commandButton style=" visibility:hidden;" rerender="dummy"/> 
+                        </section>
+                        <div class="flex-wrap justify-between align_center mb10">
+                            <h1 class="fontb font2rem">お客様情報</h1>
+                            <apex:commandButton value="名寄せ不要" onclick="checkMerge();"
+                                                reRender="dummy" styleClass="btn btn btn-sm btn-normal" tabIndex="1" disabled="{!isOpenError}"
+                                                />
+                            
+                        </div>
+                        <div class="border-g-3 mb60">
+                            <div class="flex-xs-xolumn justify-between">
+                                <div class="wd33">
+                                    <div class="information_title">お客様名</div>
+                                    <div class="information_contents">
+                                        <apex:outputText value="{!targetRecord.Name}" />
+                                    </div>
+                                </div>
+                                <div class="wd33">
+                                    <div class="information_title">お客様名（カナ）</div>
+                                    <div class="information_contents">
+                                        <apex:outputText value="{!targetRecord.NameKana__c}" />
+                                    </div>
+                                </div>
+                                <div class="wd33">
+                                </div>
+                            </div>
+                            <div class="flex-xs-xolumn justify-between">
+                                <div class="wd33">
+                                    <div class="information_title">メール1</div>
+                                    <div class="information_contents">
+                                        <apex:outputText value="{!targetRecord.Email__c}" />
+                                    </div>
+                                </div>
+                                <div class="wd33">
+                                    <div class="information_title">メール2</div>
+                                    <div class="information_contents">
+                                        <apex:outputText value="{!targetRecord.Email2__c}" />
+                                    </div>
+                                </div>
+                                <div class="wd33">
+                                    <div class="information_title">メール3</div>
+                                    <div class="information_contents">
+                                        <apex:outputText value="{!targetRecord.Email3__c}" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex-xs-xolumn justify-between">
+                                <div class="wd33">
+                                    <div class="information_title">電話番号1</div>
+                                    <div class="information_contents">
+                                        <apex:outputText value="{!targetRecord.Phone}" />
+                                    </div>
+                                </div>
+                                <div class="wd33">
+                                    <div class="information_title">電話番号2</div>
+                                    <div class="information_contents">
+                                        <apex:outputText value="{!targetRecord.Phone2__c}" />
+                                    </div>
+                                </div>
+                                <div class="wd33">
+                                    <div class="information_title">電話番号3</div>
+                                    <div class="information_contents">
+                                        <apex:outputText value="{!targetRecord.Phone3__c}" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="information_title">住所</div>
+                            <div class="information_contents">
+                                <apex:outputText value="{!targetRecord.Address__c}" />
+                            </div>
+                            <!--ポータルサイト構築 追加 Start-->
+                            <div class="information_title">ポータル会員ID</div>
+                           <div class="information_contents">
+                                <apex:outputText value="{!portalMemberId}" />
+                            </div>
+                            <!--ポータルサイト構築 追加 End-->
+                        </div>
+
+                    </section>
+                    <section>
+                        <h2 class="fontb font2rem">検索結果
+                            <apex:image url="/img/msg_icons/info16.png" title="名寄対象となる条件に合致するお客様です。条件：お客様名、メール、電話番号の項目のうち、最低一項目が一致する。" />
+                        </h2>
+                        
+                        
+                        <table class="gray" style="height:452px;">
+                            <tbody>
+                                <tr>
+                                    <th class="choice"></th>
+                                    <th class="customer_name">お客様名</th>
+                                    <th class="customer_name_kana">お客様名(カナ)</th>
+                                    <th class="mail1">メール1</th>
+                                    <th class="mail1">メール2</th>
+                                    <th class="mail1">メール3</th>
+                                    <th class="tel1">電話番号1</th>
+                                    <th class="tel1">電話番号2</th>
+                                    <th class="tel1">電話番号3</th>
+                                    <th class="address">住所</th>
+                                    <!--ポータルサイト構築 追加 Start-->
+                                    <th class="address">ポータル会員ID</th>
+                                    <!--ポータルサイト構築 追加 End-->
+                                    
+                                </tr>
+                                <apex:repeat value="{!displayCandidateResult}" var="D">
+                                    <tr>
+                                        <td class="choice right-border text-center">
+                                            <apex:commandLink value="選択" onclick="checkMergeDone({!D.setIndex})" reRender="dummy" styleClass="blue" />
+                                        </td>
+                                        <td>
+                                            <apex:commandLink value="{!D.candidateResult.name}" onclick="showPage('GA102001View', '', 'true', 'accountId={! D.candidateResult.Id}')">
+                                                <apex:param value="{!D.setIndex}" name="mergeSelectedIndex" assignTo="{!mergeSelectedIndex}" />
+                                            </apex:commandLink>
+                                        </td>
+                                        
+                                        <td>
+                                            <apex:outputText value="{!D.candidateResult.NameKana__c}" />
+                                        </td>
+                                        <td>
+                                            <apex:outputText value="{!D.candidateResult.Email__c}" />
+                                        </td>
+                                        <td>
+                                            <apex:outputText value="{!D.candidateResult.Email2__c}" />
+                                        </td>
+                                        <td>
+                                            <apex:outputText value="{!D.candidateResult.Email3__c}" />
+                                        </td>
+                                        <td>
+                                            <apex:outputText value="{!D.candidateResult.Phone}" />
+                                        </td>
+                                        <td>
+                                            <apex:outputText value="{!D.candidateResult.Phone2__c}" />
+                                        </td>
+                                        <td>
+                                            <apex:outputText value="{!D.candidateResult.Phone3__c}" />
+                                        </td>
+                                        <td>
+                                            <apex:outputText value="{!D.candidateResult.Address__c}" />
+                                        </td>
+                                        <!--ポータルサイト構築 追加 Start-->
+                                        <td>
+                                            <apex:outputText value="{!D.candidateMember.Email__c}" />
+                                        </td>
+                                        <!--ポータルサイト構築 追加 End-->
+                                    </tr>
+                                </apex:repeat>
+                                
+                            </tbody>
+                        </table>
+                        
+                    </section>
+                    
+                </apex:form>
+            </article>
+        </main>
+    </body>
+    
+    
+    
+    
+    
+</apex:page>

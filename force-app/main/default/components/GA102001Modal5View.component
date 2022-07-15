@@ -1,0 +1,53 @@
+<!-- QR画面 -->
+<apex:component controller="GA102001Modal5Controller" allowDML="true">
+    <apex:attribute name="url"        type="String"  description="key1" />
+    <apex:attribute name="WarningFlg" type="Boolean" description="key2" />
+    <apex:attribute name="mizukimeFlg" type="Boolean" description="key3" />
+    <apex:attribute name="Correspond" type="String" description="key4" assignTo="{!CorrespondId}" />
+    <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jQueryUI/jquery-ui.min.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.jQuery, 'jQuery/jquery-qrcode-master/jquery.qrcode.min.js')}"/>        
+
+    <apex:form id="GA102001Modal5">
+        <body id="GA102001Modal5body" style="background-color:#ffffff;">
+            <apex:commandButton style="visibility:hidden;" rerender="dummy"/>
+            <apex:outputText rendered="{!init}" />
+            <apex:pageMessages id="messageArea5" />
+            <apex:outputPanel rendered="{!WarningFlg}">
+                申込を入力する前に一度、金額のご確認をお願いします。
+            </apex:outputPanel>
+
+            <!-- QR表示部分 -->
+            <div id="output" align="center">
+            </div>         
+
+            <div align="right">
+                <apex:commandButton styleClass="btn btn-submit btn-primary text-center mauto_xs" value="来店パス"
+                                    disabled="{!isOpenError}"   
+                                    reRender="dummy" 
+                                    rendered="{!mizukimeFlg}"
+                                    onclick="save();" tabindex="1" />
+            </div>
+        
+            <apex:actionFunction name="insetdate" action="{!saveDate}"                                                                  
+                oncomplete="if({!hasErrorMessage}){unblockUi();return false;}closeDialogModal5();"
+                reRender="messageArea5,GA102001Modal5"/>
+
+            <script type="text/javascript">
+                // URLからQR生成
+                jQuery(function(){
+                    jQuery('#output').qrcode("{!url}");
+                })
+
+                //  保存処理
+                async function save(){
+                    var message = "{! MSG_COM_V_SAVE}";
+                    if (! await showConfirm(message)) {
+                        return false;
+                    }
+                    blockUi();
+                    insetdate();
+                }
+            </script>
+        </body>
+    </apex:form>
+</apex:component>

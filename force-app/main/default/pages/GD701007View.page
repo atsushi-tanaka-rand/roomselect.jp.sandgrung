@@ -1,0 +1,270 @@
+<!-- 電物メンテ一覧画面 -->
+<apex:page controller="GD701007Controller" docType="html-5.0" standardStylesheets="false" title="電物メンテ一覧">
+    <script type="text/javascript">
+    
+    //保存確認メッセージ
+    async function checkSave(){
+        var message = "{! MSG_COM_V_SAVE}";
+        var retVal = await showConfirm(message);
+        if (retVal) {
+            blockUi();
+            save();
+        }          
+    }
+    
+    //保存完了メッセージ
+    async function alertSaveFinish() {
+        //完了メッセージ
+        await showAlert("{! MSG_COM_I_SAVE}");
+    }
+    </script>
+    
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="format-detection" content="telephone=no" />
+        <meta name="robots" content="noindex" />
+        <title>電物メンテ一覧</title>
+        
+        <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/reset.min.css')}" />
+        <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/foundation.css')}" />
+        <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/modaal.css')}" />
+        <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/style.css')}" />
+        <apex:stylesheet value="https://use.fontawesome.com/releases/v5.0.6/css/all.css" />
+        <apex:stylesheet value="{!URLFOR($Resource.external_file, 'external_file/common_style.css')}" />
+        <apex:stylesheet value="{!URLFOR($Resource.jQuery,'jQuery/jQueryUI/jquery-ui.css')}" />
+        
+        <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery-3.6.0.min.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery.blockUI.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jQueryUI/jquery-ui.min.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.designer_file,'designer_file/js/modaal.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/common_screen_util.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/input_rules.js')}" />
+        
+    </head>
+    
+    <body style="background-color:#ffffff;" id="gd701001">
+        <main>
+            <article>
+                <apex:form id="form">
+                    <apex:pageMessages id="messageArea"/>
+                    <section>
+                        
+                        <section style="display:flex">
+                            <div class="flex-wrap justify-between align_center mb10">
+                                <h1 class="fontb font2rem">電物メンテ</h1>
+                            </div>
+                            <!-- 非表示検索ボタン（Enterキー押下時動作用の隠し項目） -->
+                            <apex:commandButton id="hiddenSearchBtn" styleclass="btn btn-submit btn-primary " value="検索(非表示)" onclick="blockUi();" action="{!search}"  disabled="{!isOpenError}"
+                                                oncomplete="unblockUi();if({!hasErrorMessage}){gotoTop()}" reRender="form" style="visibility:hidden;" />
+                            
+                        </section>
+                        
+                        
+                        <section class="border-g-3 mb60">
+                            <div class="flex-wrap flex_wrap align-items_end mb10">
+                                <div class="mr20">
+                                    <div>元付業者</div>
+                                    <apex:input type="text" html-placeholder="元付業者" disabled="{! isOpenError}" styleClass="form-control wd24 mb10" value="{!FormerSupplier}"
+                                                onchange="correctInputRules(this,'text', '255')"/>
+                                </div>
+                                <div class="mr20 mb10">地区
+                                    <div class="textbox-pen">
+                                        <apex:input type="text" html-readonly="readonly" value="{!Districts}" id="DistrictArea" style="width:90%;"/>
+                                        <div class="info" align="right">
+                                            <apex:commandButton image="{!URLFOR($Resource.designer_file, 'designer_file/images/pencil.png')}" onclick="blockUi();" action="{!openModal}"
+                                                                rerender="GH201003Form" status="loadComponent"  disabled="{!isOpenError}" oncomplete="unblockUi(); jQuery('#dialog-modal1').dialog('open');"
+                                                                />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <apex:inputCheckbox id="sc1" styleClass="sc1" value="{!isIppan}"  onchange="scChange(this,'.sc2');" />
+                                    <apex:outputLabel for="sc1" styleClass="serach_check2 mr5">一般物</apex:outputLabel>
+                                    <apex:inputCheckbox id="sc2" styleClass="sc2" value="{!isGyoubutsu}" onchange="scChange(this,'.sc1');" />
+                                    <apex:outputLabel for="sc2" styleClass="serach_check2">業物</apex:outputLabel>
+                                </div>
+                            </div>
+                            <div class="text-center">
+                                <apex:commandButton action="{!search}" styleclass="btn btn-submit btn-primary " value="検索" onclick="blockUi();" oncomplete="unblockUi();if({!hasErrorMessage}){gotoTop()}"
+                                                    reRender="form" disabled="{!isOpenError}"/>
+                            </div>
+                        </section>
+                        
+                        <section>
+                            <h2 class="fontb font2rem">検索結果</h2>
+                            <apex:outputPanel id="table">
+                                <table class="gray search-table" style="height:452px;">
+                                    <tbody>
+                                        <tr>
+                                            <th style="min-width:40px;width:40px;"></th>
+                                            <th class="wd5">元付業者</th>
+                                            <th class="wd4">TEL</th>
+                                            <th class="wd4">担当者名</th>
+                                            <th class="wd4">TEL</th>
+                                            <th class="wd6">住所</th>
+                                            <th class="wd1">電物</th>
+                                            <th class="wd3">電物日</th>
+                                            <th class="wd4">電物者</th>
+                                            <th class="wd2">取扱物件</th>
+                                            <th class="wd2">管理物件</th>
+                                            <th class="wd6">イベントメモ</th>
+                                        </tr>
+                                        <apex:variable var="num" value="0" />
+                                        <apex:repeat value="{! screenRecordClassList}" var="account">
+                                            <tr>
+                                                <td class="text-center">
+                                                    <apex:outputlabel value="{!VALUE(num)+1}" />
+                                                </td>
+                                                <td>
+                                                    <!-- 元付業者 -->
+                                                    <apex:outputText value="{! account.targetAccountRecord.Name}" />
+                                                </td>
+                                                <td>
+                                                    <!-- 電話番号 -->
+                                                    <apex:outputText value="{! account.targetAccountRecord.Phone}" />
+                                                </td>
+                                                <td>
+                                                    <!-- 担当者名 -->
+                                                    <apex:outputText value="{! account.targetAccountRecord.Representative__c}" />
+                                                </td>
+                                                <td>
+                                                    <!-- 担当者電話番号 -->
+                                                    <apex:outputText value="{! account.targetAccountRecord.RepresentativePhone__c}" />
+                                                </td>
+                                                <td>
+                                                    <!-- 住所 -->
+                                                    <apex:outputText value="{! account.targetAccountRecord.Address__c}" />
+                                                </td>
+                                                <td>
+                                                    <!-- 電物ステータス -->
+                                                    <apex:selectList size="1" value="{!account.dembutsuStatus}"  onchange="changeDembutsuData(this);">
+                                                        <apex:selectOptions value="{!selectDembutsuList}"/>
+                                                    </apex:selectList>
+                                                </td>
+                                                <td>
+                                                    <!-- 電物日 -->
+                                                    <apex:outputText styleClass="dembutsuDateOutput" value="{! account.dembutsuDate}" />
+                                                    <apex:inputText styleClass="dembutsuDateInput"  value="{! account.dembutsuDate}" style="display:none;" />
+                                                </td>
+                                                <td>
+                                                    <!-- 電物者 -->
+                                                    <apex:outputText styleClass="dembutsuUserOutput" value="{! account.dembutsuStaff}" />
+                                                    <apex:inputText styleClass="dembutsuUserInput"  value="{! account.dembutsuStaff}" style="display:none" />
+                                                </td>
+                                                <td>
+                                                    <!-- 一般物／業物 -->
+                                                    <apex:outputText value="{! account.targetAccountRecord.IppamGyobutsu__c}" />
+                                                </td>
+                                                <td>
+                                                    <!-- 管理物件 -->
+                                                    <apex:commandLink value="管理物件" reRender="dummy" oncomplete="unblockUi();showPage('GD701002View', '', 'true', 'Id={!screenRecordClassList[AccountIndex].targetAccountRecord.Id}&Districts={!SearchDistricts}')">
+                                                        <apex:param name="AccountIndex" value="{!VALUE(num)}" assignTo="{!AccountIndex}" />
+                                                    </apex:commandLink>
+                                                </td>
+                                                <td>
+                                                    <!-- 電物イベントメモ -->
+                                                    <apex:input type="text" value="{! account.dembutsuEventMemo}" onchange="correctInputRules(this,'text','255')"/>
+                                                </td>
+                                            </tr>
+                                            <apex:variable var="num" value="{!VALUE(num) + 1}" />
+                                        </apex:repeat>
+                                    </tbody>
+                                </table>
+                            </apex:outputPanel>
+                            
+                            <div class="text-center mt20">
+                                <apex:commandButton styleclass="btn btn-submit btn-primary" value="保存" rendered="{! !isNoSaveButton}" disabled="{!isOpenError}"
+                                                    reRender="dummy" onclick="!checkSave();"
+                                                    />
+                            </div>
+                        </section>
+                        
+                    </section>
+                    <!-- actionfunction -->
+                    <apex:actionFunction action="{! closeModal}" name="closeModal" rerender="DistrictArea" oncomplete="unblockUi()" />
+                    <apex:actionFunction action="{! recordSave}" name="save"
+                                         oncomplete="unblockUi();if(!{! hasErrorMessage}){alertSaveFinish()  }else{gotoTop()}" reRender="form"/>
+                </apex:form>
+            </article>
+        </main>
+    </body>
+    
+    <!-- 【モーダルダイアログ】 -->
+    <div id="dialog-modal1" title="">
+        <apex:outputPanel id="dialogPanel1">
+            <c:GH201003View ParameterClass="{!GH201003Paremeter}" />
+        </apex:outputPanel>
+    </div>
+    
+    <!-- 【JAVASCRIPT】 -->
+    <script language="javascript" type="text/javascript">
+    // モーダル幅の設定用
+    var clientWidth = 0; 
+    jQuery(function () {
+        if(document.body.clientWidth > 800){
+            clientWidth = 800;
+        }else{
+            clientWidth = document.body.clientWidth;
+        }
+        //ダイアログを表示
+        jQuery("#dialog-modal1").dialog({
+            modal: true,
+            autoOpen: false,
+            width: clientWidth,
+        });
+    });
+    
+    //モーダルを閉じる際の処理
+    function closeGH201003View() {
+        jQuery("#dialog-modal1").dialog("close");
+        closeModal();
+    }
+    </script>
+    
+    <script src="https://npmcdn.com/vue/dist/vue.js"></script>
+    <script>
+        
+        //電物が変更された際の処理
+        function changeDembutsuData(obj){
+        
+        if ($(obj).val() != "") { //値が空白以外に変更された場合
+            //電物日を変更する
+            $(obj).closest('tr').find('.dembutsuDateOutput').text('{! todayDateString}'); //表示値を変更する
+            $(obj).closest('tr').find('.dembutsuDateInput' ).val( '{! todayDateString}'); //見えない入力値も変更する
+            //電物者を変更する
+            $(obj).closest('tr').find('.dembutsuUserOutput').text('{! loginUserName}'  ); //表示値を変更する
+            $(obj).closest('tr').find('.dembutsuUserInput' ).val( '{! loginUserName}'  ); //見えない入力値も変更する
+        }
+    }
+    
+    //チェックボックスが操作された際の処理
+    function scChange(obj, oneOf){
+        var flag = $(obj).prop('checked');
+        if (!flag) {
+            $(oneOf).prop('checked',true);
+            
+        } else {
+            $(oneOf).prop('checked',false);
+            
+        }
+    }
+    jQuery(function ($) {
+        $('.edit').click(function () {
+            if (!$(this).hasClass('on')) {
+                $(this).addClass('on');
+                var txt = $(this).text();
+                $(this).html('<input type="text" value="' + txt + '" />');
+                $('.edit > input').focus().blur(function () {
+                    var inputVal = $(this).val();
+                    if (inputVal === '') {
+                        inputVal = this.defaultValue;
+                    };
+                    $(this).parent().removeClass('on').text(inputVal);
+                });
+            };
+        });
+    });
+    </script>
+    
+</apex:page>

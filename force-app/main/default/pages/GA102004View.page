@@ -1,0 +1,834 @@
+<!-- メール送信画面 -->
+<apex:page standardStylesheets="false" docType="html-5.0" controller="GA102004Controller" title="メール送信">
+
+    <apex:form id="form">
+        <!-- actionFunction -->
+        <head>
+            <meta charset="utf-8" />
+            <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+            <meta name="format-detection" content="telephone=no" />
+            <meta name="robots" content="noindex" />
+            <title>メール送信</title>
+            <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/reset.min.css')}" />
+            <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/foundation.css')}" />
+            <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/modaal.css')}" />
+            <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/style.css')}" />
+            <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery-3.6.0.min.js')}" />
+            <apex:includeScript value="{!URLFOR($Resource.designer_file, 'designer_file/js/modaal.js')}" />
+            <apex:stylesheet value="https://use.fontawesome.com/releases/v5.0.6/css/all.css" />
+
+            <apex:stylesheet value="{!URLFOR($Resource.external_file, 'external_file/common_style.css')}" />
+            <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery.blockUI.js')}" />
+            <apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/common_screen_util.js')}" />
+            <apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/input_rules.js')}" />
+            <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jQueryUI/jquery-ui.min.js')}" />
+            <apex:stylesheet value="{!URLFOR($Resource.jQuery,'jQuery/jQueryUI/jquery-ui.css')}" />
+            <apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/clipboard.js')}" />
+        </head>
+
+        <style type="text/css">
+            .attachmentfile {
+                text-decoration: none;  /* 下線なし */
+                display: inline;
+                margin-right: 10px;
+            }
+            a {
+                color: #303030;
+            }
+            #dialog-modal2 {
+                background-color: #a5a5a5;
+            }
+            /* ポータルサイト構築 追加 Start */
+            /* 背景色の違う */
+            .pop_box2 {
+                background-color: #eeeeee;
+                padding: 30px 10px;
+            }
+            .btn-default2 {
+                /* background-color: #d2d2d2; */
+                /* border-radius: 10px 10px 0 0; */
+            }
+            .btn-default2:focus{
+                color: #000000;
+                /* background-color: #b6b6b6; */
+                opacity:0.9;
+            }
+            .btn-gray2 {
+                color: #ffffff;
+                background-color: #b8b8b8;
+                /* border-radius: 10px 10px 0 0; */
+            }
+            .btn-gray2:focus{
+                color: #000000;
+                background-color: #b6b6b6;
+                opacity:0.9;
+            }
+            /* ポータルサイト構築 追加 End */
+
+            /** ▼ 2021.12.3 LINE連携対応より、セクション用スタイルの追加 */
+            .section {
+				background: #e5e5e5;
+				padding: 5px;
+			}
+            /** ▲ 2021.12.3 */
+
+        </style>
+
+        <body>
+            <main>
+                <article>
+                    <apex:pageMessages id="messageArea" />
+                    <!-- ▼ 2021.12.3 LINE連携対応より、ヘッダ部を追加 -->
+                    <div class="text-left mb10">
+						<div class="fontb section mt10">お客様情報</div>
+                        <div class="flex-wrap justify-between flex_wrap border-g-3">
+                            <div class="wd47 wd100_xs">
+                                <div class="information_title">お客様名</div>
+                                <div class="information_contents">{! screenUserHead.accountName }</div>
+                            </div>
+                            <div class="wd47 wd100_xs">
+                                <div class="information_title">LINE名</div>
+                                <div class="information_contents">{! screenUserHead.lineName }</div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- ▲ 2021.12.3 -->
+                    <div class="row">
+                        <div class=" small-12 medium-3 large-3 back_gray">
+                            <div class="deli_box show-for-small-only">
+                                <apex:image url="{!URLFOR($Resource.designer_file, 'designer_file/images/trash.png')}" alt="削除" />
+                            </div>
+                            <!-- ポータルサイト構築 変更 Start -->
+                            <div class="">
+                                <div class="  flex-wrap">
+                                    <div class="wd50">
+                                        <button type="button" class="btn btn-default2 wd100" id="favoriteProperty">お気に入り物件</button>
+                                    </div>
+                                    <div class="wd50">
+                                        <button type="button" class="btn btn-gray2 wd100" id="propertyURLGenerate">物件URL生成</button>
+                                    </div>
+                                </div>
+                                <apex:inputHidden id="isSueURL" value="{!isSueURL}" />
+                                <div class="columns favoriteProperty pop_box2" id="favoriteProperty_contents">
+                                    <!-- お気に入り物件-->
+                                    <ul id="accordion3" class="accordion">
+                                        <div class="text-center mb30">
+                                            <apex:outputPanel id="screenFavoritePropertyList">
+                                                <table class="gray " style="height:345px;background-color:white;" id="screenFavoriteProperty" >
+                                                    <tbody>                                                         
+                                                        <apex:variable var="num" value="0" />
+                                                        <apex:repeat value="{! screenFavoritePropertyList}" var="screenFavoriteProperty">
+                                                            <tr>
+                                                                <!-- チェックボックス -->
+                                                                <td style="height:0px">
+                                                                    <apex:inputCheckbox id="checkreFavoritePropertyRecord"  value="{!screenFavoriteProperty.isSelected}" disabled="{! !screenFavoriteProperty.isPortalFlg}"/> 
+                                                                    <apex:outputlabel styleClass="serach_check5" for="checkreFavoritePropertyRecord" />
+                                                                </td>
+                                                                <!-- 物件名 -->
+                                                                <td style="height:0px">
+                                                                    <apex:commandLink value="{!screenFavoriteProperty.buildingName}  {!screenFavoriteProperty.propertyName}"
+                                                                                    style="color: #0000e1;"
+                                                                                    onclick="showPage('GA104006View', '', 'true', 'propertyId={!screenFavoriteProperty.propertyId}')"
+                                                                                    rerender="dummy"
+                                                                                    />
+                                                                </td>
+                                                            </tr>
+                                                            <apex:variable var="num" value="{!VALUE(num) + 1}" />
+                                                        </apex:repeat>
+                                                    </tbody>
+                                                </table>
+                                            </apex:outputPanel>
+                                            <apex:commandButton value="発行" styleClass="btn btn-info  mt10 text-center wd100 jump_to_issue"
+                                                                disabled="{!OR(isOpenError, correspondId==null)}"
+                                                                action="{!clickIssueFavoriteProperty}" onclick="blockUi();"
+                                                                oncomplete="unblockUi();if(!{! hasErrorMessage}) setClipBoardURL();"
+                                                                reRender="isSueURL, messageArea"/>
+                                        </div>
+                                    </ul>
+                                </div>
+                                <div class="columns propertyURLGenerate pop_box2" id="phrase_contents" style="display:none;">
+                                    <!-- 物件URL生成-->
+                                    <ul id="accordion4" class="accordion">
+                                        <div class="text-center mb30">
+                                            <apex:input type="text" styleClass="form-control mb10" value="{!screenMailInfo.propertyURL}" html-placeholder="URL" disabled="{!correspondId==null}" onchange="correctInputRules(this, 'text', 2000)" />
+                                            <apex:input type="text" styleClass="form-control mb10" value="{!screenMailInfo.propertyDetail}" html-placeholder="物件詳細" disabled="{!correspondId==null}" onchange="correctInputRules(this, 'text', 255)" />
+                                            <apex:commandButton value="発行" styleClass="btn btn-info  mt10 text-center wd100 jump_to_issue"
+                                                                disabled="{!OR(isOpenError, correspondId==null)}"
+                                                                action="{!clickIssue}" onclick="blockUi();"
+                                                                oncomplete=" unblockUi();if(!{! hasErrorMessage}) setClipBoardURL();"
+                                                                reRender="isSueURL, messageArea" />
+                                        </div>
+                                    </ul>
+                                </div>
+                            </div>
+                            <!-- ポータルサイト構築 変更 End  -->
+                            <div class="columns mt30 show-for-medium ">
+                                <div class="  flex-wrap">
+                                    <div class="wd50">
+                                        <button type="button" class="btn btn-default wd100" id="template">定型文</button>
+                                    </div>
+                                    <div class="wd50">
+                                        <button type="button" class="btn btn-gray wd100" id="phrase">文例集</button>
+                                    </div>
+                                </div>
+                                <div class="template pop_box" id="template_contents">
+                                    <!-- 定型文-->
+                                    <ul id="accordion" class="accordion">
+                                        <apex:repeat value="{!screenFixedPhrase.folder}" var="folder">
+                                            <li>
+                                                <div class="link" style="padding-right:30px">
+                                                    <apex:outputText value="{!folder}" />
+                                                    <i class="fa fa-chevron-down"></i>
+                                                </div>
+                                                <ul class="submenu">
+                                                    <apex:variable var="fixedPhraseIndex" value="0" />
+                                                    <apex:repeat value="{!screenFixedPhrase.fixedPhraseMap[folder]}" var="fixedPhrase">
+                                                        <li>
+                                                            <apex:commandLink action="{!clickFixedPhrase}" value="{!fixedPhrase.Name}" reRender="messageArea, subjectInput, bodyInput">
+                                                                <apex:param name="fixedPhraseIndex" value="{!VALUE(fixedPhraseIndex)}" assignTo="{!selectFixedPhraseIndex}" />
+                                                                <apex:param name="fixedPhraseFolder" value="{!folder}" assignTo="{!selectFixedPhraseFolder}" />
+                                                            </apex:commandLink>
+                                                        </li>
+                                                        <apex:variable var="fixedPhraseIndex" value="{!VALUE(fixedPhraseIndex)+1}" />
+                                                    </apex:repeat>
+                                                </ul>
+                                            </li>
+                                        </apex:repeat>
+                                    </ul>
+                                </div>
+                                <div class="phrase pop_box" id="phrase_contents" style="display:none;">
+                                    <!-- 文例-->
+                                    <ul id="accordion2" class="accordion">
+                                        <apex:repeat value="{!screenExampleSentence.folder}" var="folder">
+                                            <li>
+                                                <div class="link" style="padding-right:30px">
+                                                    <apex:outputText value="{!folder}" />
+                                                    <i class="fa fa-chevron-down"></i>
+                                                </div>
+                                                <ul class="submenu">
+                                                    <apex:variable var="exampleSentenceIndex" value="0" />
+                                                    <apex:repeat value="{!screenExampleSentence.exampleSentenceMap[folder]}" var="exampleSentence">
+                                                        <li>
+                                                             <apex:commandLink value="{!exampleSentence.Name}" oncomplete="writeClipBoard('{!selectExampleSentenceText}');">
+                                                                <apex:param name="sentenceText" value="{!exampleSentence.ExampleSentence__c}" assignTo="{!selectExampleSentenceText}" />
+                                                            </apex:commandLink>
+                                                        </li>
+                                                        <apex:variable var="exampleSentenceIndex" value="{!VALUE(exampleSentenceIndex)+1}" />
+                                                    </apex:repeat>
+                                                </ul>
+                                            </li>
+                                        </apex:repeat>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- メール作成画面 -->
+                        <div class="columns small-12 medium-9 large-9">
+                            <div class="flex-wrap justify-between align_center">
+                                <h3>メール作成</h3>
+                                <div style="margin-top: 30px; margin-left: 30px;">
+                                    <apex:outputlabel id="sendingDateTimeAlert"
+                                                    value="※{!screenMailInfo.sendingDateTime} に時間指定送信の設定があります。"
+                                                    style="color:red;"
+                                                    rendered="{!AND(screenMailInfo.sendingDateTime != '', !isOpenError)}"></apex:outputlabel>
+                                </div>
+                                <div class="deli_box show-for-medium">
+                                    <apex:commandLink rendered="{!OR(mailDraftId != null, mailTimeSpecificationSendingId != null)}"
+                                                    onclick="checkDelete()" reRender="dummy">
+                                        <apex:image url="{!URLFOR($Resource.designer_file, 'designer_file/images/trash.png')}" alt="削除" />
+                                    </apex:commandLink>
+                                </div>
+                            </div>
+                            <div class="mail_box">
+                                <table class="table table-hstriped">
+                                    <col width="20%" />
+                                    <col width="80%" />
+                                    <tr>
+                                        <th>予約</th>
+                                        <td>
+                                            <div class="flex-wrap flex_wrap align_center">
+                                                <div class="mr10">
+                                                    <apex:input type="date" value="{!screenMailInfo.sendingDate}" id="dateInput"
+                                                                styleClass="form-control" style="width: auto;"
+                                                                onkeydown="dateInputKeydownFocusAdjust(this, event)"
+                                                                onblur="clearValidateErrorValue(this)" html-min="1700-01-01" html-max="4000-12-31"/>
+                                                </div>
+                                                <div class="mr10">
+                                                    <apex:selectList value="{!screenMailInfo.sendingTime}"
+                                                                    styleClass="form-control" size="1">
+                                                        <apex:selectOptions value="{!sendingTimeList}" />
+                                                    </apex:selectList>
+                                                </div>時
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>送信者</th>
+                                        <td>
+                                            <apex:outputText value="{!screenMailInfo.sendFrom}" />
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>宛先</th>
+                                        <td>
+                                            <apex:repeat value="{!screenMailInfo.sendTo}" var="to">
+                                                <apex:inputCheckbox id="sendTo" value="{!to.isCheck}" />
+                                                <apex:outputLabel for="sendTo" styleClass="mail_check" value="{!to.label}" />
+                                                <br/>
+                                            </apex:repeat>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>
+                                            <label for="id_cc">CC</label>
+                                        </th>
+                                        <td>
+                                            <apex:repeat value="{!screenMailInfo.cc}" var="cc">
+                                                <apex:inputCheckbox id="cc" value="{!cc.isCheck}" />
+                                                <apex:outputLabel for="cc" styleClass="mail_check" value="{!cc.label}" />
+                                                <br/>
+                                            </apex:repeat>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>添付ファイル
+                                            <br/>(3MBまで)</th>
+                                        <td>
+                                            <div class="flex-wrap flex_wrap mb10">
+                                                <div class="mt10">
+                                                    <label for="id_file" class="btn btn-sm btn-normal mr10" id="id_file_label" style="{!IF(isOpenError,'background-color: #ddd;','')}">
+                                                        ファイルから選択
+                                                        <input id="id_file" type="file" onchange="blockUi();addAttachment(this);unblockUi();" onclick="{!IF(isOpenError,'return false;','')}" style="display:none;" />
+                                                    </label>
+                                                </div>
+                                                <div class="mt10">
+                                                    <apex:inputHidden id="tempAttachmentParentId" value="{!tempAttachmentParentId}" />
+                                                    <apex:inputHidden id="attachmentFileNames" value="{!screenMailInfo.attachmentFileNames}" />
+                                                    <div id="attachmentFilesDiv" style="font-size:14px;">
+                                                        <!-- 保存済み添付ファイル -->
+                                                        <apex:outputPanel id="attachmentFileNamesBlock" layout="block" style="display: inline;">
+                                                            <apex:inputHidden id="attachmentTotalSize" value="{!attachmentTotalSize}" />
+                                                            <apex:variable var="attachmentIndex" value="0" />
+                                                            <apex:repeat value="{!attachmentList}" var="att">
+                                                                <apex:commandLink value="{!att.Name}"
+                                                                                onclick="checkAttachmentDelete({!VALUE(attachmentIndex)})"
+                                                                                styleClass="attachmentfile"
+                                                                                reRender="dummy" />
+                                                                <apex:variable var="attachmentIndex" value="{!VALUE(attachmentIndex)+1}" />
+                                                            </apex:repeat>
+                                                        </apex:outputPanel>
+                                                        <!-- 追加添付ファイル はここに追加される -->
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>
+                                            <label for="id_subject">件名</label>
+                                        </th>
+                                        <td>
+                                            <apex:input type="text" styleClass="form-control" value="{!screenMailInfo.subject}" id="subjectInput" onchange="correctInputRules(this, 'text', 3000)" />
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>
+                                            <label for="id_content">本文</label>
+                                        </th>
+                                        <td>
+                                            <!-- ▼ 2021.12.3 LINE連携対応より、LINEともだち紹介を追加・修正 -->
+                                            <div>
+                                                <div class="show-for-small-only inline-block mr10">
+                                                    <apex:commandButton value="定型文"
+                                                                        styleClass="btn btn-normal-small"
+                                                                        style="line-height: 1.6; margin-bottom: 5px;"
+                                                                        disabled="{!isOpenError}"
+                                                                        onclick="blockUi();"
+                                                                        action="{!openFixedPhraseSelect}"
+                                                                        oncomplete="unblockUi();if({!hasErrorMessage}){gotoTop();}else{gotoTop();jQuery('#dialog-modal2').dialog('open');}"
+                                                                        reRender="messageArea, GA102004Modal2Form, rejs" />
+                                                    <apex:commandButton value="文例集"
+                                                                        styleClass="btn btn-normal-small"
+                                                                        style="line-height: 1.6; margin-bottom: 5px;"
+                                                                        disabled="{!isOpenError}"
+                                                                        onclick="blockUi();"
+                                                                        action="{!openExampleSentenceSelect}"
+                                                                        oncomplete="unblockUi();if({!hasErrorMessage}){gotoTop();}else{gotoTop();jQuery('#dialog-modal3').dialog('open');}"
+                                                                        reRender="messageArea, GA102004Modal3Form, rejs" />
+                                                </div>
+                                                <apex:inputCheckbox id="lineFriendIntroduction" value="{! screenMailInfo.isLineFriendIntroduction }" />
+                                                <apex:outputLabel for="lineFriendIntroduction" styleClass="mail_check" value="LINEともだち紹介" />
+                                            </div>
+                                            <!-- ▲ 2021.12.3 -->
+                                            <apex:inputTextarea cols="40" rows="25" styleClass="form-control" value="{!screenMailInfo.body}" id="bodyInput" onchange="correctInputRules(this, 'text', 32000)" />
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                            <div class="text-center mb60">
+                                <div class="mb10">
+                                    <apex:commandButton value="確認する"
+                                                        styleClass="btn btn-submit btn-primary text-center"
+                                                        disabled="{!isOpenError}"
+                                                        onclick="blockUi();getAttachmentFileNames();"
+                                                        action="{!clickConfirm}"
+                                                        oncomplete="unblockUi();if({!hasErrorMessage}){gotoTop();}else{gotoTop();jQuery('#dialog-modal1').dialog('open');}"
+                                                        reRender="messageArea, GA102004Modal1Form, rejs" />
+                                </div>
+                                <div>
+                                    <apex:commandButton value="下書き保存する"
+                                                        styleClass="btn btn-submit btn-reservation text-center"
+                                                        disabled="{!isOpenError}"
+                                                        onclick="checkSave()"
+                                                        rerender="messageArea" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+            </main>
+
+            <!-- actionfunction -->
+            <apex:actionFunction name="clickDraftSave" action="{!clickDraftSave}" oncomplete="unblockUi();if({!hasErrorMessage}){gotoTop();}else{alertSaveFinish();}"   reRender="messageArea" />
+            <apex:actionFunction name="clickDelete"    action="{!clickDelete}"    oncomplete="unblockUi();if({!hasErrorMessage}){gotoTop();}else{alertDeleteFinish();}" reRender="messageArea" />
+            <apex:actionFunction name="clickAttachmentDelete" action="{!clickAttachmentDelete}" oncomplete="unblockUi()" reRender="messageArea, attachmentFileNamesBlock">
+                <apex:param name="cadParam1" assignTo="{!deleteAttachmentIndex}" value="" />
+            </apex:actionFunction>
+            <apex:actionFunction name="initPropertyDetail" action="{!initPropertyDetail}" oncomplete="if({!hasErrorMessage}){gotoTop();}else{}" reRender="messageArea, bodyInput" />
+            <apex:actionFunction name="closeFixedPhraseSelect" action="{!closeFixedPhraseSelect}" oncomplete="unblockUi();if({!hasErrorMessage}){gotoTop();}" reRender="messageArea, subjectInput, bodyInput" />
+
+        </body>
+
+        <script>
+            // 発行ボタン クリップボード設定処理
+            function setClipBoardURL() {
+                var isSueURL = document.getElementById("{!$Component.isSueURL}");
+                var isSueText = isSueURL.value;
+                // クリップボードにURL設定
+                writeClipBoard(isSueText);
+            }
+         
+        	// クリップボード書き込み処理
+        	function writeClipBoard(text){
+                new ClipBoard().writeText(text)
+                .then(function(message){
+                    return showAlert(message);
+                }).catch(function(error){
+                    return showAlert(error.message);
+                });
+            }
+
+        </script>
+        <!-- 添付ファイル関連処理 -->
+        <script src="/soap/ajax/47.0/connection.js" type="text/javascript"></script>
+        <script>
+            sforce.connection.sessionId = '{!$Api.Session_ID}';
+
+            // 画面起動時
+            window.addEventListener('load', function() {
+                if ({!isInitPropertyDetail}) {
+                    // 物件情報の初期表示
+                    initPropertyDetail();
+                }
+                // ポータルサイト構築 追加 Start
+                if ({! !authorityOptionPortalFlg} || {!creenFavoritePropertyCount} == '0' ) {
+                    // 
+                    changeTemplateTab();
+                }
+                // ポータルサイト構築 追加 End 
+            }, false);
+
+            // 追加添付ファイル一覧保持用
+            var addAttachmentFiles = [];
+            // 追加添付ファイルサイズ保持用
+            var addAttachmentTotalSize = 0;
+
+            // 添付ファイルの追加処理
+            async function addAttachment(inputFileObject) {
+
+                // 選択ファイル取得
+                var file = inputFileObject.files[0];
+                if (typeof file == "undefined") {
+                    // ファイル選択なしの場合、処理終了
+                    return true;
+                }
+
+                // ファイルサイズ3MB（3,145,728Byte）超過チェック
+                console.log(Number(document.getElementById("{!$Component.attachmentTotalSize}").value) + addAttachmentTotalSize + file.size);
+                if (3145728 < Number(document.getElementById("{!$Component.attachmentTotalSize}").value) + addAttachmentTotalSize + file.size) {
+                    inputFileObject.value = '';
+                    await showAlert('合計で3BMを超えるファイルの添付はできません。');
+                    return;
+                }
+
+                // 追加添付ファイル一覧に追加
+                addAttachmentFiles.push(file);
+                addAttachmentTotalSize = addAttachmentTotalSize + file.size;
+
+                // 添付ファイル表示情報作成
+                var newAttachment = document.createElement('a');
+                newAttachment.id = 'addAttachmentList' + String(addAttachmentFiles.length - 1);
+                newAttachment.classList.add("attachmentfile");
+                newAttachment.textContent = file.name;
+                newAttachment.onclick = function() {    // クリック時の削除処理追加
+                    checkTempAttachmentDelete(this);
+                }
+
+                // 添付ファイル表示枠へ追加
+                document.getElementById("attachmentFilesDiv").appendChild(newAttachment);
+
+                inputFileObject.value = '';
+
+            }
+
+            // 添付ファイルの削除処理
+            function delAttachment(delAttachmentFile) {
+
+                // 削除ファイルのインデックス取得
+                var delIndex = Number(delAttachmentFile.id.replace('addAttachmentList', ''));
+
+                // 要素削除
+                delAttachmentFile.parentNode.removeChild(delAttachmentFile);
+                // 削除ファイルのサイズ分、追加添付の合計ファイルサイズをマイナス
+                addAttachmentTotalSize = addAttachmentTotalSize - addAttachmentFiles[delIndex].size;
+                // 追加添付ファイル一覧から削除（指定indexから1要素削除）
+                addAttachmentFiles.splice(delIndex, 1);
+
+                // 添付ファイル要素のId内のindexを振り直す
+                for (var i = delIndex; i < addAttachmentFiles.length; i++) {
+                    document.getElementById("addAttachmentList" + String(i + 1)).id = "addAttachmentList" + String(i);
+                }
+
+            }
+
+            // 添付ファイル名の取得
+            function getAttachmentFileNames() {
+                var attachmentfileElements = $(document.getElementById("attachmentFilesDiv")).find('a');
+                var attachmentFileNames = '';
+                for (var i = 0; i < attachmentfileElements.length; i++) {
+                    attachmentFileNames = attachmentFileNames + attachmentfileElements[i].textContent + '　';
+                }
+                document.getElementById("{!$Component.attachmentFileNames}").value = attachmentFileNames;
+            }
+
+            // 添付ファイルのアップロード処理
+            async function uploadAttachment() {
+                try {
+                    // ファイル追加がない場合、処理終了
+                    if (addAttachmentFiles.length == 0) {
+                        // 下書き保存処理（actionFunctionを実行）
+                        clickDraftSave();
+                        return true;
+                    }
+
+                    // 追加添付ファイル数取得
+                    var attachmentfileCount = addAttachmentFiles.length;
+
+                    // 添付ファイル一時保存用の親オブジェクト作成
+                    var parentId = createTemprecord();
+                    // IdをApex返却用の項目へセット
+                    document.getElementById("{!$Component.tempAttachmentParentId}").value = parentId;
+
+                    var addAttachmentObjects = [];
+                    var fileName;
+                    var fileBody;
+                    var fileContent;
+                    // 添付ファイルを一時的に登録（最終的にapex側の処理で削除する）
+                    for (var i = 0; i < addAttachmentFiles.length; i++) {
+                        // ファイルの読み込み処理を作成する
+                        var reader = new FileReader();
+                        reader.onload = function(event) {
+                            // ファイル名取得
+                            fileName = addAttachmentFiles[addAttachmentObjects.length].name;
+                            // ファイル内容取得
+                            fileBody = event.target.result;
+                            fileContent = String(fileBody);
+                            fileContent = fileContent.substr(fileContent.indexOf(',') + 1);
+                            // 添付ファイル情報作成
+                            var att = new sforce.SObject('Attachment');
+                            att.ParentId    = parentId;
+                            att.Name        = fileName;
+                            att.Body        = fileContent;
+                            addAttachmentObjects.push(att);
+
+                            if (addAttachmentObjects.length == addAttachmentFiles.length) {
+                                // 最後のファイルまで読み込んだ場合
+                                // 添付ファイルを一時登録
+                                var saveResult = sforce.connection.create(addAttachmentObjects);
+                                // 下書き保存処理（actionFunctionを実行）
+                                clickDraftSave();
+                            }
+                        }
+                        // ファイルの読み込みを実行
+                        reader.readAsDataURL(addAttachmentFiles[i]);
+                    }
+                    return true;
+
+                } catch(e) {
+                    await showAlert('添付ファイルのアップロードに失敗しました。');
+                    await showAlert(e);
+                    unblockUi();
+                    return false;
+
+                }
+            }
+
+            // 一時的な添付ファイルオブジェクトの親データ作成（Id返却）
+            function createTemprecord() {
+                var att = new sforce.SObject('MailDraft__c');
+                att.Name       = 'Temporary of Attachment';
+                var saveResult = sforce.connection.create([att]);
+                if (saveResult[0].success) {
+                    return saveResult[0].id;
+                } else {
+                    console.log(saveResult[0].errors);
+                    return null;
+                }
+            }
+
+            // ポータルサイト構築 追加 Start
+             // 権限が無い状態でのタブの制御
+            function changeTemplateTab(){
+                $('#propertyURLGenerate').addClass("btn-default2");
+                $('#propertyURLGenerate').removeClass("btn-gray2");
+                $('#favoriteProperty').removeClass("btn-default2");
+                $('.favoriteProperty').css('display', 'none');
+                $('.propertyURLGenerate').css('display', 'block');
+                $('#favoriteProperty').css('cursor','auto');
+                $('#propertyURLGenerate').css('cursor','auto');
+                $('#favoriteProperty').css('color','#ffffff');
+                $('#favoriteProperty').css('background-color','#b8b8b8');
+            }
+            
+            // ポータルサイト構築 追加 End
+        </script>
+
+        <script type="text/javascript">
+
+$('#template').on("click", function(){
+  $(this).addClass("btn-default");
+  $(this).removeClass("btn-gray");
+  $('#phrase').addClass("btn-gray");
+  $('#phrase').removeClass("btn-default");
+  $('.template').css('display', 'block');
+  $('.phrase').css('display', 'none');
+});
+
+$('#phrase').on("click", function(){
+  $(this).addClass("btn-default");
+  $(this).removeClass("btn-gray");
+  $('#template').addClass("btn-gray");
+  $('#template').removeClass("btn-default");
+  $('.template').css('display', 'none');
+  $('.phrase').css('display', 'block');
+});
+
+// ポータルサイト構築 追加 Start
+// お気に入り物件
+$('#favoriteProperty').on("click", function(){
+    if ({!authorityOptionPortalFlg} && {!creenFavoritePropertyCount} != '0') {
+        $(this).addClass("btn-default2");
+        $(this).removeClass("btn-gray2");
+        $('#propertyURLGenerate').addClass("btn-gray2");
+        $('#propertyURLGenerate').removeClass("btn-default2");
+        $('.favoriteProperty').css('display', 'block');
+        $('.propertyURLGenerate').css('display', 'none');
+    }
+});
+
+// 物件URL生成
+$('#propertyURLGenerate').on("click", function(){
+    if ({!authorityOptionPortalFlg} && {!creenFavoritePropertyCount} != '0') {
+        $(this).addClass("btn-default2");
+        $(this).removeClass("btn-gray2");
+        $('#favoriteProperty').addClass("btn-gray2");
+        $('#favoriteProperty').removeClass("btn-default2");
+        $('.favoriteProperty').css('display', 'none');
+        $('.propertyURLGenerate').css('display', 'block');
+    }
+});
+// ポータルサイト構築 追加 End
+
+            $(function () {
+                var Accordion = function (el, multiple) {
+                    this.el = el || {};
+                    this.multiple = multiple || false;
+
+                    var links = this.el.find('.link');
+                    links.off('click');
+                    links.on('click', { el: this.el, multiple: this.multiple }, this.dropdown);
+                }
+
+                Accordion.prototype.dropdown = function (e) {
+                    var $el = e.data.el;
+                    $this = $(this),
+                        $next = $this.next();
+
+                    $next.slideToggle();
+                    $this.parent().toggleClass('open');
+
+                    if (!e.data.multiple) {
+                        $el.find('.submenu').not($next).slideUp().parent().removeClass('open');
+                    };
+                }
+
+                var accordion = new Accordion($('#accordion'), false);
+                var accordion = new Accordion($('#accordion2'), false);
+                var accordion = new Accordion($('#accordion3'), false);
+                var accordion = new Accordion($('#accordion4'), false);
+            });
+        </script>
+    </apex:form>
+
+    <!-- 【モーダルダイアログ】 -->
+    <div id="dialog-modal1" title="">
+        <apex:outputPanel id="dialogPanel1">
+            <c:GA102004Modal1View ParameterClass="{!GA102004Modal1Parameter}" />
+        </apex:outputPanel>
+    </div>
+    <div id="dialog-modal2" title="">
+        <apex:outputPanel id="dialogPanel2">
+            <c:GA102004Modal2View ParameterClass="{!GA102004Modal2Parameter}" />
+        </apex:outputPanel>
+    </div>
+    <div id="dialog-modal3" title="">
+        <apex:outputPanel id="dialogPanel3">
+            <c:GA102004Modal3View ParameterClass="{!GA102004Modal3Parameter}" />
+        </apex:outputPanel>
+    </div>
+
+    <!-- 【JAVASCRIPT】 -->
+    <script language="javascript" type="text/javascript">
+
+        //削除確認メッセージ
+        async function checkDelete() {
+            var message = "{!MSG_COM_V_DELETE}";
+            if (await showConfirm(message)) {
+                blockUi();
+                clickDelete();
+            }
+        }
+
+        //削除確認メッセージ（添付ファイル）
+        async function checkAttachmentDelete(index) {
+            var message = "{!MSG_COM_V_DELETE}";
+            if (await showConfirm(message)) {
+                blockUi();
+                clickAttachmentDelete(index);
+            }
+        }
+
+        //削除確認メッセージ（追加分の添付ファイル）
+        async function checkTempAttachmentDelete(element) {
+            var message = "{!MSG_COM_V_DELETE}";
+            if (await showConfirm(message)) {
+                blockUi();
+                delAttachment(element);
+                unblockUi();
+            }
+        }
+
+        //保存確認メッセージ
+        async function checkSave() {
+            var message = "{!MSG_COM_V_SAVE}";
+            if (await showConfirm(message)) {
+                blockUi();
+                uploadAttachment();
+            }
+        }
+
+        //削除完了メッセージ
+        async function alertDeleteFinish() {
+            //完了メッセージ
+            await showAlert("{!MSG_COM_I_DELETE}");
+
+            //画面を閉じる
+            closePage();
+        }
+
+        //保存完了メッセージ
+        async function alertSaveFinish() {
+            //完了メッセージ
+            await showAlert("{!MSG_COM_I_SAVE}");
+
+            //画面を閉じる
+            closePage();
+        }
+
+        //確認モーダル終了
+        function closeDialogModal1() {
+            jQuery("#dialog-modal1").dialog("close");
+
+            //画面を閉じる
+            closePage();
+        }
+
+        //定型文選択モーダル終了
+        function closeDialogModal2() {
+            jQuery("#dialog-modal2").dialog("close");
+
+            //画面を閉じる
+            closeFixedPhraseSelect();
+        }
+
+        //文例集選択モーダル終了
+        function closeDialogModal3() {
+            //画面を閉じる
+            jQuery("#dialog-modal3").dialog("close");
+        }
+    </script>
+
+    <!-- 【JAVASCRIPT】画面のコントロールを再呼び込み用 -->
+    <apex:outputPanel id="rejs">
+        <script language="javascript" type="text/javascript">
+            // モーダル幅の設定用
+            var clientWidth = 0; 
+            if(document.body.clientWidth > 800){
+                clientWidth = 800;
+            }else{
+                clientWidth = document.body.clientWidth;
+            }
+            var clientHeight = 0;
+            if(document.body.clientHeight > 900){
+                clientHeight = 900;
+            }else{
+                clientHeight = document.body.clientHeight;
+            }
+
+            //確認モーダル起動
+            jQuery(function () {
+                //ダイアログを表示
+                jQuery("#dialog-modal1").dialog({
+                    modal: true,
+                    autoOpen: false,
+                    width: clientWidth,
+                    height: clientHeight,
+                });
+            });
+
+            //定型文モーダル起動
+            jQuery(function () {
+                //ダイアログを表示
+                jQuery("#dialog-modal2").dialog({
+                    modal: true,
+                    autoOpen: false,
+                    width: clientWidth,
+                    height: clientHeight,
+                });
+            });
+
+            //文例集モーダル起動
+            jQuery(function () {
+                //ダイアログを表示
+                jQuery("#dialog-modal3").dialog({
+                    modal: true,
+                    autoOpen: false,
+                    width: clientWidth,
+                    height: clientHeight,
+                });
+            });
+
+        </script>
+    </apex:outputPanel>
+
+</apex:page>

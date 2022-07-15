@@ -1,0 +1,173 @@
+<!-- 手動メンテ一覧画面 -->
+<apex:page controller="GD701001Controller" docType="html-5.0" standardStylesheets="false" title="手動メンテ一覧">
+
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="format-detection" content="telephone=no" />
+        <meta name="robots" content="noindex" />
+        <title>手動メンテ一覧</title>
+        <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/reset.min.css')}" />
+        <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/foundation.css')}" />
+        <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/modaal.css')}" />
+        <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/style.css')}" />
+        <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery-3.6.0.min.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.designer_file, 'designer_file/js/modaal.js')}" />
+        <apex:stylesheet value="https://use.fontawesome.com/releases/v5.0.6/css/all.css" />
+
+        <apex:stylesheet value="{!URLFOR($Resource.external_file, 'external_file/common_style.css')}" />
+        <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery.blockUI.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/common_screen_util.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/input_rules.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jQueryUI/jquery-ui.min.js')}" />
+        <apex:stylesheet value="{!URLFOR($Resource.jQuery,'jQuery/jQueryUI/jquery-ui.css')}" />
+    </head>
+
+    <body style="background-color:#ffffff;" id="gd701001">
+        <main>
+            <article>
+                <apex:form id="form" onkeydown="if(event.keyCode==13){this.blur();search();}">
+                    <apex:pageMessages />
+
+                    <section>
+
+                        <div class="flex-wrap justify-between align_center mb10" >
+                            <h1 class="fontb font2rem" style="float:left">手動メンテ</h1>
+                            <!-- 非表示検索ボタン（Enterキー押下時動作用の隠し項目） -->
+                            <apex:commandButton id="hiddenSearchBtn" styleclass="btn btn-submit btn-primary " value="検索(非表示)" disabled="{!isOpenError}"
+                            onclick="blockUi();" action="{!search}"
+                            oncomplete="unblockUi();if({!hasErrorMessage}){gotoTop()}"
+                            reRender="form" style="visibility:hidden;" />
+                        </div>
+                        
+                        
+
+                        <section class="border-g-3 mb60">
+                            <div class="flex-wrap flex_wrap align-items_end mb10">
+                                <div class="mr20">
+                                    <div>元付業者</div>
+                                    <apex:input type="text" html-placeholder="元付業者" disabled="{! isOpenError}" styleClass="form-control wd24 mb10" value="{!FormerSupplier}"  onchange="correctInputRules(this,'text', '255')"   tabIndex="1" />
+                                </div>
+                                <div class="mr20 mb10">地区
+                                    <div class="textbox-pen">
+                                        <apex:input type="text" style="width:90%;" html-readonly="readonly" value="{!Districts}" tabindex="2" />
+                                        <div class="info" align="right">
+                                            <apex:commandButton image="{!URLFOR($Resource.designer_file, 'designer_file/images/pencil.png')}"
+                                                                onclick="blockUi();" action="{!openModal}" rerender="GH201003Form" disabled="{!isOpenError}"
+                                                                status="loadComponent" oncomplete="unblockUi(); jQuery('#dialog-modal1').dialog('open');"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-center ">
+                                <apex:commandButton styleclass="btn btn-submit btn-primary " value="検索" disabled="{!isOpenError}"
+                                                    onclick="blockUi();" action="{!search}"
+                                                    oncomplete="unblockUi();if({!hasErrorMessage}){gotoTop()}"
+                                                    reRender="form"  tabIndex="3" />
+                            </div>
+                        </section>
+
+                        <section>
+                            <h2 class="fontb font2rem">検索結果</h2>
+                            <table class="gray search-table" style="height:252px;">
+                                <tbody>
+                                    <tr>
+                                        <th class="wd4">元付業者</th>
+                                        <th class="wd4">TEL</th>
+                                        <th class="wd3">担当者名</th>
+                                        <th class="wd4">TEL</th>
+                                        <th class="wd6">住所</th>
+                                        <th class="wd5">Email</th>
+                                        <th class="wd2">管理物件</th>
+                                        <th class="wd4">最新手動メンテ日</th>
+                                    </tr>
+                                    <apex:variable var="num" value="0" />
+                                    <apex:repeat value="{!accountRecordList}" var="acc">
+                                        <tr>
+                                            <td>
+                                                <apex:outputText value="{!acc.Name}" />
+                                            </td>
+                                            <td>
+                                                <apex:outputText value="{!acc.Phone}" />
+                                            </td>
+                                            <td>
+                                                <apex:outputText value="{!acc.Representative__c}" />
+                                            </td>
+                                            <td>
+                                                <apex:outputText value="{!acc.RepresentativePhone__c}" />
+                                            </td>
+                                            <td>
+                                                <apex:outputText value="{!acc.Address__c}" />
+                                            </td>
+                                            <td>
+                                                <apex:commandLink value="{!acc.Email__c}"
+                                                                  oncomplete="showPage('GA102004View', '', 'true', 'AccountId={!accountRecordList[AccountIndex].Id}')">
+                                                    <apex:param value="{!VALUE(num)}" name="AccountIndex" assignTo="{!AccountIndex}" />
+                                                </apex:commandLink>
+                                            </td>
+                                            <td>
+                                                <apex:commandLink value="管理物件" oncomplete="showPage('GD701002View', '', 'true', 'Id={!accountRecordList[AccountIndex].Id}&Districts={!SearchDistricts}')">
+                                                    <apex:param value="{!VALUE(num)}" name="AccountIndex" assignTo="{!AccountIndex}" />
+                                                </apex:commandLink>
+                                            </td>
+                                            <td>
+                                                <!-- サブクエリ項目の表示（サブクエリ結果1件のみの前提で、Repeatを使用し1項目だけ表示） -->
+                                                <apex:repeat value="{!acc.PropertyFormerSupplier__r}" var="pro">
+                                                    <apex:outputtext value="{0, date, yyyy/MM/dd}">
+                                                        <apex:param value="{!pro.ManualMaintenanceDate__c +9/24}" />
+                                                    </apex:outputtext>
+                                                </apex:repeat>
+                                            </td>
+                                            <apex:variable var="num" value="{!VALUE(num)+1}" />
+                                        </tr>
+                                    </apex:repeat>
+
+                                </tbody>
+                            </table>
+                        </section>
+
+                    </section>
+
+                    <!-- actionfunction -->
+                    <apex:actionFunction action="{!closeModal}" name="closeModal" rerender="form" oncomplete="unblockUi()" />
+                    <apex:actionFunction action="{!search}" name="search" rerender="form" />
+                </apex:form>
+            </article>
+        </main>
+    </body>
+    
+    <!-- 【モーダルダイアログ】 -->
+    <div id="dialog-modal1" title="">
+        <apex:outputPanel id="dialogPanel1">
+            <c:GH201003View ParameterClass="{!GH201003Paremeter}" />
+        </apex:outputPanel>
+    </div>
+    <!-- 【JAVASCRIPT】 -->
+    <script language="javascript" type="text/javascript">
+        // モーダル幅の設定用
+        var clientWidth = 0; 
+        jQuery(function () {
+            if(document.body.clientWidth > 800){
+                clientWidth = 800;
+            }else{
+                clientWidth = document.body.clientWidth;
+            }
+            //ダイアログを表示
+            jQuery("#dialog-modal1").dialog({
+                modal: true,
+                autoOpen: false,
+                width: clientWidth,
+            });
+        });
+
+        //モーダルを閉じる際の処理
+        function closeGH201003View() {
+
+            jQuery("#dialog-modal1").dialog("close");
+            closeModal();
+
+        }
+    </script>
+
+</apex:page>

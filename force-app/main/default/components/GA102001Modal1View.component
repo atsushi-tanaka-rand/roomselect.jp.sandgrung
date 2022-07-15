@@ -1,0 +1,135 @@
+<!--モーダル画面（担当者設定）-->
+<apex:component controller="GA102001Modal1Controller" allowDML="true">
+    <apex:attribute name="ParameterClass" type="GA102001Modal1ParameterClass" assignTo="{!Parameter}" description="key" />
+    <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery-3.6.0.min.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery.blockUI.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/common_screen_util.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.designer_file, 'designer_file/js/modaal.js')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/reset.min.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/foundation.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/style.css')}"/>
+    <apex:stylesheet value="https://use.fontawesome.com/releases/v5.0.6/css/all.css"/>
+
+    <!-- 反響担当者ポップアップ -->
+    <body style="background-color:#ffffff;">
+        
+        <apex:form id="GA102001Modal1" >
+            <apex:pageBlock rendered="{!parameter.noFirst}">
+                <apex:outputText rendered="{!init}" />
+                <apex:pageMessages />        
+                <div class="modal-header">
+                    <h4 class="modal-title fontb mb20">反響担当者<apex:commandButton style="visibility:hidden;" rerender="dummy"/></h4>
+                </div>
+                <div class="modal-body">
+                    <!-- 操作対象 -->
+                    <apex:outputPanel rendered="{! EchoInputFlg}">
+                        <div class="flex-wrap  flex_wrap flex_wrap justify-between align_center ">
+                            <div class=" mb10 wd48 wd100_xs">
+                                <div>店舗</div>
+                                <apex:actionRegion >                                    
+                                    <apex:selectList styleClass="form-control" size="1" value="{!echoShop}" >
+                                        <apex:selectOptions value="{!selectEchoShopList}"/>
+                                        <apex:actionSupport event="onchange" onsubmit="blockUi();" action="{!getEchoShopList}" oncomplete="unblockUi();" reRender="selectEchoStaffList" />    
+                                    </apex:selectList>
+                                </apex:actionRegion>
+                            </div>
+
+                            <apex:outputPanel id="selectEchoStaffList" layout="block" styleClass="mr20 mb10 wd48 wd100_xs">
+                                <div>担当者</div>
+                                <apex:selectList styleClass="form-control" size="1" value="{!echoStaff}" >
+                                    <apex:selectOptions value="{!selectEchoStaffList}" />
+                                </apex:selectList>
+                            </apex:outputPanel>
+                        </div>
+                    </apex:outputPanel>
+
+                    <!-- 操作対象外 -->
+                    <apex:outputPanel rendered="{! !EchoInputFlg}">
+                        <div class="flex-wrap  flex_wrap flex_wrap justify-between align_center ">
+                            <div class=" mb10 wd48 wd100_xs">
+                                <div>店舗</div>
+                                <apex:outputLabel value="{!echoShopName}" style="border: 0;"/>
+                            </div>
+
+                            <apex:outputPanel id="EchoStaff" layout="block" styleClass=" mr20 mb10 wd48 wd100_xs">
+                                <div>担当者</div>
+                                <apex:outputLabel value="{!echoStaffName}" style="border: 0;" />
+                            </apex:outputPanel>
+                        </div>
+                    </apex:outputPanel>
+
+                    <div class="modal-title fontb mb10">来店担当者</div>
+                    <!-- 操作対象 -->
+                    <apex:outputPanel rendered="{! ShopInputFlg}">
+                        <div class="flex-wrap  flex_wrap flex_wrap justify-between align_center ">
+                            <div class=" mb10 wd48 wd100_xs">
+                                <div>店舗</div>
+                                <apex:actionRegion >                                    
+                                    <apex:selectList styleClass="form-control" size="1" value="{!visitShop}" >
+                                        <apex:selectOptions value="{!selectVisitShopList}"/>
+                                        <apex:actionSupport event="onchange" onsubmit="blockUi();" action="{!getVisitShopList}" oncomplete="unblockUi();" reRender="selectShopStaffList" />    
+                                    </apex:selectList>
+                                </apex:actionRegion>
+                            </div>
+
+                            <apex:outputPanel id="selectShopStaffList" layout="block" styleClass="mr20 mb10 wd48 wd100_xs">
+                                <div>担当者</div>
+                                <apex:selectList styleClass="form-control" size="1" value="{!shopStaff}" >
+                                    <apex:selectOptions value="{!selectShopStaffList}" />
+                                </apex:selectList>
+                            </apex:outputPanel>
+                        </div>
+                    </apex:outputPanel>
+
+                    <!-- 操作対象外 -->
+                    <apex:outputPanel rendered="{! !ShopInputFlg}">
+                        <div class="flex-wrap  flex_wrap flex_wrap justify-between align_center ">
+                            <div class=" mb10 wd48 wd100_xs">
+                                <div>店舗</div>
+                                <apex:outputLabel value="{!visitShopName}" style="border: 0;"/>
+                            </div>
+
+                            <apex:outputPanel id="ShopStaff" layout="block" styleClass=" mr20 mb10 wd48 wd100_xs">
+                                <div>担当者</div>
+                                <apex:outputLabel value="{!shopStaffName}" style="border: 0;"/>
+                            </apex:outputPanel>
+                        </div>
+                    </apex:outputPanel>
+                </div>
+
+                <div class="modal-footer">
+                    <div class="flex-wrap justify-around flex_wrap mt30">
+                        <div class="mb10 message btn btn-primary btn-submit text-center">
+                            <apex:commandButton styleClass="btn btn-submit btn-primary text-center mauto_xs" value="更新" 
+                                disabled="{!isOpenError}" 
+                                reRender="dummy"
+                                onclick="checkInsert1();"  />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 更新時の動作 -->
+                <apex:actionFunction name="insetdate" action="{!saveDate}"
+                    oncomplete="if({!hasErrorMessage}){unblockUi();return false;}closeDialogModal1();"
+                    reRender="GA102001Modal1"  />
+
+                <apex:outputPanel id="js">
+                    <script language="javascript" type="text/javascript">
+                        //登録確認メッセージ
+                        async function checkInsert1() {
+                            var message = "{! MSG_COM_V_SAVE}";
+                            if (!await showConfirm(message)) {
+                                return false;
+                            }
+                            blockUi();
+                            insetdate();
+                            return true;
+                        }
+                        
+                    </script>
+        
+                </apex:outputPanel>
+            </apex:pageBlock>
+        </apex:form>
+    </body>
+</apex:component>

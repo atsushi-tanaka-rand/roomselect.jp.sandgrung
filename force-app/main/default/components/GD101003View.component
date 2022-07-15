@@ -1,0 +1,125 @@
+<!--保証会社選択画面-->
+
+<apex:component controller="GD101003Controller">
+    
+    <apex:attribute name="ParameterClass" type="GD101003ParameterClass" assignTo="{!Parameter}" description="key" />
+    
+    <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/reset.min.css')}" />
+    <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/foundation.css')}" />
+    <apex:stylesheet value="https://use.fontawesome.com/releases/v5.0.6/css/all.css" />
+    <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/style.css')}" />
+    <apex:stylesheet value="{!URLFOR($Resource.external_file, 'external_file/common_style.css')}" />
+    <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery-3.6.0.min.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery.blockUI.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/common_screen_util.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/input_rules.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.designer_file, 'designer_file/js/modaal.js')}" />
+    
+    
+    
+    <apex:form id="GD101003Form">
+        <apex:pageBlock rendered="{!Parameter.noFirst}">
+            <apex:outputText rendered="{!init}" />
+            
+            <body style="background-color:#ffffff;">
+                <main id="ga102003">
+                    <apex:pageMessages id="messageArea"/>
+                    <article>
+                        <section>
+                            <section style="display:flex">
+                                <div class="flex-wrap  align_center mb10">
+                                    <h1 class="fontb font2rem">保証会社選択</h1> 
+                                </div>
+                                <apex:commandButton styleClass="btn btn-submit btn-primary" value="検索(非表示))" disabled="{!isOpenError}" 
+                                onclick="blockUi();" 
+                                action="{! search}"  reRender="GD101003Form"
+                                oncomplete="unblockUi();" 
+                                status="loadComponent" style="visibility:hidden;"/>   
+                            </section>
+                            
+                            
+                            <div class="border-g-3 mb60">
+                               
+                                <div class="flex-wrap  flex_wrap justify-between align_center mb30">
+                                    <div class=" mb10 wd33">
+                                        <div>保証会社名</div>
+                                        <apex:input type="text" value="{! accountScreenText}" styleclass="form-control  mb10" />
+                                    </div>
+                                    
+                                    <div class=" mb10 wd33">
+                                        <div>プラン名</div>
+                                        <apex:input type="text" value="{! itemNameScreenText}" styleclass="form-control  mb10" />
+                                    </div>
+                                    
+                                    <div class=" mb10 wd33">
+                                        <div>保証内容</div>
+                                        <apex:input type="text" value="{! guaranteePlanScreenText}"  styleclass="form-control  mb10" />
+                                    </div>
+                                    
+                                </div>
+                                
+                                <div class="text-center">
+                                    <apex:commandbutton value="検索" styleClass="btn btn-submit btn-primary modal mb10" disabled="{! isOpenError}"  onclick="blockUi();" action="{! search}"  oncomplete="unblockUi();" reRender="GD101003Form"  />                                  
+                                </div>
+                                
+                            </div>
+                            
+                        </section>
+                        
+                        <section>
+                            <h2 class="fontb font2rem">検索結果</h2>
+                            <table class="gray mb30">
+                                <tbody >
+                                    <tr>
+                                        <th >
+                                            <apex:inputCheckbox id="sc" value="{! headerCheckbox}" styleClass="guaranteeSelectHeadCheck"  onchange="listCheckBoxAllChange(this, '.guaranteeSelectHeadCheck',  '.guaranteeSelectCheck');"/>
+                                            <apex:outputLabel for="sc" styleclass="serach_check3"/>
+                                        </th>
+                                        <th style="width: 300px; height:0px;">
+                                            <apex:outputlabel value="保証会社名"/>
+                                        </th>
+                                        <th style="width: 300px; height:0px;">
+                                            <apex:outputlabel value="プラン名" />
+                                        </th>
+                                        <th  style="width: 400px; height:0px;">
+                                            <apex:outputlabel value="内容" />
+                                        </th>
+                                        <th style="width: 400px; height:0px;">
+                                            <apex:outputlabel value="保証備考" />
+                                        </th>
+                                    </tr>
+                                </tbody>
+                                <tbody  style="height:320px; overflow-y:scroll; display:block; overflow-x: hidden; ">
+                                    <apex:repeat value="{!targetList}" var="D" >
+                                        <tr>
+                                            <td >
+                                                <apex:inputCheckbox id="sc1" value="{!D.checkBox}" styleClass="guaranteeSelectCheck"  onchange="headCheckBoxChange(this, '.guaranteeSelectHeadCheck',  '.guaranteeSelectCheck');"/>
+                                                <apex:outputLabel for="sc1" styleclass="serach_check3"></apex:outputLabel>
+                                            </td>
+                                            <td style="width: 300px; height:0px;">{!D.item.Account__r.Name}</td>
+                                            <td style="width: 300px; height:0px;">{!D.item.ItemName__c}</td>
+                                            <td style="width: 390px; height:0px;">
+                                                <apex:outputField value="{! D.item.AssuranceContent__c}"/>
+                                                <apex:outputText value="{! D.assuranceContentPlus}" escape="false"/>
+                                            </td>
+                                            <td style="width: 375px; height:0px;">{!D.item.Remarks__c}</td>
+                                        </tr> 
+                                    </apex:repeat>
+                                </tbody>
+                            </table>                            
+                            <div class="mr0 wd200">
+                                <apex:commandButton styleClass="btn btn-submit btn-primary text-center modal mb10" value="選択" action="{! selectButton}" onclick="blockUi();" 
+                                                    oncomplete=" if(!{! hasErrorMessage}){closeGD101003View()}unblockUi();" rerender="messageArea,GD101003,GD101003Form"/>
+                            </div>
+                        </section>
+                    </article>
+                </main>
+            </body>
+            
+        </apex:pageBlock>
+    </apex:form>
+    <script>
+
+    </script>
+
+</apex:component>

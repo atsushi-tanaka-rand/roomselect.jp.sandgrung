@@ -1,0 +1,121 @@
+<!--業者選択画面-->
+<apex:component controller="GD301003Controller">
+
+    <apex:attribute name="ParameterClass" type="GD301003ParameterClass" assignTo="{!Parameter}" description="key" />
+    
+    <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/reset.min.css')}" />
+    <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/foundation.css')}" />
+    <apex:stylesheet value="https://use.fontawesome.com/releases/v5.0.6/css/all.css" />
+    <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/style.css')}" />
+    <apex:stylesheet value="{!URLFOR($Resource.external_file, 'external_file/common_style.css')}" />
+    <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery-3.6.0.min.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery.blockUI.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/common_screen_util.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/input_rules.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.designer_file, 'designer_file/js/modaal.js')}" />
+    
+    
+    
+    <apex:form id="GD301003Form">
+        <apex:pageBlock rendered="{!Parameter.noFirst}">
+            <apex:outputText rendered="{!init}" />
+            
+            <body style="background-color:#ffffff;">
+                <main id="ga102003">
+                    <apex:pageMessages id="messageArea"/>
+                    <article>
+                        <section>
+                            
+                            <section style="display:flex">
+                                <div class="flex-wrap justify-between align_center mb10">
+                                    <h1 class="fontb font2rem">業者選択</h1> 
+                                </div>
+                                <apex:commandButton styleClass="btn btn-submit btn-primary" value="検索(非表示))" disabled="{!isOpenError}" 
+                                onclick="blockUi();" 
+                                action="{! search}"  reRender="GD301003Form"
+                                oncomplete="unblockUi();" 
+                                status="loadComponent" style="visibility:hidden;"/>   
+                            </section>
+                            <div class="border-g-3 mb60">
+                               
+                                <div class="flex-wrap  flex_wrap justify-between align_center mb30">
+                                    <div class=" mb10 wd33">
+                                        <div>業者名</div>
+                                        <apex:input type="text" value="{! accountScreenText}" styleclass="form-control  mb10" />
+                                    </div>
+                                    
+                                    <div class=" mb10 wd33">
+                                        <div>TEL</div>
+                                        <apex:input type="tel" value="{! telScreenText}" styleclass="form-control  mb10"/>
+                                    </div>
+                                    
+                                    <div class=" mb10 wd33">
+                                        <div>メール</div>
+                                        <apex:input type="text" value="{! mailScreenText}"  styleclass="form-control  mb10"/>
+                                    </div>
+                                    
+                                </div>
+
+                                <div>業者種別</div>
+                                <div class="flex-xs-xolumn justify-between">
+                                   <div class=" ">
+                                     <apex:inputCheckbox id="syubetu1" value="{! ownerCheck}" disabled="{! ownerIsDisabled  }"/><apex:outputLabel for="syubetu1" styleClass="serach_check" style="width:auto;">オーナー</apex:outputLabel>
+                                     <apex:inputCheckbox id="syubetu2" value="{! managementCompanyCheck}" disabled="{! managementCompanyIsDisabled }"/><apex:outputLabel for="syubetu2" styleClass="serach_check" style="width:auto;">管理会社</apex:outputLabel>
+                                     <apex:inputCheckbox id="syubetu3" value="{! subleaseCheck}" disabled="{! subleaseIsDisabled }"/><apex:outputLabel for="syubetu3" styleClass="serach_check" style="width:auto;">サブリース</apex:outputLabel>
+                                   </div>
+                                </div>           
+                            </div>
+                            <div class="text-center">
+                                <apex:commandbutton value="検索" styleClass="btn btn-submit btn-primary modal mb10" disabled="{! isOpenError}"  onclick="blockUi();" action="{! search}"  oncomplete="unblockUi();"  reRender="GD301003Form" />                                  
+                            </div>   
+
+                        </section>
+                        
+                        <section class="mt30">
+                            <table class="gray headerLockTable">
+                                <tbody id="header" class="tableHeader">
+                                    <tr>
+                                        <th class="wd1"></th>
+                                        <th class="wd5">業者名</th>
+                                        <th class="wd3">種別</th>
+                                        <th class="wd6">住所</th>
+                                        <th class="wd5">業者TEL</th>
+                                        <th class="wd4">担当者名</th>
+                                        <th class="wd5">担当者TEL</th>
+                                        <th class="wdlast">備考</th>
+                                    </tr>
+                                </tbody>
+
+                                <tbody class="tableBody" style="height:320px;" onscroll="linkScrollX(this, 'header')">
+                                    <apex:variable var="num" value="0" />
+                                    <apex:repeat value="{!targetList}" var="D" >
+                                        <tr>
+                                            <td class="text-center wd1">
+                                                <apex:commandLink value="選択" action="{! selectButton}" onclick="blockUi();" oncomplete=" if(!{! hasErrorMessage}){closeGD301003View()}else{gotoTop()}unblockUi();">
+                                                    <apex:param value="{!VALUE(num)}" name="index" assignTo="{!index}" />
+                                                </apex:commandLink>
+                                            </td>
+                                            <td class="wd5">{! D.screenAccount.Name}</td>
+                                            <td class="wd3">{! D.screenSupplierType}</td>
+                                            <td class="wd6">{! D.screenAccount.Address__c}</td>
+                                            <td class="wd5">{! D.screenAccount.Phone}</td>
+                                            <td class="wd4">{! D.screenAccount.Representative__c}</td>
+                                            <td class="wd5">{! D.screenAccount.RepresentativePhone__c}</td>
+                                            <td class="wdlast"><apex:outputField value="{! D.screenAccount.RemarksPublic__c}" /></td>
+                                        </tr>
+                                        <apex:variable var="num" value="{!VALUE(num)+1}" />
+                                    </apex:repeat>
+                                </tbody>
+                            </table> 
+                            
+                            <div class="mr0 wd200">
+
+                            </div>
+                        </section>
+                    </article>
+                </main>
+            </body>
+            
+        </apex:pageBlock>
+    </apex:form>
+</apex:component>

@@ -1,0 +1,125 @@
+<!--地区別メンテナンス条件登録画面-->
+<apex:page controller="GFA01002Controller" docType="html-5.0" id="page" standardStylesheets="false" title="地区別メンテナンス条件登録画面">
+    <head>
+        <title>地区別メンテナンス条件登録画面</title>
+        
+        <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/reset.min.css')}" />
+        <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/foundation.css')}" />
+        <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/modaal.css')}" />
+        <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/style.css')}" />
+        <apex:stylesheet value="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+        <apex:stylesheet value="{!URLFOR($Resource.external_file, 'external_file/common_style.css')}" />
+        <apex:stylesheet value="{!URLFOR($Resource.jQuery,'jQuery/jQueryUI/jquery-ui.css')}" />
+        
+        <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery-3.6.0.min.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery.blockUI.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jQueryUI/jquery-ui.min.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.designer_file, 'designer_file/js/modaal.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/common_screen_util.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/input_rules.js')}" />
+        
+        <script type="text/javascript">
+        //削除確認メッセージ
+        async function checkDelete(){
+            var message = "{! MSG_COM_V_DELETE}";
+            var retVal = await showConfirm(message);
+            if (retVal) {
+                blockUi();
+                targetRecordDelete();
+            }                      
+        }
+        
+        //保存確認メッセージ
+        async function checkSave(){
+            var message = "{! MSG_COM_V_SAVE}";
+            var retVal = await showConfirm(message);
+            if (retVal) {
+                blockUi();
+                save();
+            }          
+        }
+        
+        //削除完了メッセージ
+        async function alertDeleteFinish() {
+            //完了メッセージ
+            await showAlert("{! MSG_COM_I_DELETE}");
+            
+            //画面を閉じる
+            closePage();
+        }
+        
+        //保存完了メッセージ
+        async function alertSaveFinish() {
+            //完了メッセージ
+            await showAlert("{! MSG_COM_I_SAVE}");
+            
+            //画面を閉じる
+            closePage();
+        }    
+        </script>
+    </head>
+    <apex:form id="form">
+        <!-- actionFunction -->
+        <apex:actionFunction action="{! targetRecordSave}"   name="save"
+                             oncomplete="unblockUi();if(!{! hasErrorMessage}){alertSaveFinish()  }else{gotoTop()}" reRender="messageArea" />
+        <apex:actionFunction action="{! targetRecordDelete}" name="targetRecordDelete"
+                             oncomplete="unblockUi();if(!{! hasErrorMessage}){alertDeleteFinish()}else{gotoTop()}" reRender="messageArea"/>        
+        <body id="gf101002">
+            <main>
+                <article>
+                    <section class="">
+                        <apex:pageMessages id="messageArea"/>
+                        <section style="display:flex">
+                            <h1 class="fontb font2rem">地区別メンテナンス条件登録</h1>
+                            <apex:commandButton style=" visibility:hidden;" rerender="dummy"/> 
+                        </section>
+                        
+                        <section>
+                            <div class="border-g ">
+                                <div class="flex-wrap flex_wrap justify-between back_graydark pdr30 pdl30 pdt10px pdb10px pdr10_xs pdl10_xs">
+                                    <h2 class="fontb font18">{!screenTargetRecord.titleName}</h2>
+                                    <div class="flex-wrap">
+                                        <apex:commandbutton value="削除" rendered="{! NOT(isNew)}" styleclass="btn-w-2 btn-w-2-l blue" disabled="{! isOpenError}" 
+                                                            onclick="checkDelete()" rerender="dummy" 
+                                                            tabIndex="9" />
+                                    </div>
+                                </div>
+                                <div class="pdr30 pdl30  pdr10_xs pdl10_xs">
+                                    <div class="flex-wrap  flex_wrap justify-between align_center mt30">
+                                        
+                                        <div class=" mb10 wd32_8 wd33_md100 wd100_xs">
+                                            <div class="information_title">地区</div>
+                                            <apex:selectList styleClass="form-control" size="1" value="{!screenTargetRecord.district}">
+                                                <apex:selectOptions value="{!SelectDistrictList}" />
+                                            </apex:selectList>
+                                        </div>
+                                        
+                                        <div class=" mb10 wd32_8 wd33_md100 wd100_xs">
+                                            <div class="information_title">取扱い物件 金額(下限)</div>
+                                            <apex:input type="text" styleClass="form-control" value="{! screenTargetRecord.propertyAmountLowerLimit}" onchange="correctInputRules(this,'currency', '9')"
+                                                        tabIndex="2" />
+                                        </div>
+                                        
+                                        <div class=" mb10 wd32_8 wd33_md100 wd100_xs">
+                                            <div class="information_title">取扱い物件 金額(上限)</div>
+                                            <apex:input type="text" styleClass="form-control" value="{! screenTargetRecord.propertyAmountUpperLimit}" onchange="correctInputRules(this,'currency', '9')"
+                                                        tabIndex="3" />
+                                        </div>
+                                    </div>
+                                    
+                                </div>
+                            </div>
+                            
+                            <div class="flex-wrap justify-center flex-xs-xolumn  mt60">
+                                <apex:commandbutton value="キャンセル" styleclass="btn btn-cancel text-center mauto_xs mr10" oncomplete="closePage()" tabIndex="7"
+                                                    />
+                                <apex:commandbutton value="保存"       styleclass="btn btn-primary text-center mauto_xs ml10" disabled="{! isOpenError}"
+                                                    onclick="checkSave()" rerender="dummy" tabIndex="8" />
+                            </div>
+                        </section>
+                    </section>
+                </article>
+            </main>
+        </body>
+    </apex:form>
+</apex:page>

@@ -1,0 +1,126 @@
+<!--火災保険プラン登録のモーダル画面 view画面-->
+<apex:component controller="GF801004Controller">
+
+    <apex:attribute name="ParameterClass" type="GF801004ParameterClass" assignTo="{!Parameter}" description="key"/>
+    
+    <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery-3.6.0.min.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery.blockUI.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/common_screen_util.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.designer_file, 'designer_file/js/modaal.js')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/reset.min.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/foundation.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/style.css')}"/>
+    <apex:stylesheet value="https://use.fontawesome.com/releases/v5.0.6/css/all.css"/>
+    
+    <apex:form id="GF801004Form" >
+        <apex:pageBlock rendered="{!Parameter.noFirst}">
+            <apex:pageMessages />
+            <apex:outputText rendered="{!init}" />
+
+            <body id="gf801004">
+                <!-- actionfunction -->
+                <apex:actionFunction name="textRerender" rerender="elPayment" />
+                <main>
+                    <article>
+                        <section class="">
+                            <section style="display:flex">
+                                <h1 class="fontb font2rem">火災保険プラン登録</h1>
+                                <apex:commandButton style=" visibility:hidden;" rerender="dummy"/> 
+                            </section>
+                            
+
+                            <section>                    
+                                <div class="mt30">
+                                    <div class="">
+                                        <div class="flex-wrap  flex_wrap justify-between align_center ">
+                                            <div class=" mb10 wd47 wd100_xs">
+                                                <div class="information_title">火災保険会社</div>
+                                                <div class="information_contents" style="margin-bottom:0">
+                                                    <apex:outputText value="{! modalParameter.companyName}" />
+                                                </div>
+                                            </div>
+                
+                                            <div class=" mb10 wd47 wd100_xs">
+                                                <div class="information_title">火災保険プラン</div>
+                                                <apex:input type="text" styleClass="form-control" value="{! modalParameter.itemName }" onchange="correctInputRules(this,'text','80')" />
+                                            </div>
+
+                                            <!--↓ラジオボタン-->
+                                            <div class=" mb10 wd47 wd100_xs">
+                                                <div class="information_title">付帯商品区分</div>
+                                                <apex:outputPanel layout="block" styleClass="mb10 flex-wrap align_center" >
+                                                    <apex:selectRadio styleClass="choice_box choice_box_wide" value="{! modalParameter.isAuxiliary}" >
+                                                      <apex:selectOptions value="{! SelectIsAuxiliaryList}" />
+                                                    </apex:selectRadio>
+                                                </apex:outputPanel>
+                                            </div>
+                    
+                                            <div class=" mb10 wd47 wd100_xs">
+                                                <div class="information_title">紹介料の割合(保険料に対する割合)</div>
+                                                <apex:input type="text" styleClass="form-control" value="{! modalParameter.insuranceFeeRate }" onchange="correctInputRules(this,'number',3,0,100,false,0)" />
+                                            </div>
+
+                                            <div class=" mb10 wd47 wd100_xs">
+                                                <div class="information_title">保険料</div>
+                                                <apex:input type="text" styleClass="form-control" value="{! modalParameter.insuranceFee }" onchange="correctInputRules(this,'currency',7,0)" />
+                                            </div>
+
+                                            <!--↓ラジオボタン-->
+                                            <div class=" mb10 wd47 wd100_xs">
+                                                <div class="information_title">更新期間</div>
+                                                <apex:outputPanel layout="block" styleClass="mb10 wd76 flex-wrap align_center" >
+                                                    <apex:input type="text" styleClass="form-control mr10 elPayment" value="{! modalParameter.paymentYear }" onchange="correctInputRules(this,'number',1,0,9,false,0)" 
+                                                                disabled="{!IF(modalParameter.paymentType == '月型',true,false)}"/>
+                                                    <apex:selectRadio styleClass="choice_box choice_box_wide" value="{! modalParameter.paymentType}" onchange="selectPayment(this)"  >
+                                                      <apex:selectOptions value="{! SelectPaymentTypeList}" />
+                                                    </apex:selectRadio>
+                                                </apex:outputPanel>
+                                            </div>                                            
+                    
+                                            <div class="mb10 wd47 wd100_xs">
+                                                <div class="information_title">家財保証料</div>
+                                                <apex:input type="text" styleClass="form-control" value="{! modalParameter.houseGoodsDeposit }" onchange="correctInputRules(this,'currency',9,0)" />
+                                            </div>
+                    
+                                            <div class="mb10 wd47 wd100_xs">
+                                                <div class="information_title">借家人賠償</div>
+                                                <apex:input type="text" styleClass="form-control" value="{! modalParameter.tenantCompensation }" onchange="correctInputRules(this,'currency',9,0)" />
+                                            </div>
+                                            <div class=" mb10 wd100">
+                                                <div class="information_title">保険内容</div>
+                                                <apex:input type="text" styleClass="form-control" value="{! modalParameter.fireInsurance }" onchange="correctInputRules(this,'text','255')" />
+                                            </div>
+                
+                                        </div>
+                                    </div>
+                                </div>                            
+                                <div class="flex-wrap justify-around flex_wrap">
+                                        <div class="flex-wrap justify-center flex-xs-xolumn  mt60">
+                                            <div class="">
+                                                <apex:commandButton action="{! closeModal}" value="設定" styleClass="btn btn-submit btn-primary text-center mauto_xs ml5"
+                                                                    onclick="blockUi()" oncomplete="unblockUi(); if({! !hasErrorMessage}){closeGF801004View();}"
+                                                                    disabled="{! isOpenError}" reRender="GF801004Form"/>
+                                            </div>
+                                        </div>
+                                </div>                   
+                            </section>
+                        </section>
+                    </article>
+                </main>
+            </body>
+        </apex:pageBlock>
+    </apex:form>
+    <script language="javascript" type="text/javascript">
+    //ラジオボタン変更時処理
+    function selectPayment(input){
+        if (input.value == '年型') {
+            $( ".elPayment" )[0].disabled = false;
+            // disabled：trueで属性値：valueが削除されるため、再描画
+            textRerender();
+        } else if (input.value == '月型') {
+            $( ".elPayment" )[0].disabled = true;
+            $( ".elPayment" )[0].value = '';
+        }
+    }
+    </script>    
+</apex:component>

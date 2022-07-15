@@ -1,0 +1,1004 @@
+<!--物件詳細-->
+<apex:page standardStylesheets="false" docType="html-5.0" controller="GA104004Controller" title="物件詳細">
+    
+    <apex:form id="form">
+        
+        <head>
+            <meta charset="utf-8" />
+            <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+            <meta name="format-detection" content="telephone=no" />
+            <meta name="robots" content="noindex" />
+            <title>物件詳細</title>
+            <apex:includeScript value="{!URLFOR($Resource.jQuery, 'jQuery/jquery-3.6.0.min.js')}" />
+            <apex:includeScript value="{!URLFOR($Resource.jQuery, 'jQuery/jQueryUI/jquery-ui.min.js')}"/>
+            <apex:includeScript value="{!URLFOR($Resource.jQuery, 'jQuery/jquery.blockUI.js')}" />
+            <apex:includeScript value="{!URLFOR($Resource.designer_file,'designer_file/js/modaal.js')}" />
+            <apex:includeScript value="{!URLFOR($Resource.external_file, 'external_file/common_screen_util.js')}" />
+            <apex:includeScript value="{!URLFOR($Resource.external_file, 'external_file/input_rules.js')}" />
+            
+            <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/reset.min.css')}" />
+            <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/foundation.css')}" />
+            <apex:stylesheet value="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+            <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/modaal.css')}" />
+            <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/style.css')}" />
+            <apex:stylesheet value="{!URLFOR($Resource.external_file, 'external_file/common_style.css')}" />
+            <apex:stylesheet value="{!URLFOR($Resource.jQuery,'jQuery/jQueryUI/jquery-ui.css')}"/>
+        </head>
+        
+        <body id="ga104004">
+            
+            <!-- actionFunction -->
+            <apex:commandButton style="visibility:hidden;" reRender="dummy" />
+            <apex:actionFunction action="{! saveFavorite}"   name="saveFavorite"
+                                 oncomplete="unblockUi(); if(!{!hasErrorMessage}){alertSaveFinish();gotoTop();}"
+                                 reRender="favorite, messageArea" />
+            
+            <!-- 隠し項目 -->
+            <apex:inputText style="display:none;" value="{! pictureAspectType1}"    styleClass="pat1"/>
+            <apex:inputText style="display:none;" value="{! pictureAspectType2}"    styleClass="pat2"/>
+            <apex:inputText style="display:none;" value="{! pictureAspectType3}"    styleClass="pat3"/>
+            <apex:inputText style="display:none;" value="{! pictureAspectTypeList}" styleClass="patList"/>
+            <apex:inputText style="display:none;" value="{!formLogoIsAlive}"        styleClass="formLogoIsAlive"/>
+            
+            <main>
+                <article>
+                    <section class="">
+                        <apex:pageMessages id="messageArea"/>
+                        <section class="flex-wrap align_center justify-between border_btm_b pdb10px mb20">
+                            
+                            <div class="wd90px_xs">
+                            </div>
+                            <div>
+                                <div class="flex-wrap">
+                                    <apex:commandButton id="favorite" styleClass="modal btn-w-2 btn-w-2-r blue" value="お気に入り登録" 
+                                                        onclick="checkInsert()" 
+                                                        reRender="dummy" 
+                                                        disabled="{! isOpenError || hasFavoriteFlg}" 
+                                                        rendered="{! accountId != null && !customerFlg}"
+                                                        tabindex="1" />
+                                    
+                                    <apex:commandButton styleClass="modal btn-w-2  blue" value="MAP" 
+                                                        onclick="showPage('GA104002View', '{! if(customerFlg, '_blank','')}', '{! if(customerFlg, 'FALSE', 'TRUE')}', 'propertyId={!propertyId}&accountId={!accountId}&isClient={!customerFlg}');" 
+                                                        rerender="favorite, messageArea" 
+                                                        disabled="{! isOpenError}" tabindex="2" />
+                                    
+                                    <apex:commandButton styleClass="modal btn-w-2  blue" value="印刷"
+                                                        onclick="setPictureAspectTypes();"
+                                                        oncomplete="showPage('TA102002View', '_blank', 'FALSE',
+                                                                 'Id={!propertyId}&accountId={!accountId}&customerFlg={!motoCustomerFlg}&pictureFlg=false&pat1={!pictureAspectType1}&pat2={!pictureAspectType2}&pat3={!pictureAspectType3}&patList={!pictureAspectTypeList}&formLogoIsAlive={!formLogoIsAlive}');" 
+                                                        rerender="favorite, messageArea" 
+                                                        disabled="{! isOpenError}" tabindex="3" />
+                                    
+                                    <apex:commandButton styleClass="modal btn-w-2  blue" value="写真印刷"
+                                                        onclick="setPictureAspectTypes();"
+                                                        oncomplete="showPage('TA102002View', '_blank', 'FALSE',
+                                                                 'Id={!propertyId}&accountId={!accountId}&customerFlg={!motoCustomerFlg}&pictureFlg=true&pat1={!pictureAspectType1}&pat2={!pictureAspectType2}&pat3={!pictureAspectType3}&patList={!pictureAspectTypeList}&formLogoIsAlive={!formLogoIsAlive}');" 
+                                                        rerender="favorite, messageArea" 
+                                                        rendered="{! customerFlg}" disabled="{! isOpenError || publicPhotoData.sortPhotoDataList.size = 0}" tabindex="3" />
+                                    
+                                    <apex:commandButton styleClass="modal btn-w-2 btn-w-2-l blue" value="お客様用"
+                                                        onclick="showPage('GA104004View', '_blank', 'FALSE', 'Id={!propertyId}&accountId={!accountId}&customerFlg=true');" 
+                                                        rerender="favorite, messageArea" 
+                                                        rendered="{! !customerFlg}" disabled="{! isOpenError}"
+                                                        tabindex="4" />
+                                </div>
+                            </div>
+                        </section>
+                        
+                        <section>
+                            <div class="border-g ">
+                                <div class="flex-wrap flex_wrap justify-between pd20">
+                                    <div class="wd49 flex-wrap justfy-between" style="flex-flow: column;">
+                                        <div class="border_bottom font2rem font18 mb40 title">
+                                            <!-- 物件名 リンク無し版（お客様表示の場合） -->
+                                            <apex:outputText value="{!propertyTargetRecord.Building__r.Name}"
+                                                             rendered="{! customerFlg}" />
+                                            <!-- 物件名 リンク有り版（通常表示の場合） -->
+                                            <apex:outputLink styleClass="blue"
+                                                             onclick="showPage('GA104003View', '', 'TRUE', 'Id={! propertyTargetRecord.Building__r.Id}&accountId={! accountId}');"
+                                                             rendered="{! !customerFlg}">{!propertyTargetRecord.Building__r.Name}</apex:outputLink>
+                                            <apex:outputLabel value="　" />
+                                            <!-- 号室名 リンク無し版（お客様表示の場合） -->
+                                            <apex:outputText value="{!propertyTargetRecord.Name}"
+                                                             rendered="{! customerFlg}" />
+                                            <!-- 号室名 リンク有り版（通常表示の場合） -->
+                                            <apex:outputLink styleClass="blue"
+                                                             onclick="showPage('GA104006View', '', 'TRUE', 'propertyId={!propertyId}&buildingId={!propertyTargetRecord.Building__r.Id}');"
+                                                             rendered="{! !customerFlg}">{!propertyTargetRecord.Name}</apex:outputLink>
+                                        </div>
+                                        <div class="mb60 mt30">
+                                            <div>築年｜
+                                                <apex:outputText value="{!propertyTargetRecord.Building__r.BuildingYMFormat__c}" />&nbsp;種別・構造｜
+                                                <apex:outputText value="{!propertyTargetRecord.Building__r.PropertyType__c}" />・
+                                                <apex:outputText value="{!propertyTargetRecord.Building__r.Structure__c}" />
+                                            </div>
+                                            <div>所在地｜〒
+                                                <apex:outputText value="{!propertyTargetRecord.Building__r.PostalCode__c}" />&nbsp;
+                                                <apex:outputText value="{!propertyTargetRecord.Building__r.Address__c}" />
+                                            </div>
+                                            <div>最寄駅｜
+                                                <apex:outputText value="{!propertyTargetRecord.Building__r.TrainRoute1__r.Name}" />&nbsp;
+                                                <apex:outputText value="{!propertyTargetRecord.Building__r.Station1__r.Name}" />
+                                                <apex:outputText value="(徒歩" />
+                                                <apex:outputText value="{!propertyTargetRecord.Building__r.StationWalkTime1__c}" />
+                                                <apex:outputText value="分)" />
+                                            </div>
+                                        </div>
+                                        <!-- 間取図写真 -->
+                                        <div class="text-center pdb10px">
+                                            <div class="img-wrapper md10" style=" border:none; {! if(publicPhotoData.roomLayoutFilePath == null, 'visibility:hidden;', '')}">
+                                                <div class="img-wrapper-inner">
+                                                    <apex:image alt="" value="{!publicPhotoData.roomLayoutFilePath}"
+                                                                styleClass="img-contain picture1" style="cursor: pointer;"
+                                                                onclick="openModal( '{!publicPhotoData.roomLayoutFilePath}' );"/>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!-- 外観写真 -->
+                                        
+                                        <div class="flex-wrap flex_wrap mt30 align-items_end" style="justify-content: space-around; margin-top: auto;">
+                                            <div class="img-wrapper" style="max-width:49.5%; border:none; {! if(buildingPhotoData.AppearanceFilePath__c == null, 'visibility:hidden;', '')}">
+                                                 <div class="img-wrapper-inner">
+                                                <apex:image alt="" value="{!buildingPhotoData.AppearanceFilePath__c}"
+                                                            styleClass="img-contain picture2" style="cursor: pointer;"
+                                                            onclick="openModal( '{!JSINHTMLENCODE(buildingPhotoData.AppearanceFilePath__c)}' );"/>
+                                                </div>
+                                            </div>
+                                            <div class="img-wrapper" style="max-width:49.5%; border:none; {! if(publicPhotoData.livingFile.FilePath == null, 'visibility:hidden;', '')}">
+                                                 <div class="img-wrapper-inner">
+                                                <apex:image alt="" value="{!publicPhotoData.livingFile.FilePath}"
+                                                            styleClass="img-contain picture3" style="cursor: pointer;"
+                                                            onclick="openModal( '{!publicPhotoData.livingFile.FilePath}' );"/>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                    </div>
+                                    
+                                    <!-- 条件欄の表示項目 -->
+                                    
+                                    <div class="wd49">
+                                        <div class="back_graydark mb20 text-center">
+                                            条件
+                                        </div>
+                                        <div class="flex-wrap flex_wrap justify-between">
+                                            <div class="wd47 wd100_md flex-wrap  justify-between border_bottom mb7">
+                                                <div>総賃料 </div>
+                                                <div>
+                                                    <apex:outputtext value="{0, number, ###,###}">
+                                                        <apex:param value="{!propertyTargetRecord.AllRentFee__c}"></apex:param>
+                                                    </apex:outputtext>
+                                                    <apex:outputText value=" 円" />
+                                                </div>
+                                            </div>
+                                            <div class="wd47 wd100_md flex-wrap justify-between border_bottom mb7">
+                                                <div> 敷金 </div>
+                                                <div>
+                                                    <!-- 円 -->
+                                                    <apex:outputtext value="{0, number, ###,###}" rendered="{!propertyTargetRecord.SecurityDepositUnit__c == '円'}">
+                                                        <apex:param value="{!propertyTargetRecord.SecurityDepositYen__c}"></apex:param>
+                                                    </apex:outputtext>
+                                                    <!-- ヵ月 問合せNo0497で小数点表示修正 -->
+                                                    <apex:outputtext value="{0, number, ###,###.#}" rendered="{!propertyTargetRecord.SecurityDepositUnit__c != '円'}">
+                                                        <apex:param value="{!propertyTargetRecord.SecurityDepositMonth__c}"></apex:param>
+                                                    </apex:outputtext>
+                                                    <!-- 単位 -->
+                                                    <apex:outputText value="{! if(propertyTargetRecord.SecurityDepositUnit__c == '円', ' 円', ' ヵ月')}" />
+                                                </div>
+                                            </div>
+                                            <div class="wd47 wd100_md flex-wrap justify-between border_bottom mb7">
+                                                <div> 賃料 </div>
+                                                <div>
+                                                    <apex:outputtext value="{0, number, ###,###}">
+                                                        <apex:param value="{!propertyTargetRecord.RentFee__c}"></apex:param>
+                                                    </apex:outputtext>
+                                                    <apex:outputText value=" 円" />
+                                                </div>
+                                            </div>
+                                            <div class="wd47 wd100_md flex-wrap justify-between border_bottom mb7">
+                                                <div> 保証金 </div>
+                                                <div>
+                                                    <!-- 円 -->
+                                                    <apex:outputtext value="{0, number, ###,###}" rendered="{!propertyTargetRecord.DepositUnit__c == '円'}">
+                                                        <apex:param value="{!propertyTargetRecord.DepositYen__c}"></apex:param>
+                                                    </apex:outputtext>
+                                                    <!-- ヵ月 -->
+                                                    <apex:outputtext value="{0, number, ###,###.#}" rendered="{!propertyTargetRecord.DepositUnit__c != '円'}">
+                                                        <apex:param value="{!propertyTargetRecord.DepositMonth__c}"></apex:param>
+                                                    </apex:outputtext>
+                                                    <!-- 単位 -->
+                                                    <apex:outputText value="{! if(propertyTargetRecord.DepositUnit__c == '円', ' 円', ' ヵ月')}" />
+                                                </div>
+                                            </div>
+                                            <div class="wd47 wd100_md flex-wrap justify-between border_bottom mb7">
+                                                <div> 管理費 </div>
+                                                <div>
+                                                    <apex:outputtext value="{0, number, ###,###}">
+                                                        <apex:param value="{!propertyTargetRecord.ManagementFeeTax__c}"></apex:param>
+                                                    </apex:outputtext>
+                                                    <apex:outputText value=" 円" />
+                                                </div>
+                                            </div>
+                                            <div class="wd47 wd100_md flex-wrap justify-between border_bottom mb7">
+                                                <div>敷引/償却</div>
+                                                <div>
+                                                    <!-- 円 -->
+                                                    <apex:outputtext value="{0, number, ###,###}" rendered="{!propertyTargetRecord.CancellationActualFeeUnit__c == '円'}">
+                                                        <apex:param value="{!propertyTargetRecord.CancellationActualFeeYen__c}"></apex:param>
+                                                    </apex:outputtext>
+                                                    <!-- ヵ月 -->
+                                                    <apex:outputtext value="{0, number, ###,###.#}" rendered="{!propertyTargetRecord.CancellationActualFeeUnit__c == 'ヵ月'}">
+                                                        <apex:param value="{!propertyTargetRecord.CancellationActualFeeMonth__c}"></apex:param>
+                                                    </apex:outputtext>
+                                                    <!-- % -->
+                                                    <apex:outputtext value="{0, number, ###,###}" rendered="{!propertyTargetRecord.CancellationActualFeeUnit__c == '%'}">
+                                                        <apex:param value="{!propertyTargetRecord.CancellationActualFeeRate__c}"></apex:param>
+                                                    </apex:outputtext>
+                                                    <!-- 単位 -->
+                                                    <apex:outputText value="{! if(propertyTargetRecord.CancellationActualFeeUnit__c == '円', ' 円', 
+                                                                            if(propertyTargetRecord.CancellationActualFeeUnit__c == 'ヵ月', ' ヵ月', ' %'))}"
+                                                                     />
+                                                </div>
+                                            </div>
+                                            <div class="wd47 wd100_md flex-wrap justify-between border_bottom mb7">
+                                                <div>町会費</div>
+                                                <div>
+                                                    <apex:outputtext value="{0, number, ###,###}">
+                                                        <apex:param value="{!propertyTargetRecord.TownshipFeeTax__c}"></apex:param>
+                                                    </apex:outputtext>
+                                                    <apex:outputText value=" 円" />
+                                                </div>
+                                            </div>
+                                            <div class="wd47 wd100_md flex-wrap justify-between border_bottom mb7">
+                                                <div>礼金</div>
+                                                <div>
+                                                    <!-- 円 -->
+                                                    <apex:outputtext value="{0, number, ###,###}" rendered="{!propertyTargetRecord.KeyMoneyUnit__c == '円'}">
+                                                        <apex:param value="{!propertyTargetRecord.KeyMoneyYen__c}"></apex:param>
+                                                    </apex:outputtext>
+                                                    <!-- ヵ月 -->
+                                                    <apex:outputtext value="{0, number, ###,###.#}" rendered="{!propertyTargetRecord.KeyMoneyUnit__c != '円'}">
+                                                        <apex:param value="{!propertyTargetRecord.KeyMoneyMonth__c}"></apex:param>
+                                                    </apex:outputtext>
+                                                    <!-- 単位 -->
+                                                    <apex:outputText value="{! if(propertyTargetRecord.KeyMoneyUnit__c == '円', ' 円', ' ヵ月')}" />
+                                                </div>
+                                            </div>
+                                            <div class="wd47 wd100_md flex-wrap justify-between border_bottom mb7">
+                                                <div>水道代</div>
+                                                <div>
+                                                    <apex:outputtext value="{0, number, ###,###}">
+                                                        <apex:param value="{!propertyTargetRecord.WortFeeTax__c}"></apex:param>
+                                                    </apex:outputtext>
+                                                    <apex:outputText value=" 円" />
+                                                </div>
+                                            </div>
+                                            <div class="wd47 wd100_md flex-wrap justify-between border_bottom mb7">
+                                                <div>入町費</div>
+                                                <div>
+                                                    <apex:outputtext value="{0, number, ###,###}">
+                                                        <apex:param value="{!propertyTargetRecord.TownshipInitialFeeTax__c}"></apex:param>
+                                                    </apex:outputtext>
+                                                    <apex:outputText value=" 円" />
+                                                </div>
+                                            </div>
+                                            <div class="wd47 wd100_md flex-wrap justify-between border_bottom mb7">
+                                                <div>CATV代</div>
+                                                <div>
+                                                    <apex:outputtext value="{0, number, ###,###}">
+                                                        <apex:param value="{!propertyTargetRecord.CATVFeeTax__c}"></apex:param>
+                                                    </apex:outputtext>
+                                                    <apex:outputText value=" 円" />
+                                                </div>
+                                            </div>
+                                            <div class="wd47 wd100_md flex-wrap justify-between border_bottom mb7">
+                                                <div>鍵交換費</div>
+                                                <div>
+                                                    <apex:outputtext value="{0, number, ###,###}">
+                                                        <apex:param value="{!propertyTargetRecord.KeyExchangeFeeTax__c}"></apex:param>
+                                                    </apex:outputtext>
+                                                    <apex:outputText value=" 円" />
+                                                </div>
+                                            </div>
+                                            <div class="wd47 wd100_md flex-wrap justify-between border_bottom mb7">
+                                                <div>駐輪場代</div>
+                                                <div>
+                                                    <apex:outputtext value="{0, number, ###,###}">
+                                                        <apex:param value="{!propertyTargetRecord.BicycleParkingFeeTax__c}"></apex:param>
+                                                    </apex:outputtext>
+                                                    <apex:outputText value=" 円" />
+                                                </div>
+                                            </div>
+                                            <div class="wd47 wd100_md flex-wrap justify-between border_bottom mb7">
+                                                <div>定額修繕費等</div>
+                                                <div>
+                                                    <!-- 円 -->
+                                                    <apex:outputtext value="{0, number, ###,###}" rendered="{!propertyTargetRecord.CleaningFeeUnit__c == '円'}">
+                                                        <apex:param value="{!propertyTargetRecord.CleaningFeeTax__c}"></apex:param>
+                                                    </apex:outputtext>
+                                                    <!-- ヵ月 -->
+                                                    <apex:outputtext value="{0, number, ###,###.#}" rendered="{!propertyTargetRecord.CleaningFeeUnit__c != '円'}">
+                                                        <apex:param value="{!propertyTargetRecord.CleaningFeeMonth__c}"></apex:param>
+                                                    </apex:outputtext>
+                                                    <!-- 単位 -->
+                                                    <apex:outputText value="{! if(propertyTargetRecord.CleaningFeeUnit__c == '円', ' 円', ' ヵ月')}" />
+                                                </div>
+                                            </div>
+                                            <div class="wd47 wd100_md flex-wrap justify-between border_bottom mb7">
+                                                <div>ゴミ処理費</div>
+                                                <div>
+                                                    <apex:outputtext value="{0, number, ###,###}">
+                                                        <apex:param value="{!propertyTargetRecord.GarbageDisposalFeeTax__c}"></apex:param>
+                                                    </apex:outputtext>
+                                                    <apex:outputText value=" 円" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="flex-wrap justify-between border_bottom wd100">
+                                            <div class="wd15">管理会社<br/>指定商品</div>
+                                            <div class="wd85">
+                                                <apex:outputText value="{! managementCompanyItem}" />
+                                            </div>
+                                        </div>
+                                        
+                                        
+                                        <!-- その他条件欄の表示項目 -->
+                                        
+                                        <div class="back_graydark mb20 text-center mt20">その他条件</div>
+                                        <div class="flex-wrap flex_wrap justify-between">
+                                            <div class="wd47  wd100_md flex-wrap justify-between border_bottom mb7">
+                                                <div>火災保険加入</div>
+                                                <div>
+                                                    <apex:outputText value="{! if(propertyTargetRecord.FireInsuranceUseType__c == '有', '必須', '')}" />
+                                                </div>
+                                            </div>
+                                            <div class="wd47 wd100_md flex-wrap justify-between border_bottom mb7">
+                                                <div style="{!if(propertyTargetRecord.FireInsurancePlan__r.PaymentType__c != '月型', 'display:none;','')}">
+                                                    <apex:outputText value="{! propertyTargetRecord.FireInsurancePlan__r.Account__r.Name}" />
+                                                    <apex:outputText value="{! if(propertyTargetRecord.FireInsurancePlan__r.Account__r.Name !='', ' / ','')}" />
+                                                    <apex:outputText value="{! if(propertyTargetRecord.FireInsurancePlan__r.FireInsuranceMonth__c != null, '月額保険料 ','')}" />
+                                                    <apex:outputText value="{0, number, ###,###}">
+                                                        <apex:param value="{!propertyTargetRecord.FireInsurancePlan__r.FireInsuranceMonth__c}"></apex:param>
+                                                    </apex:outputText>
+                                                    <apex:outputText value="円" />
+                                                </div>
+                                                
+                                                <div style="{!if(propertyTargetRecord.FireInsurancePlan__r.PaymentType__c == '月型', 'display:none;','')}">
+                                                    <apex:outputText value="{! propertyTargetRecord.FireInsurancePlan__r.Account__r.Name}" />
+                                                    <apex:outputText value="{! if(propertyTargetRecord.FireInsurancePlan__r.Account__r.Name !='' && 
+                                                                                propertyTargetRecord.FireInsurancePlan__r.PaymentYear__c != null, ' / ','')}" />
+                                                    <apex:outputText value="{! propertyTargetRecord.FireInsurancePlan__r.PaymentYear__c}" />
+                                                    <apex:outputText value="{! if(propertyTargetRecord.FireInsurancePlan__r.PaymentYear__c !=null, '年','')}" />
+                                                    <apex:outputText value="{! if(propertyTargetRecord.FireInsurancePlan__r.PaymentYear__c !=null && 
+                                                                                propertyTargetRecord.FireInsurancePlan__r.FireInsuranceYear__c != null, ' / ','')}" />
+                                                    <apex:outputtext value="{0, number, ###,###}">
+                                                        <apex:param value="{!propertyTargetRecord.FireInsurancePlan__r.FireInsuranceYear__c}"></apex:param>
+                                                    </apex:outputtext>
+                                                    <apex:outputText value="{! if(propertyTargetRecord.FireInsurancePlan__r.FireInsuranceYear__c != null, '円','')}" />
+                                                </div>
+                                                <div></div>
+                                            </div>
+                                            <div class="wd47 wd100_md flex-wrap justify-between border_bottom mb7">
+                                                <div>保証会社利用</div>
+                                                <div>
+                                                    <apex:outputText value="{! if(propertyTargetRecord.GuaranteeidCompanyType__c == '利用可', '利用可',
+                                                                            if(propertyTargetRecord.GuaranteeidCompanyType__c == '利用必須', '必須', ''))}" />
+                                                </div>
+                                            </div>
+                                            <div class="wd47 wd100_md flex-wrap justify-between border_bottom mb7">
+                                                <div>
+                                                    <apex:outputText value="{! propertyTargetRecord.Guaranteeid__r.Account__r.Name}" />
+                                                    <apex:outputText value="{! if(propertyTargetRecord.Guaranteeid__r.Account__r.Name != '' && 
+                                                                                propertyTargetRecord.Guaranteeid__r.ItemName__c != '', ' / ','')}" />
+                                                    <apex:outputText value="{! propertyTargetRecord.Guaranteeid__r.ItemName__c}" />
+                                                </div>
+                                                <div></div>
+                                            </div>
+                                            <div class="wd47  wd100_md flex-wrap justify-between border_bottom mb7">
+                                                <div>契約期間</div>
+                                                <div>
+                                                    <apex:outputText value="{! propertyTargetRecord.ContractTermYear__c}" />
+                                                    <apex:outputText value=" 年" />
+                                                </div>
+                                            </div>
+                                            <div class="wd47 wd100_md flex-wrap justify-between border_bottom mb7">
+                                                <div>更新料等</div>
+                                                <div>
+                                                    <!-- 円 -->
+                                                    <apex:outputtext value="{0, number, ###,###}" rendered="{!propertyTargetRecord.RenewalFeeUnit__c == '円'}">
+                                                        <apex:param value="{!propertyTargetRecord.RenewalFee__c}"></apex:param>
+                                                    </apex:outputtext>
+                                                    <!-- ヵ月 -->
+                                                    <apex:outputtext value="{0, number, ###,###.#}" rendered="{!propertyTargetRecord.RenewalFeeUnit__c != '円'}">
+                                                        <apex:param value="{!propertyTargetRecord.RenewalFeeMonth__c}"></apex:param>
+                                                    </apex:outputtext>
+                                                    <!-- 単位 -->
+                                                    <apex:outputText value="{! if(propertyTargetRecord.RenewalFeeUnit__c == '円', ' 円', ' ヵ月')}" />
+                                                </div>
+                                            </div>
+                                            <div class="wd47  wd100_md flex-wrap justify-between border_bottom mb7">
+                                                <div>短期解約違約金</div>
+                                                <div>
+                                                    <apex:outputText value="{! propertyTargetRecord.IsShortTermPenalty__c}" />
+                                                </div>
+                                            </div>
+                                            <div class="wd47  wd100_md flex-wrap justify-between border_bottom mb7"></div>
+                                            <div class="wd47  wd100_md flex-wrap justify-between border_bottom mb7">
+                                                <div>違約年数(1)</div>
+                                                <div>
+                                                    <apex:outputText value="{! propertyTargetRecord.ShortTermPenaltyLessYear__c}" />
+                                                    <apex:outputText value="{! if(propertyTargetRecord.ShortTermPenaltyLessYear__c != null, '年未満の解約', '')}" />
+                                                </div>
+                                            </div>
+                                            <div class="wd47 wd100_md flex-wrap justify-between border_bottom mb7">
+                                                <div>違約年数(1)</div>
+                                                <div>
+                                                    <apex:outputText value="{! if(propertyTargetRecord.ShortTermPenaltyFee__c != null, '家賃等の  ', '')}" />
+                                                    <apex:outputText value="{! propertyTargetRecord.ShortTermPenaltyFee__c}" />
+                                                    <apex:outputText value="{! if(propertyTargetRecord.ShortTermPenaltyFee__c != null, 'カ月', '')}" />
+                                                </div>
+                                            </div>
+                                            <div class="wd47 wd100_md flex-wrap justify-between border_bottom mb7">
+                                                <div>違約年数(2)</div>
+                                                <div>
+                                                    <apex:outputText value="{! propertyTargetRecord.ShortTermPenaltyLessYear2__c}" />
+                                                    <apex:outputText value="{! if(propertyTargetRecord.ShortTermPenaltyLessYear2__c != null, '年未満の解約', '')}" />
+                                                </div>
+                                            </div>
+                                            <div class="wd47 wd100_md flex-wrap justify-between border_bottom mb7">
+                                                <div>違約年数(2)</div>
+                                                <div>
+                                                    <apex:outputText value="{! if(propertyTargetRecord.ShortTermPenaltyFee2__c != null, '家賃等の  ', '')}" />
+                                                    <apex:outputText value="{! propertyTargetRecord.ShortTermPenaltyFee2__c}" />
+                                                    <apex:outputText value="{! if(propertyTargetRecord.ShortTermPenaltyFee2__c != null, 'カ月', '')}" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="wd100 flex-wrap justify-between border_bottom mb7">
+                                            <div class="wd15">条件<br/>備考</div>
+                                            <div class="wd85">
+                                                <small>
+                                                    <apex:outputText value="(" />
+                                                    <apex:outputText value="{! propertyTargetRecord.MonetaryPublic__c}" />
+                                                    <apex:outputText value=")" />
+                                                </small>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="border_bottom">　</div>
+                                        <div class="back_graydark mb20 text-center mt20">駐車場/バイク置き場</div>
+                                        <div class="flex-wrap flex_wrap justify-between">
+                                            <div class="wd47 wd100_md flex-wrap justify-between border_bottom mb7">
+                                                <div>駐車場種別</div>
+                                                <div>
+                                                    <apex:outputText value="{! propertyTargetRecord.ParkingType__c}" />
+                                                </div>
+                                            </div>
+                                            <div class="wd47 wd100_md flex-wrap justify-between border_bottom mb7">
+                                                <div>駐車場までの距離 </div>
+                                                <div>
+                                                    <apex:outputText value="{! propertyTargetRecord.ParkingDistance__c}" />
+                                                    <apex:outputText value=" m" />
+                                                </div>
+                                            </div>
+                                            <div class="wd47 wd100_md flex-wrap justify-between border_bottom mb7">
+                                                <div>駐車場料金</div>
+                                                <div>
+                                                    <apex:outputtext value="{0, number, ###,###}">
+                                                        <apex:param value="{!propertyTargetRecord.ParkingFeeTax__c}"></apex:param>
+                                                    </apex:outputtext>
+                                                    <apex:outputText value=" 円" />
+                                                </div>
+                                            </div>
+                                            <div class="wd47 wd100_md flex-wrap justify-between border_bottom mb7">
+                                                <div>駐車場保証金</div>
+                                                <div>
+                                                    <apex:outputtext value="{0, number, ###,###}">
+                                                        <apex:param value="{!propertyTargetRecord.ParkingDepositTax__c}"></apex:param>
+                                                    </apex:outputtext>
+                                                    <apex:outputText value=" 円" />
+                                                </div>
+                                            </div>
+                                            <div class="wd100 flex-wrap justify-between border_bottom mb7">
+                                                <div class="wd15">駐車場<br/>備考</div>
+                                                <div class="wd85">
+                                                    <apex:outputText value="{! propertyTargetRecord.ParkingRemarksPublic__c}" />
+                                                </div>
+                                            </div>
+                                            <div class="wd47 wd100_md flex-wrap justify-between border_bottom mb7">
+                                                <div>バイク置場種別</div>
+                                                <div>
+                                                    <apex:outputText value="{! propertyTargetRecord.BikeStorageType__c}" />
+                                                </div>
+                                            </div>
+                                            <div class="wd47 wd100_md flex-wrap justify-between  mb7">
+                                                <div><apex:outputLabel value="{!MSG_PROP_I_BIKEPARKING_NOT_ALLRENTFEE}"/> </div>
+                                            </div>
+                                        </div>
+                                        <div class="flex-wrap flex_wrap justify-between">
+                                            <div class="wd33 wd100_md flex-wrap justify-between border_bottom mb7">
+                                                <div>小型</div>
+                                                <div>
+                                                    <apex:outputtext value="{0, number, ###,###}">
+                                                        <apex:param value="{!propertyTargetRecord.BikeParkingSmallFeeTax__c}"></apex:param>
+                                                    </apex:outputtext>
+                                                    <apex:outputText value=" 円" />
+                                                </div>
+                                            </div>
+                                            <div class="wd33 wd100_md flex-wrap justify-between border_bottom mb7">
+                                                <div>中型</div>
+                                                <div>
+                                                    <apex:outputtext value="{0, number, ###,###}">
+                                                        <apex:param value="{!propertyTargetRecord.BikeParkingMediumFeeTax__c}"></apex:param>
+                                                    </apex:outputtext>
+                                                    <apex:outputText value=" 円" />
+                                                </div>
+                                            </div>
+                                            <div class="wd33 wd100_md flex-wrap justify-between border_bottom mb7">
+                                                <div>大型</div>
+                                                <div>
+                                                    <apex:outputtext value="{0, number, ###,###}">
+                                                        <apex:param value="{!propertyTargetRecord.BikeParkinLargeFeeTax__c}"></apex:param>
+                                                    </apex:outputtext>
+                                                    <apex:outputText value=" 円" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="back_graydark mb20 text-center mt20">部屋</div>
+                                        <div class="flex-wrap flex_wrap justify-between">
+                                            <div class="wd33 wd100_md flex-wrap justify-between border_bottom mb7">
+                                                <div>現状</div>
+                                                <div>
+                                                    <apex:outputText value="{! propertyTargetRecord.LiveStatus__c}" />
+                                                </div>
+                                            </div>
+                                            <div class="wd33 wd100_md flex-wrap justify-between border_bottom mb7">
+                                                <div>間取り</div>
+                                                <div>
+                                                    <apex:outputText value="{! propertyTargetRecord.RoomCount__c}" />
+                                                    <apex:outputText value="{! propertyTargetRecord.RoomLayout__c}" />
+                                                </div>
+                                            </div>
+                                            <div class="wd33 wd100_md flex-wrap justify-between border_bottom mb7">
+                                                <div>面積</div>
+                                                <div>
+                                                    <apex:outputText value="{! propertyTargetRecord.RoomArea__c}" />
+                                                    <apex:outputText value=" ㎡" />
+                                                </div>
+                                            </div>
+                                            <div class="wd33 wd100_md flex-wrap justify-between border_bottom mb7">
+                                                <div>所在階</div>
+                                                <div>
+                                                    <apex:outputText value="{! propertyTargetRecord.Floor__c}" />
+                                                    <apex:outputText value="階 / " />
+                                                    <apex:outputText value="{! propertyTargetRecord.Building__r.GroundFloorCount__c}" />
+                                                    <apex:outputText value="階" />
+                                                </div>
+                                            </div>
+                                            <div class="wd33 wd100_md flex-wrap justify-between border_bottom mb7">
+                                                <div>向き</div>
+                                                <div>
+                                                    <apex:outputText value="{! propertyTargetRecord.BalconyDirection__c}" />
+                                                </div>
+                                            </div>
+                                            <div class="wd33 wd100_md flex-wrap justify-between mb7"></div>
+                                        </div>
+                                        
+                                        <div class="wd100 flex-wrap justify-between border_bottom mb7">
+                                            <div class="wd15">設備
+                                                <br/>条件</div>
+                                            <div class="wd85">
+                                                <apex:outputText value="{! facilityConditions}" />
+                                            </div>
+                                        </div>
+                                        <div class="wd100 flex-wrap justify-between border_bottom ">
+                                            <div class="wd15">備考</div>
+                                            <div class="wd85">
+                                                <apex:outputText value="{! facilityRemarksPublic}" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="flex-wrap wd100 mt30 align-items_end">
+                                        <div class="wd100px mr10">
+                                            <apex:image alt="" url="{!formLogoUrl}" />
+                                            <img src="{!formLogoUrl}" style="display:none;" onError="onErrorFormLogo()" />
+                                        </div>
+                                        <div class="fsmall">
+                                            <apex:outputText value="{! shopTargetRecord.Name}" />
+                                            <apex:outputText value=" 〒" />
+                                            <apex:outputText value="{!shopTargetRecord.PostalCode__c}" />
+                                            <apex:outputText value="　" />
+                                            <apex:outputText value="{! shopTargetRecord.Address__c}" />
+                                            <apex:outputText value="　TEL." />
+                                            <apex:outputText value="{! shopTargetRecord.Phone__c}" />
+                                            <apex:outputText value="　FAX." />
+                                            <apex:outputText value="{! shopTargetRecord.Fax__c}" />
+                                            <apex:outputText value="　" />
+                                            <apex:outputText value="{! shopTargetRecord.Homepage__c}" />
+                                             <apex:outputText value="　" />
+                                            <apex:outputText value="{! shopTargetRecord.QualificationLicensesNumber__c}" />
+                                             <apex:outputText value="　" />
+                                            <apex:outputText value="{! shopTargetRecord.AffiliationAssociation__c}" />
+                                            <apex:outputText value="　取引態様：" />
+                                            <apex:outputText value="{! propertyTargetRecord.TransactionAspect__c}" />
+                                            <apex:outputText value="　物件番号：" />
+                                            <apex:outputText value="{! propertyTargetRecord.PropertyCode__c}" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="border-g mt30" style = "{!if(customerFlg, 'display:none;','')}">
+                                <div class="flex-wrap flex_wrap justify-between pdr30 pdl30 pdt10px pdb10px pdr10_xs pdl10_xs">
+                                    <div class="wd49">
+                                        <div class="back_graydark mb20 text-center mt20">元付</div>
+                                        <div class="flex-wrap flex_wrap justify-between">
+                                            <div class="wd47 wd100_md flex-wrap justify-between border_bottom mb7">
+                                                <div>元付</div>
+                                                <div>
+                                                    <apex:outputText value="{! propertyTargetRecord.FormerSupplier__r.Name}" />
+                                                </div>
+                                            </div>
+                                            <div class="wd47 flex-wrap justify-between mb7"></div>
+                                            <div class="wd47 wd100_md flex-wrap justify-between border_bottom mb7">
+                                                <div>電話番号</div>
+                                                <div>
+                                                    <apex:outputField value="{! propertyTargetRecord.FormerSupplierPhone__c}" />
+                                                </div>
+                                            </div>
+                                            <div class="wd47 wd100_md flex-wrap justify-between border_bottom mb7">
+                                                <div>FAX</div>
+                                                <div>
+                                                    <apex:outputText value="{! propertyTargetRecord.FormerSupplierFax__c}" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="wd100 flex-wrap justify-between border_bottom mb7">
+                                            <div class="wd16">メール</div>
+                                            <div class="wd84 text-right">
+                                                <apex:outputText value="{! propertyTargetRecord.FormerSupplierEmail__c}" />
+                                            </div>
+                                        </div>
+                                        <div class="wd100 flex-wrap justify-between border_bottom mb7">
+                                            <div class="wd16">郵便番号</div>
+                                            <div class="wd84 text-right">
+                                                <apex:outputText value="{! propertyTargetRecord.FormerSupplierPostalCode__c}" />
+                                            </div>
+                                        </div>
+                                        <div class="wd100 flex-wrap justify-between border_bottom mb7">
+                                            <div class="wd16">住所</div>
+                                            <div class="wd84 text-right">
+                                                <apex:outputText value="{! propertyTargetRecord.FormerSupplierAddress__c}" />
+                                            </div>
+                                        </div>
+                                        <div class="flex-wrap flex_wrap justify-between">
+                                            <div class="wd47 wd100_md flex-wrap justify-between border_bottom mb7">
+                                                <div>担当部署</div>
+                                                <div>
+                                                    <apex:outputText value="{! propertyTargetRecord.FormerSupplierDepartment__c}" />
+                                                </div>
+                                            </div>
+                                            <div class="wd47 wd100_md flex-wrap justify-between border_bottom mb7">
+                                                <div>担当者</div>
+                                                <div>
+                                                    <apex:outputText value="{! propertyTargetRecord.FormerSupplierRepresentative__c}" />
+                                                </div>
+                                            </div>
+                                            <div class="wd47 wd100_md flex-wrap justify-between border_bottom mb7">
+                                                <div>担当者携帯</div>
+                                                <div>
+                                                    <apex:outputText value="{! propertyTargetRecord.FormerSupplierRepresentativePhone__c}" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="wd100 flex-wrap justify-between border_bottom mb7">
+                                            <div class="wd16">備考</div>
+                                            <div class="wd84">
+                                                <apex:outputText value="{! propertyTargetRecord.FormerSupplier__r.RemarksPublic__c}" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="wd49">
+                                        <div class="back_graydark mb20 text-center mt20">契約</div>
+                                        <div class="flex-wrap flex_wrap justify-between">
+                                            <div class="wd47 wd100_md flex-wrap justify-between border_bottom mb7">
+                                                <div>報酬負担貸主</div>
+                                                <div>
+                                                    <apex:outputText value="{! propertyTargetRecord.RewardBurdenLender__c}" />
+                                                    <apex:outputText value=" %" />
+                                                </div>
+                                            </div>
+                                            <div class="wd47 wd100_md flex-wrap justify-between border_bottom mb7">
+                                                <div>報酬負担借主</div>
+                                                <div>
+                                                    <apex:outputText value="{! propertyTargetRecord.RewardBurdenBorrower__c}" />
+                                                    <apex:outputText value=" %" />
+                                                </div>
+                                            </div>
+                                            <div class="wd47 wd100_md flex-wrap justify-between border_bottom mb7">
+                                                <div>報酬配分元付</div>
+                                                <div>
+                                                    <apex:outputText value="{! propertyTargetRecord.RewardSplitFormerSupplier__c}" />
+                                                    <apex:outputText value=" %" />
+                                                </div>
+                                            </div>
+                                            <div class="wd47 wd100_md flex-wrap justify-between border_bottom mb7">
+                                                <div>報酬配分客付</div>
+                                                <div>
+                                                    <apex:outputText value="{! propertyTargetRecord.RewardSplitCustomer__c}" />
+                                                    <apex:outputText value=" %" />
+                                                </div>
+                                            </div>
+                                            <div class="wd47 wd100_md flex-wrap justify-between border_bottom mb7">
+                                                <div>広告料</div>
+                                                <div>
+                                                    <apex:outputtext value="{0, number, ###,###}">
+                                                        <apex:param value="{!propertyTargetRecord.ADFeeTax__c}"></apex:param>
+                                                    </apex:outputtext>
+                                                    <apex:outputText value=" 円" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="wd100 flex-wrap justify-between border_bottom mb7">
+                                            <div class="wd16">広告<br/>コメント</div>
+                                            <div class="wd84"> 
+                                                <apex:outputText value="{! propertyTargetRecord.ADFeeComment__c}" />
+                                            </div>
+                                        </div>
+                                        <div class="wd100 flex-wrap justify-between border_bottom mb7">
+                                            <div class="wd16">物件<br/>コメント</div>
+                                            <div class="wd84">
+                                                <apex:outputText value="{! propertyTargetRecord.PropertyComment__c}" />
+                                            </div>
+                                        </div>
+                                        <div class="wd100 flex-wrap justify-between border_bottom mb7">
+                                            <div class="wd16">担当<br/>コメント</div>
+                                            <div class="wd84">
+                                                <apex:outputText value="{! propertyTargetRecord.RepresentativeComment__c}" />
+                                            </div>
+                                        </div>
+                                        <div class="wd100 flex-wrap justify-between border_bottom mb7">
+                                            <div class="wd16">鍵所在</div>
+                                            <div class="wd84">
+                                                <apex:outputText value="{! propertyTargetRecord.KeyPlace__c}" />
+                                            </div>
+                                        </div>
+                                        <div class="wd100 flex-wrap justify-between border_bottom mb7">
+                                            <div class="wd16">備考</div>
+                                            <div class="wd84">
+                                                <apex:outputText value="{! propertyTargetRecord.PropertyRemarksPrivate__c}" />
+                                            </div>
+                                        </div>
+                                        <div class="wd100 flex-wrap justify-between border_bottom mb7">
+                                            <div class="wd16">金銭備考<br/>(非公開)</div>
+                                            <div class="wd84">
+                                                <apex:outputText value="{! propertyTargetRecord.MonetaryPrivate__c}" />
+                                            </div>
+                                        </div>
+                                        <div class="wd100 flex-wrap justify-between border_bottom mb7">
+                                            <div class="wd16">駐車場備考<br/>(非公開)</div>
+                                            <div class="wd84">
+                                                <apex:outputText value="{! propertyTargetRecord.ParkingRemarksPrivate__c}" />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="wd100 back_graydark mb20 text-center mt20">メモ</div>
+                                    <div class="wd100 border_bottom mb7">　</div>
+                                    <div class="wd100 border_bottom mb7">　</div>
+                                    <div class="wd100 border_bottom mb7">　</div>
+                                    <div class="wd100 border_bottom mb7">　</div>
+                                    <div class="wd100 border_bottom mb7">　</div>
+                                    <div class="wd100 border_bottom mb7">　</div>
+                                    <div class="wd100 border_bottom mb7">　</div>
+                                    <div class="wd100 border_bottom mb7">　</div>
+                                    <div class="wd100 border_bottom mb7">　</div>
+                                    <div class="wd100 border_bottom mb7">　</div>
+                                    <div class="wd100 border_bottom mb7">　</div>
+                                    <div class="wd100 border_bottom mb7">　</div>
+                                </div>
+                            </div>
+                            
+                            <div class="border-g mt30">
+                                <div class="flex-wrap flex_wrap justify-between pdr30 pdl30 pdt10px pdb10px pdr10_xs pdl10_xs">
+                                    <apex:repeat value="{!publicPhotoData.sortPhotoDataList}" var="publicPhoto">
+                                        <div class=" mb50_xs30 wd33">
+                                            <div class="img-wrapper md10">
+                                                <div class="img-wrapper-inner pictureList">
+                                                    <apex:image alt="" value="{!publicPhoto.FilePath}"
+                                                                styleClass="img-contain" style="cursor: pointer;"
+                                                                onclick="openModal( '{!publicPhoto.FilePath}' );"/>
+                                                </div>
+                                            </div>
+                                        </div>  
+                                    </apex:repeat>
+                                    <apex:outputPanel layout="block" rendered="{! MOD(publicPhotoData.sortPhotoDataList.size, 3) = 2}" styleClass="mb50_xs30 wd33">
+                                    </apex:outputPanel>
+                                </div>
+                            </div>
+                        </section>
+                    </section>
+                </article>
+            </main>
+        </body>
+    </apex:form>
+    
+    <!-- 【モーダルダイアログ】 -->
+    <div id="photoDialog" title="">
+        <div>
+            <apex:image alt="" value=""
+                        styleClass="img-contain modalPhoto"/>
+        </div>
+    </div>
+
+    <div id="photoDialog_min" title="">
+        <div>
+            <apex:image alt="" value=""
+                        styleClass="img-contain modalPhoto"/>
+        </div>
+    </div>
+    
+    
+    <apex:outputPanel id="js">
+        <script language="javascript" type="text/javascript">     
+        
+        // 写真情報
+        var imgs  = new Array(3);  //上部の3枚
+        var imgs2 = new Array(30); //下部の公開写真
+        
+        // 画面開いたタイミングで起動
+        $(document).ready(
+            function() {
+                //サイズ取得のために、画像を読み込んでおく
+                imgs[0]     = new Image();
+                imgs[0].src = '{! publicPhotoData.roomLayoutFilePath}';
+                imgs[1]     = new Image();
+                imgs[1].src = '{!JSINHTMLENCODE(buildingPhotoData.AppearanceFilePath__c)}';
+                imgs[2]     = new Image();
+                imgs[2].src = '{! publicPhotoData.livingFile.FilePath}';
+                
+                //公開画像を読み込んでおく
+                $('.pictureList').find('img').each(function(index,element){
+                    imgs2[index] = new Image();
+                    imgs2[index].src = element.src;
+                })
+            }
+        );
+        
+        // 画像の縦横比を隠し項目に設定する
+        function setPictureAspectTypes(){
+            //画像の縦横比を設定する
+            setPictureAspectType(imgs[0].width, imgs[0].height, 938, 500, '.pat1'); //間取り
+            setPictureAspectType(imgs[1].width, imgs[1].height, 450, 360, '.pat2'); //外観
+            setPictureAspectType(imgs[2].width, imgs[2].height, 450, 360, '.pat3'); //リビング
+            setPictureAspectTypeList(600, 410, '.patList'); //公開写真
+        }
+        
+        // 画像の縦横比を隠し項目に設定する
+        function setPictureAspectType(imgWidth, imgHeight, maxWidth, maxHeight, setClassName){
+            
+            // 縦横比を計算しWかHかEを返却してもらう
+            var pictureAspectRateString = calcPictureAspectType(imgWidth, imgHeight, maxWidth, maxHeight);
+            
+            // 隠し項目に設定
+            $(setClassName).val(pictureAspectRateString);
+        }
+        
+        
+        // 公開画像の縦横比を隠し項目に設定する
+        function setPictureAspectTypeList(maxWidth, maxHeight, setClassName){
+            
+            // 画像がなければ終了
+            if ({!publicPhotoData.sortPhotoDataList.size} == 0) return;
+            
+            // 画像ごとに縦横比Stringを計算し、文字列に追加
+            var pictureAspectRateListString = '';
+            
+            //公開画像一つずつ
+            var i = 0;
+            $('.pictureList').find('img').each(function(index,element){
+                pictureAspectRateListString += calcPictureAspectType(imgs2[i].width, imgs2[i].height, maxWidth, maxHeight)
+                i++;
+            })
+            
+            // 隠し項目に設定
+            $(setClassName).val(pictureAspectRateListString);
+        }
+        
+        
+        // 縦横比を計算
+        function calcPictureAspectType(img_width, img_height, maxWidth, maxHeight){
+            
+            // 値がないならEを返却
+            if (img_width == 0) {
+                return 'E';
+            }
+            
+            // 配置場所の縦横比率を計算
+            var aspectRate = maxWidth / maxHeight;
+            
+            // 実際の画像の縦横比率を計算
+            var pictureAspectRate = img_width / img_height;
+            
+            // 縦幅か横幅かを決定
+            var pictureAspectRateString
+            if (aspectRate > pictureAspectRate) {
+                pictureAspectRateString = 'H';
+            } else {
+                pictureAspectRateString = 'W';
+            }
+            
+            // 値を返却
+            return pictureAspectRateString;
+        }
+        
+
+        //登録確認メッセージ
+        async function checkInsert() {
+            var message = "{! MSG_COM_V_SAVE}";
+            var retVal = await showConfirm(message);
+            if (retVal) {
+                blockUi();
+                saveFavorite();
+            }
+        }
+        
+        // 登録完了メッセージ
+        async function alertSaveFinish() {
+            
+            //完了メッセージ
+            await showAlert("{! MSG_COM_I_SAVE}");
+        }
+        
+        // 画像クリック
+        function openModal(filePath) {
+            
+            
+            var img = new Image();
+            img.src = filePath;//高さと幅を取得したいURLを入力
+            
+            var img_width  = img.width;  // 幅
+            var img_height = img.height; // 高さ
+            
+            //モーダル画像変更
+            $('.modalPhoto').attr('src', filePath);
+            
+            //モーダルオープン
+            //画面に表示されている画像サイズ以下にならないよう調整 
+            if (img_width < 400) {
+                jQuery('#photoDialog_min').dialog('open');
+            } else {
+                jQuery('#photoDialog').dialog('open');
+            }
+        }
+        
+        jQuery(function() {
+            
+            //ダイアログを表示
+            jQuery( "#photoDialog" ).dialog({
+                modal: true,
+                autoOpen: false,
+                maxHeight: 800,
+                width: 'auto'
+            });
+            
+            //ダイアログを表示
+            jQuery( "#photoDialog_min" ).dialog({
+                modal: true,
+                autoOpen: false,
+                maxHeight: 800,
+                width: 400
+            });
+        });
+
+        // 帳票ロゴ表示エラー時に次画面パラメータを変更
+        function onErrorFormLogo() {
+            $('.formLogoIsAlive').val('false');
+        }
+        </script>
+        
+    </apex:outputPanel>
+</apex:page>

@@ -1,0 +1,92 @@
+<!-- 新規タブによる画面遷移ページ -->
+
+<!-- パラメータとして受け取ったVFページを新規タブで開く -->
+<!-- 画面遷移は静的リソースを用いて行う                 -->
+
+
+<apex:page title="画面遷移中">
+    <head><title>画面遷移中</title></head>
+    <apex:includeScript value="{!URLFOR($Resource.external_file, 'external_file/common_screen_util.js')}"/>
+    
+    <script type="text/javascript">
+
+    //遷移先のページ名取得
+    var newPage = getParam('pageName'); // パラメータで受け取ったVFページ名
+
+    
+    //除外パラメータ作成
+    var excludeParamName//開くページのパラメータから除外するパラメータ名
+    excludeParamName = 'pageName' + ',';           //ページ名はパラメータ名に使用しない
+    
+    excludeParamName += 'ltn_app_id' + ',';        // 左記のパラメータは「OpenDummyWindow.page」のURLに強制で付与されるlightningの固定パラメータ名のため、開くページのパラメータから除外
+    excludeParamName += 'sfdcIFrameHost' + ',';    // ※開きたいページのパラメータ名に使用しないようにしてください
+    excludeParamName += 'isdtp' + ',';
+    excludeParamName += 'clc' + ',';
+    excludeParamName += 'sfdcIFrameOrigin' + ',';
+    excludeParamName += 'nonce' + ',';
+    excludeParamName += 'tour' + ',';
+    
+    
+    //setParam作成
+    var setParam = '';                  // 次画面に渡すパラメータ    
+    var isFirst = 'TRUE';               // 最初のパラメータフラグ
+    var allParamList = getAllParam();   // URLを&区切りで格納した配列    
+    
+    for (var i=0; i < allParamList.length ; i++){
+        
+        //パラメータ名取得
+        var paramSplit = allParamList[i].split('='); //パラメータ(パラメータ名='praram')を=で区切る
+        var paramName = paramSplit[0];               //パラメータ名を取得
+        
+        //パラメータ除外
+        if ( excludeParamName.indexOf(paramName) != -1) {
+            continue;
+        }
+        
+        //＆追加
+        if(isFirst == 'FALSE') {
+            setParam += '&'; //パラメータの2つ目以降は&で区切る
+        } else {
+            isFirst = 'FALSE';
+        }
+        
+        //パラメータ追加
+        setParam += allParamList[i];
+    }
+    
+    //VFページを新規タブで開く  ※Salfariの場合、画面遷移ページが戻る為、強制的に新規タブ
+    if (isUseBrowserSafari()) {
+        showPage(newPage, '_self', 'true' , setParam ); //静的リソースのメソッドShowPageを使用
+    } else {
+        showPage(newPage, '', 'true' , setParam ); //静的リソースのメソッドShowPageを使用
+        //元の画面に戻る
+        window.history.back(-1);
+    }
+
+    
+    
+    //＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊以下、関数＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊
+    
+    //URLのパラメータを指定して取得するメソッド
+    function getParam(name, url) {
+        if (!url) url = window.location.href;
+        name = name.replace(/[\[\]]/g, "\\$&");
+        var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+            results = regex.exec(url);
+        if (!results) return null;
+        if (!results[2]) return '';
+        return decodeURIComponent(results[2].replace(/\+/g, " "));
+    }
+    
+    
+    //パラメータを配列で取得するメソッド
+    function getAllParam(url) {
+        if (!url) url = window.location.href;
+        
+        var urlAndParamList = url.split('?');//?でURLとパラメータを区切る
+        var paramList = urlAndParamList[1].split('&');//&でパラメータを区切る
+        
+        return paramList
+    }
+    </script>
+</apex:page>

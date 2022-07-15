@@ -1,0 +1,902 @@
+<!-- お客様紐づけ_お客様情報検索 -->
+<apex:page docType="html-5.0" standardStylesheets="false" controller="GA105001Controller" title="お客様情報検索">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="format-detection" content="telephone=no" />
+        <meta name="robots" content="noindex" />
+        <title>お客様情報検索</title>
+        
+        <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/reset.min.css')}" />
+        <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/foundation.css')}" />
+        <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/modaal.css')}" />
+        <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/style.css')}" />
+        <apex:stylesheet value="https://use.fontawesome.com/releases/v5.0.6/css/all.css" />
+        <apex:stylesheet value="{!URLFOR($Resource.external_file, 'external_file/common_style.css')}" />
+        <apex:stylesheet value="{!URLFOR($Resource.jQuery,'jQuery/jQueryUI/jquery-ui.css')}" />
+        <apex:stylesheet value="{!URLFOR($Resource.jQuery,'jQuery/jQueryUI/jquery-ui.css')}" />
+        
+        <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery-3.6.0.min.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery.blockUI.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jQueryUI/jquery-ui.min.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.designer_file, 'designer_file/js/modaal.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/common_screen_util.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/input_rules.js')}" />
+        
+        <apex:outputPanel id="messagescript">
+        <script type="text/javascript">
+        
+        //お客様紐付け実行確認メッセージ
+        async function checkAccountLink() {
+            var message = "{!MSG_CUST_V_EXECUTE_CUSTOMER_LINKING}";
+            var retVal = await showConfirm(message);
+            if (retVal) {
+                blockUi();
+                accountLink();
+            }
+        }
+
+        // ▼問合せNo0429で追加
+        //お客様紐付け完了後紹介メール情報削除メッセージ
+        async function alertIntroductionMailInformation() {
+            if ("{!isDeleteIntroMail}" == "true"){
+                await showAlert("{!MSG_COM_I_MERGE_END_SENDSTOP}");
+            }
+            showPage('GA102001View', '_self', 'TRUE', 'AccountId={!checkedSearchAccountDetail.Id}&Corresponds={!correspondId}');
+        }
+        // ▲問合せNo0429で追加
+        
+        //業者紐付け実行確認メッセージ
+        async function checkClientLink() {
+            var message = "{!MSG_CUST_V_EXECUTE_CLIENT_LINKING}";
+            var retVal = await showConfirm(message);
+            if (retVal) {
+                blockUi();
+                accountLink();
+            }
+        }
+        </script>
+        </apex:outputPanel>
+    </head>
+    
+    <style type="text/css">
+        /* ラジオボタンの表示変更 */
+        #ga105001 input[type="radio"] {
+        display: inline;
+        margin: 0 0 0 5px;
+        }
+        /* ボックス表示選択リスト apex:inputCheckbox用の設定 */
+        input[type=checkbox].choice_box {
+        display: none; /* チェックの非表示 */
+        }
+        input[type=checkbox].choice_box:checked + label {
+        background: #d2d2d2; /* 選択時の背景色 */
+        }
+        /* ボックス表示選択リスト apex:selectRadio用の設定 */
+        table.choice_box {
+        border: 0px;
+        }
+        table.choice_box input[type=radio] {
+        display: none; /* チェックの非表示 */
+        }
+        table.choice_box input[type=radio]:checked + label {
+        background: #d2d2d2; /* 選択時の背景色 */
+        }
+        table.choice_box label {
+        display: block;
+        float: left;
+        width: 57px;
+        height: 25px;
+        text-align: center;
+        line-height: 25px;
+        font-size:1.2rem;
+        cursor: pointer;
+        border: 1px solid #d2d2d2;
+        }
+        /* ボックス表示選択リストの動的横幅設定 apex:inputCheckbox用の設定 */
+        input[type=checkbox].choice_box_wide + label {
+        display: inline-block;
+        white-space: nowrap;
+        padding-right: 10px;
+        padding-left: 10px;
+        height: 25px;
+        line-height: 25px;
+        font-size:1.2rem;
+        cursor: pointer;
+        border: 1px solid #d2d2d2;
+        }
+        /* ボックス表示選択リストの折り返し設定 apex:selectRadio用の設定 */
+        table.choice_box_wrap {
+        display: block;
+        text-align: left;
+        }
+        table.choice_box_wrap tbody {
+        float: left;
+        width: 120px;
+        }
+        table.choice_box_wrap tr {
+        display: inline;
+        font-size: 0px;
+        width: 120px;
+        }
+        table.choice_box_wrap td {
+        display: inline-block;
+        width: 57px;
+        }
+        .longtext_output_only {
+        border-top: 0px;
+        border-left: 0px;
+        border-right: 0px;
+        border-radius: 0px;
+        height: auto;
+        margin-bottom: 0px;
+        }
+        .height-auto {
+        height: auto;
+        }
+        input[type=checkbox].togglebtn {
+        /* チェックの非表示 */
+        display: none;
+        }
+        input[type=checkbox].togglebtn:checked + label {
+        /* ON時の文字・背景色 */
+        background-color: #355eb0;
+        color: #ffffff;
+        }
+        .checkButton:disabled + label {
+        background-position: 0 -90px;
+        border-color: #c4c4c4;
+        color: #909090;
+        border: 1px solid #b5b5b5;
+        background: #e8e8e9 url(/img/alohaSkin/btn_sprite.png) repeat-x right top;
+        border-radius: 3px;
+        cursor: default;
+        }
+        
+        /* td全体へのborder設定をなしに変更 */
+        #ga105001 td {
+        border: none;
+        border-left: 0px;
+        border-top: 0px;
+        height: 0px;
+        }
+        
+        /* 検索結果内のtdのみにborderを設定 */
+        #ga105001 table.gray th {
+        border-left: 0px;
+        border-right: 1px #d2d2d2 solid;
+        border-bottom: 1px #d2d2d2 solid;
+        }
+        #ga105001 .searchResult td {
+        border: none;
+        border-right: 1px #d2d2d2 solid;
+        border-bottom: 1px #d2d2d2 solid;
+        height: 50px;
+        }
+    </style>
+    
+    <body id="ga105001">
+        <apex:form id="GA105001">
+            
+            <!-- actionFunction -->
+            <apex:actionFunction name="accountLink" action="{!accountLink}"
+                                 rerender="message, script,messagescript"
+                                 oncomplete="unblockUi(); 
+                                             if(!{! hasErrorMessage}){alertIntroductionMailInformation();}else{gotoTop()}"/>
+  
+            
+            <apex:pageMessages id="message"/>
+            
+            <main>
+                
+                <article>
+                    
+                    <section>
+                        <section style="display: flex">
+                            <h1 class="fontb font2rem" style="margin-bottom: 10px">お客様情報検索</h1>
+                            <!-- 非表示検索ボタン（Enterキー押下時動作用の隠し項目） -->
+                            <apex:commandButton styleClass="btn btn-submit btn-primary" value="検索(非表示))" disabled="{!isOpenError}" 
+                            onclick="blockUi();"
+                            action="{!searchAccount}" rerender="message, script, searchResult" 
+                            oncomplete="unblockUi(); if({!hasErrorMessage}){sortSetting('{!searchResultAccountRecordType}'); gotoTop()} else {sortSetting('{!searchAccountRecordType}');}"
+                            status="loadComponent" style="visibility:hidden;"/>   
+                        </section>
+                        <section>
+                            
+                            <div class="border-g ">
+                                
+                                <div class="pdr30 pdl30  pdr10_xs pdl10_xs mt30">
+                                    
+                                    <ul id="accordion" class="accordion-defalt">
+                                        <apex:outputPanel Id="targetTask" rendered="{! !isSearch}">
+                                            <li class="default open">
+                                                
+                                                <div class="link"><i class="fa fa-chevron-up"></i>対応内容</div>
+                                                
+                                                <ul class="submenu-defalt">
+                                                    
+                                                    <li>
+                                                        
+                                                        <div class="flex-wrap  flex_wrap justify-between align_center ">
+                                                            
+                                                            <div class=" mb10 l-box">
+                                                                
+                                                                <div class="information_title">イベント</div>
+                                                                
+                                                                <div class="information_contents"><apex:outputText value="{!targetCorrespondDetail.CorrespondType__c}" /></div>
+                                                                
+                                                            </div>
+                                                            
+                                                            <div class="r-box flex-wrap flex_wrap justify-between">
+                                                                
+                                                                <div class=" mb10 contents">
+                                                                    
+                                                                    <div class="information_title">メール</div>
+                                                                    
+                                                                    <div class="information_contents"><apex:outputText value="{!targetCorrespondDetail.Email__c}"/></div>
+                                                                    
+                                                                </div>
+                                                                
+                                                                <div class=" mb10 contents"></div>
+                                                                
+                                                            </div>
+                                                            
+                                                            <div class=" mb10 l-box wd49_md wd100_xs">
+                                                                
+                                                                <div class="information_title">イベント時刻</div>
+                                                                
+                                                                <div class="information_contents">
+                                                                    <apex:outputField value="{! targetCorrespondDetail.SupportedDateTime__c}"/>
+                                                                </div>
+                                                                
+                                                            </div>
+                                                            
+                                                        </div>
+                                                        
+                                                        <div class="flex-wrap flex_wrap justify-between ">
+                                                            
+                                                            <div class=" mb10 l-box">
+                                                                
+                                                                <div class="information_title">メール件名</div>
+                                                                
+                                                                <div class="information_contents"><apex:outputText value="{!targetCorrespondDetail.SupportedTitle__c}" /></div>
+                                                                
+                                                            </div>
+                                                            
+                                                            <div class=" mb10 r-box">
+                                                                
+                                                                <div class="information_title">メール本文</div>
+                                                                
+                                                                <div class="mail_contents"><apex:outputField value="{!targetCorrespondDetail.SupportedContent__c}" /></div>
+                                                                
+                                                            </div>
+                                                            
+                                                        </div>
+                                                        
+                                                    </li>
+                                                    
+                                                </ul>
+                                                
+                                            </li>
+                                            
+                                        </apex:outputPanel>
+                                        
+                                        <li class="default open">
+                                            
+                                            <div class="link "><i class="fa fa-chevron-up"></i>お客様情報検索</div>
+                                            
+                                            <ul class="submenu-defalt">
+                                                
+                                                <li>
+                                                    
+                                                    <div class="flex-wrap flex_wrap mt10 mb20">
+                                                        
+                                                        <apex:selectRadio value="{! searchAccountRecordType}" styleClass="displayRadio"  tabIndex="1">
+                                                            <apex:selectOptions value="{! searchAccountRecordTypeRadioButton}"  />
+                                                            <apex:actionSupport event="onchange" reRender="searchButton, buttonBlock" /> 
+                                                        </apex:selectRadio>
+                                                        
+                                                    </div>
+                                                    
+                                                    <div class="flex-wrap  flex_wrap justify-between align_center ">
+                                                        
+                                                        <div class=" mb10 l-box wd100_xs ">
+                                                            
+                                                            <div class="information_title">反響担当店舗</div>
+                                                            
+                                                            <div class="">
+                                                                <apex:selectList size="1" value="{!searchEchoShop}" styleClass="form-control" tabindex="2">
+                                                                    <apex:selectOptions value="{!selectShopList}"/>
+                                                                </apex:selectList>
+                                                            </div>
+                                                            
+                                                        </div>
+                                                        
+                                                        <div class="r-box flex-wrap flex_wrap justify-between">
+                                                            
+                                                            <div class=" mb10 contents">
+                                                                
+                                                                <div class="information_title">反響担当者</div>
+                                                                
+                                                                <div class="">
+                                                                    <apex:input type="text" value="{! searchEchoStaff}" onchange="correctInputRules(this,'text', '120')" styleClass="form-control" tabIndex="3"/>
+                                                                </div>
+                                                                
+                                                            </div>
+                                                            
+                                                            <!-- 来店担当店舗 設定なしのチェックボックス -->
+                                                            <div class=" mb10 contents ">
+                                                                <div class="information_title mt20">
+                                                                    <apex:inputCheckbox id="visitShopChecked" value="{!searchNoVisitShopChecked}" tabindex="4" />
+                                                                    <apex:outputlabel for="visitShopChecked" value="来店担当店舗 設定なし" style="font-size:1.4rem" styleClass="serach_check" />
+                                                                </div>
+                                                                
+                                                            </div>
+                                                            
+                                                        </div>
+
+                                                    </div>
+                                                    
+                                                    <div class="flex-wrap  flex_wrap justify-between align_center ">
+                                                        
+                                                        <div class=" mb10 l-box">
+                                                            
+                                                            <div class="information_title">来店担当店舗</div>
+                                                            
+                                                            <div class="">
+                                                                <apex:selectList size="1" value="{!searchVisitShop}" styleClass="form-control" tabindex="5" >
+                                                                    <apex:selectOptions value="{!selectShopList}"/>
+                                                                </apex:selectList>
+                                                            </div>
+                                                            
+                                                        </div>
+                                                        
+                                                        <div class="r-box flex-wrap flex_wrap justify-between">
+                                                            
+                                                            <div class=" mb10 contents">
+                                                                
+                                                                <div class="information_title">来店担当者</div>
+                                                                
+                                                                <div class="">
+                                                                    <apex:input type="text" value="{! searchShopStaff}" onchange="correctInputRules(this,'text', '120')" styleClass="form-control" tabIndex="6"/>
+                                                                </div>
+                                                                
+                                                            </div>
+                                                            
+                                                            <div class=" mb10 contents">
+                                                                
+                                                            </div>
+                                                            
+                                                        </div>
+                                                        
+                                                    </div>
+                                                    
+                                                    <div class="flex-wrap  flex_wrap justify-between align_center ">
+                                                        
+                                                        <div class=" mb10 l-box">
+                                                            
+                                                            <div class="information_title">お客様名/業者名</div>
+                                                            
+                                                            <div class="">
+                                                                <apex:input type="text" value="{! searchAccountName}" onchange="correctInputRules(this,'text', '255')" styleClass="form-control" tabIndex="7"/>
+                                                            </div>
+                                                            
+                                                        </div>
+                                                        
+                                                        <div class="r-box flex-wrap flex_wrap justify-between">
+                                                            
+                                                            <div class=" mb10 contents">
+                                                                
+                                                                <div class="information_title">メール</div>
+                                                                
+                                                                <div class="">
+                                                                    <apex:input type="text" value="{! searchEmail}" onchange="correctInputRules(this,'email')" styleClass="form-control" tabIndex="8"/>
+                                                                </div>
+                                                                
+                                                            </div>
+                                                            
+                                                            <div class=" mb10 contents">
+                                                                
+                                                                <div class="information_title">電話番号</div>
+                                                                
+                                                                <div class="">
+                                                                    <apex:input type="tel" value="{! searchPhone}" onchange="correctInputRules(this,'tel')" styleClass="form-control" tabIndex="9"/>
+                                                                </div>
+                                                                
+                                                            </div>
+                                                            
+                                                        </div>
+                                                        
+                                                    </div>
+                                                    
+                                                    <div class="flex-wrap  flex_wrap justify-between align_center ">
+                                                        
+                                                        <div class=" mb10 l-box">
+                                                            
+                                                            <div class="information_title">コメント</div>
+                                                            
+                                                            <div class="">
+                                                                <apex:input type="text" value="{! searchComment}" onchange="correctInputRules(this,'text', '255')" styleClass="form-control" tabIndex="10"/>
+                                                            </div>
+                                                            
+                                                        </div>
+                                                        
+                                                        <div class="r-box flex-wrap justify-between">
+                                                            
+                                                        </div>
+                                                        
+                                                    </div>
+                                                    
+                                                    <div class="flex-wrap  flex_wrap justify-center text-center">
+                                                        
+                                                        <apex:repeat value="{!statusNameList}" var="statusName">
+                                                            <apex:inputCheckbox id="IsFloorplanPhotoDrawMode" styleClass="togglebtn " value="{!statusCheckedMap[statusName]}" tabindex="11" />
+                                                            <apex:outputLabel for="IsFloorplanPhotoDrawMode" value="{!statusName}" styleClass="wd16 wd25_xs border-gray" />   
+                                                        </apex:repeat>
+                                                        
+                                                    </div>
+                                                    
+                                                    <div class="flex-wrap justify-center flex-xs-xolumn  mt60 mb30">
+                                                        
+                                                        <apex:outputPanel id="searchButton"> 
+                                                            
+                                                            <apex:commandButton styleclass="btn btn-primary text-center mauto_xs ml10" value="検索"  onclick="blockUi();" action="{!searchAccount}" oncomplete="unblockUi(); if({!hasErrorMessage}){sortSetting('{!searchResultAccountRecordType}'); gotoTop()} else {sortSetting('{!searchAccountRecordType}');}" rerender="message, script, searchResult ,paging" tabIndex="12" disabled="{! isOpenError}"  />
+                                                            
+                                                        </apex:outputPanel>
+                                                        
+                                                    </div>
+                                                    
+                                                </li>
+                                                
+                                            </ul>
+                                            
+                                        </li>
+                                        <apex:outputPanel id="searchResult" styleClass="searchResult" >
+                                            <li class="default open">
+                                                
+                                                <apex:input styleClass="presseColumn" value="{!presseColumn}" style="display:none" />
+                                                
+                                                <div class="link posi_re"><i class="fa fa-chevron-up"></i>検索結果
+                                                    
+                                                    <div class="ab_btn ab_btn_xs">
+                                                        
+                                                        <apex:outputPanel id="buttonBlock" layout="block" styleClass="flex-wrap">
+                                                            
+                                                            <apex:commandButton value="{!IF( searchResultAccountRecordType == '顧客', '　お客様紐づけ　', '　業者紐づけ　')}"
+                                                                                onclick="if('{!IF( searchResultAccountRecordType == '顧客', 'TRUE', '')}'){checkAccountLink()}else{checkClientLink()}"
+                                                                                rerender="dummy,messagescript"  tabIndex="13"
+                                                                                styleClass="modal btn-w-2 btn-w-2-r blue" rendered="{! !isSearch && searchAccountDetailDisplayListCount > 0 }"
+                                                                                disabled="{! isOpenError}" 
+                                                                                />
+                                                            
+                                                            <apex:commandButton value="{! IF(searchAccountRecordType == '顧客', '　お客様登録　', '　業者登録　')}"
+                                                                                onclick="showPage( '{! IF(searchAccountRecordType == '顧客', 'GA102001View', 'GD101002View')}', '', 'TRUE', '{! IF(searchAccountRecordType == '顧客' && !isSearch, 'mail=' & mail, '') }' );"
+                                                                                styleClass="modal btn-w-2  blue"
+                                                                                tabindex="14" disabled="{! isOpenError}" />
+                                                            
+                                                            <apex:commandButton value="　新規来店　" onclick="jQuery('#dialog-modal1').dialog('open');" rerender="dialogPanel1"
+                                                                                styleClass="modal btn-w-2 btn-w-2-l blue" tabindex="15" disabled="{! isOpenError}"  />
+                                                            
+                                                        </apex:outputPanel>
+                                                        
+                                                    </div>
+                                                    
+                                                </div>
+                                                
+                                                <div>
+                                                    <div class="flex-wrap flex_wrap mb20" style="margin-top:20px;margin-bottom:-10px" id="paging">
+                                                        <!-- ページ選択リスト -->
+                                                        <div style="width:200px;">
+                                                            <apex:selectList styleClass="form-control" size="1" value="{!selectAccountPageIndex}" rendered="{! accountPageCount > 1}">
+                                                                <apex:selectOptions value="{!AccountPageingList}" />
+                                                            </apex:selectList>
+                                                        </div>
+                                                        <!-- 選択ページの表示ボタン -->
+                                                        <apex:commandButton value="表示" styleClass="modal btn-w-2 btn-w-2_normal blue ml10" style="padding-left:10px; padding-right:10px;"
+                                                                            rendered="{! accountPageCount > 1}" disabled="{! isOpenError}"
+                                                                            onclick="blockUi();" action="{!selectAccountPage}" oncomplete="unblockUi(); if({!hasErrorMessage}){sortSetting('{!searchResultAccountRecordType}'); gotoTop()} else {sortSetting('{!searchResultAccountRecordType}');}" 
+                                                                            rerender="message, script, searchResult" />
+                                                    </div>
+
+                                                    <apex:outputPanel id="supplier" rendered="{!searchResultAccountRecordType == '業者'}">
+                                                        
+                                                        <ul class="submenu-defalt">
+                                                            
+                                                            <li>
+                                                                <table class="gray mb30 nowrap" id="searchResultTable1" style="height:400px; border-left: 1px #d2d2d2 solid;">
+                                                                    
+                                                                    <tbody id="supplierHeader" class="tableHeader">
+                                                                        
+                                                                        <tr>
+                                                                            
+                                                                            <th class="wd0" data-rowNumberCol="true"></th>
+                                                                            
+                                                                            <th class="wd0"></th>
+                                                                            
+                                                                            <th>
+                                                                            業者名<img url="" class="sort sortOrderImage" />　　
+                                                                            </th>
+                                                                            
+                                                                            <th>業者種別<img url="" class="sort sortOrderImage" />　　
+                                                                            </th>
+                                                                            
+                                                                            <th>
+                                                                                電話番号<img url="" class="sort sortOrderImage" />　　　
+                                                                            </th>
+                                                                            
+                                                                            <th>
+                                                                                住所<img url="" class="sort sortOrderImage" />　　　
+                                                                            </th>
+                                                                            
+                                                                        </tr>
+                                                                        <apex:variable var="num" value="1" />
+                                                                        <apex:repeat value="{!searchAccountDetailDisplayList}" var="accountDetail">
+                                                                            
+                                                                            <tr>
+                                                                                
+                                                                                <td>{!VALUE(num)}</td>
+                                                                                
+                                                                                <td>
+                                                                                    <apex:inputCheckbox id="sc186"  value="{!accountDetail.isCheckbox}" onchange="onchangeListCheckBoxSingleSelect(this);" />
+                                                                                    <apex:outputLabel for="sc186" styleClass="serach_check" /> 
+                                                                                </td>
+                                                                                
+                                                                                <td><apex:commandLink value="{!accountDetail.Name}"  onclick="showPage('GA102001View', '', 'true', 'AccountId={!accountDetail.id}')" rerender="dummy"/></td>
+                                                                                
+                                                                                <td><apex:outputText value="{!accountDetail.supplierType}" /></td>
+                                                                                
+                                                                                <td><apex:outputText value="{!accountDetail.Phone}" /></td>
+                                                                                
+                                                                                <td><apex:outputText value="{!accountDetail.address}" /></td>
+                                                                                
+                                                                            </tr>
+                                                                            <apex:variable var="num" value="{!VALUE(num) + 1}" />
+                                                                            
+                                                                        </apex:repeat>
+                                                                        
+                                                                    </tbody>
+                                                                    
+                                                                </table>
+                                                                
+                                                            </li>
+                                                            
+                                                        </ul>
+                                                    </apex:outputPanel>
+                                                    
+                                                    <apex:outputPanel id="client" rendered="{!searchResultAccountRecordType == '顧客'}">
+                                                        <ul class="submenu-defalt">
+                                                            
+                                                            <li>
+                                                                
+                                                                <!-- 外枠 -->
+                                                                
+                                                                <div class="x_data_area ">
+                                                                    
+                                                                    <!-- ロック部分 -->
+                                                                    
+                                                                    <div class="lock_box">
+                                                                        
+                                                                        <table class="width250 data gray scrollableHidden" id="searchResultTable2"
+                                                                                style="height:400px; border-left: 1px #d2d2d2 solid;"
+                                                                                data-sortLinkTableIds="searchResultHeaderTable"
+                                                                                onscroll="linkScrollY(this, 'searchResultHeaderTable');"
+                                                                                >
+                                                                            <tr>
+                                                                                
+                                                                                <th class="wd0" data-rowNumberCol="true"></th>
+                                                                                
+                                                                                <th class="wd0"></th>
+                                                                                
+                                                                                <th>お客様名　　
+                                                                                    <img url="" class="sort sortOrderImage" />
+                                                                                </th>
+                                                                            </tr>
+                                                                            <apex:variable var="num" value="1" />
+                                                                            <apex:repeat value="{!searchAccountDetailDisplayList}" var="accountDetail">
+                                                                                <tr>
+                                                                                    
+                                                                                    <td class="text-center">{!VALUE(num)}</td>
+                                                                                    
+                                                                                    <td>
+                                                                                        <apex:inputCheckbox id="sc186"  value="{!accountDetail.isCheckbox}" onchange="onchangeListCheckBoxSingleSelect(this);" />
+                                                                                        <apex:outputLabel for="sc186" styleClass="serach_check" />  
+                                                                                    </td>
+                                                                                    
+                                                                                    <td><apex:commandLink value="{!accountDetail.Name}"  onclick="showPage('GA102001View', '', 'true', 'AccountId={!accountDetail.id}')" rerender="dummy"/></td>
+                                                                                    
+                                                                                </tr>
+                                                                                <apex:variable var="num" value="{!VALUE(num) + 1}" />
+                                                                            </apex:repeat>
+                                                                        </table>
+                                                                        
+                                                                    </div>
+                                                                    
+                                                                    <!-- /ロック部分 -->
+                                                                    
+                                                                    <!-- 横スクロール部分 -->
+                                                                    
+                                                                    <div class="x_scroll_box" style="overflow-x: hidden;">
+                                                                        
+                                                                        <table class="width2500 data gray nowrap" id="searchResultHeaderTable" style="height:419px;"
+                                                                                data-sortLinkTableIds="searchResultTable2"
+                                                                                onscroll="linkScrollY(this, 'searchResultTable2');"
+                                                                                >
+                                                                            <tbody>
+                                                                                
+                                                                                <tr>
+                                                                                    
+                                                                                    <th class="wd3">
+                                                                                        ステータス<img url="" class="sort sortOrderImage" />　　
+                                                                                    </th>
+                                                                                    
+                                                                                    <th class="wd3">
+                                                                                        イベント<img url="" class="sort sortOrderImage" />　　
+                                                                                    </th>
+                                                                                    
+                                                                                    <th class="wd3">
+                                                                                        電話番号<img url="" class="sort sortOrderImage" />　　
+                                                                                    </th>
+                                                                                    
+                                                                                    <th class="wd4">
+                                                                                        入居希望時期<img url="" class="sort sortOrderImage" />　　
+                        
+                                                                                    </th>
+                                                                                    
+                                                                                    <th class="wd3">
+                                                                                        入居希望日<img url="" class="sort sortOrderImage" />　　
+                                                                                    </th>
+                                                                                    
+                                                                                    <th class="wd4">
+                                                                                        初回問合せ日時<img url="" class="sort sortOrderImage" />　　
+                                                                                    </th>
+                                                                                    
+                                                                                    <th class="wd4">
+                                                                                        最新対応日時<img url="" class="sort sortOrderImage" />
+                                                                                    </th>
+                                                                                    
+                                                                                    <th class="wd3">
+                                                                                        反響担当者<img url="" class="sort sortOrderImage" />
+                                                                                    </th>
+                                                                                    
+                                                                                    <th class="wd3">
+                                                                                        来店担当者<img url="" class="sort sortOrderImage" />
+                                                                                    </th>
+                                                                                    
+                                                                                    <th class="r_none wd7">
+                                                                                        メモ<img url="" class="sort sortOrderImage" />
+                                                                                    </th>
+                                                                                    
+                                                                                </tr>
+                                                                                <apex:repeat value="{!searchAccountDetailDisplayList}" var="accountDetail">
+                                                                                    <tr>
+                                                                                        
+                                                                                        <td class=" b_none"><apex:outputText value="{!accountDetail.status}" /></td>
+                                                                                        
+                                                                                        <td class=" b_none"><apex:outputText value="{!accountDetail.event}" /></td>
+                                                                                        
+                                                                                        <td class=" b_none"><apex:outputText value="{!accountDetail.Phone}" /></td>
+                                                                                        
+                                                                                        <td class=" b_none"><apex:outputText value="{!accountDetail.HomeMovingSeason}"/></td>
+                                                                                        
+                                                                                        <td class=" b_none">
+                                                                                            <apex:outputText value="{0, date, yyyy/MM/dd }">
+                                                                                                <apex:param value="{!accountDetail.HomeMovingDate}"/>
+                                                                                            </apex:outputText>
+                                                                                        </td>
+                                                                                        
+                                                                                        <td class=" b_none">
+                                                                                            <apex:outputText value="{!accountDetail.createdDate}"/></td>
+                                                                                        
+                                                                                        <td class=" b_none">
+                                                                                            <apex:outputText value="{!accountDetail.latestSupportedDateTime}"/></td>
+                                                                                        
+                                                                                        
+                                                                                        <td class=" b_none"><apex:outputText value="{!accountDetail.echoStaff}" /></td>
+                                                                                        
+                                                                                        <td class=" b_none"><apex:outputText value="{!accountDetail.shopStaff}" /></td>
+                                                                                        
+                                                                                        <td class="r_none b_none"><apex:outputText value="{!accountDetail.memo}" /></td>
+                                                                                        
+                                                                                    </tr>
+                                                                                </apex:repeat>
+                                                                                
+                                                                            </tbody>
+                                                                            
+                                                                        </table>
+                                                                        
+                                                                    </div>
+                                                                    
+                                                                </div>
+                                                                
+                                                            </li>
+                                                            
+                                                        </ul>
+                                                    </apex:outputPanel>
+                                                </div>
+                                                
+                                                
+                                            </li>
+                                        </apex:outputPanel>
+                                    </ul>
+                                    
+                                </div>  
+                                
+                            </div>
+                            
+                        </section>
+                        
+                    </section>
+                    
+                </article>
+                
+            </main>
+            
+            <apex:outputPanel id="script">
+                
+                <script>
+                
+                /* $(function() {
+
+        $('table').resizableColumns();
+
+    }); */
+                
+                //初期フォーカスを外す
+                beenFocused = true;
+                
+                $(function() {
+                    
+                    var Accordion = function(el, multiple) {
+                        
+                        this.el = el || {};
+                        
+                        this.multiple = multiple || false;
+                        
+                        
+                        
+                        // Variables privadas
+                        
+                        var links = this.el.find('.link');
+                        
+                        // Evento
+                        
+                        links.off('click');//重複登録を防ぐ
+                        links.on('click', {el: this.el, multiple: this.multiple}, this.dropdown)
+                        
+                        // 追加（ボタンでは効かないように）
+                        var btns = links.find('.ab_btn');
+                        btns.on('click', function(e){return false;})
+                        
+                        
+                    }
+                    
+                    
+                    
+                    
+                    
+                    Accordion.prototype.dropdown = function(e) {
+                        
+                        var $el = e.data.el;
+                        
+                        $this = $(this),
+                            
+                            $next = $this.next();
+                        
+                        
+                        
+                        $next.slideToggle();
+                        
+                        $this.parent().toggleClass('open');
+                        
+                        
+                        
+                        if (!e.data.multiple) {
+                            
+                            // $el.find('.submenu-defalt').not($next).slideUp().parent().removeClass('open');
+                            
+                        };
+                        
+                    }
+                    
+                    
+                    
+                    var accordion = new Accordion($('#accordion'), false);
+                    
+                });
+                
+                
+                
+                $(function() {
+                    
+                    $('#btn').on('click', function(e) {
+                        
+                        //document.getElementById("accordion").removeClass('open');
+                        
+                        //document.getElementById("accordion").classList.remove("open")
+                        
+                        //$el.find('.submenu-defalt').not($next).slideUp().parent().removeClass('open');
+                        
+                        
+                        
+                        
+                        
+                        var textList = document.getElementById('accordion');
+                        
+                        //li02 = textList.getElementsByTagName('li');
+                        
+                        let elements = textList.getElementsByTagName('li');
+                        
+                        Array.prototype.forEach.call(elements, function(element) {
+                            
+                            element.classList.remove('open','default');
+                            
+                            $('.submenu-defalt').fadeOut()
+                            
+                        });
+                        
+                        
+                        
+                        
+                        
+                        //for (var j = 0; li02.length; j++) {
+                        
+                        //console.log(li02[j].textContent);
+                        
+                        // li02[j].removeClass("open")
+                        
+                        //}
+                        
+                    });
+                    
+                });    
+                
+                // 画面起動時
+                window.addEventListener('load', function(){
+                    // ソート用矢印画像の設定
+                    sortOrderImageSrc = new Map([
+                        [-1,"{!URLFOR($Resource.designer_file, 'designer_file/images/arrow_down.png')}"]
+                        ,[0,"{!URLFOR($Resource.designer_file, 'designer_file/images/arrow_none.png')}"]
+                        ,[1,"{!URLFOR($Resource.designer_file, 'designer_file/images/arrow_up.png')}"]
+                    ]);
+                    // ソートイベント設定
+                    sortSetting('{!searchResultAccountRecordType}');
+                },false);
+                
+                // ソートイベント設定
+                function sortSetting(str) {
+                    if (str == '顧客'){
+                        setSortableTable('searchResultTable2');
+                        setSortableTable('searchResultHeaderTable');
+                        tableColResize('searchResultTable2');
+                        tableColResize('searchResultHeaderTable');
+                    }else{
+                        setSortableTable('searchResultTable1');
+                        tableColResize('searchResultTable1');
+                    }
+                }
+
+                </script>
+            </apex:outputPanel>
+            
+            <!-- 【モーダルダイアログ】 -->
+            <div id="dialog-modal1" title="">
+                <apex:outputPanel id="dialogPanel1">
+                    <c:GA201001View url="{!newVisitUrl}"  />
+                </apex:outputPanel>
+            </div>
+            
+            <!-- 【JAVASCRIPT】 -->
+            <script language="javascript" type="text/javascript">
+            jQuery(function () {
+                //ダイアログを表示
+                jQuery("#dialog-modal1").dialog({
+                    modal: true,
+                    autoOpen: false,
+                    width: 300,
+                });
+            });
+            </script>
+        </apex:form>
+    </body>
+    
+</apex:page>

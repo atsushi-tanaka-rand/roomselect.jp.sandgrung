@@ -1,0 +1,233 @@
+<!--一括確認(長期)物件一覧-->
+
+<apex:page readOnly="true" contenttype="text/xml;charset=UTF-8#%E4%B8%80%E6%8B%AC%E7%A2%BA%E8%AA%8D%28%E9%95%B7%E6%9C%9F%29%E7%89%A9%E4%BB%B6%E4%B8%80%E8%A6%A7{!YEAR(Today())}-{!MONTH(Today())}-{!DAY(Today())}.xml" controller="TD401001Controller" >
+    <apex:outputText escape="true" value="{!XmlVer}" />
+    <apex:outputText escape="true" value="{!Xmlapp}" />
+    <Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+            xmlns:o="urn:schemas-microsoft-com:office:office"
+            xmlns:x="urn:schemas-microsoft-com:office:excel"
+            xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"
+            xmlns:html="http://www.w3.org/TR/REC-html40">
+        <DocumentProperties xmlns="urn:schemas-microsoft-com:office:office">
+            <Author><apex:outputText value="{!$User.FirstName} {!$User.LastName}" /></Author>
+            <LastAuthor><apex:outputText value="{!$User.FirstName} {!$User.LastName}" /></LastAuthor>
+            <Created><apex:outputText value="{!YEAR(Today())}-{!MONTH(Today())}-{!DAY(Today())}T{!LPAD(TEXT(HOUR(TIMENOW())), 2 , '0') }:{!LPAD( TEXT(MINUTE(TIMENOW())), 2 , '0')}:{!LPAD(TEXT(SECOND(TIMENOW())), 2 , '0') }Z" /></Created>
+            <LastSaved></LastSaved>
+            <Version>16.00</Version>
+        </DocumentProperties>
+        <OfficeDocumentSettings xmlns="urn:schemas-microsoft-com:office:office">
+            <AllowPNG/>
+        </OfficeDocumentSettings>
+        <ExcelWorkbook xmlns="urn:schemas-microsoft-com:office:excel">
+            <WindowHeight>4485</WindowHeight>
+            <WindowWidth>15345</WindowWidth>
+            <WindowTopX>0</WindowTopX>
+            <WindowTopY>0</WindowTopY>
+            <ProtectStructure>False</ProtectStructure>
+            <ProtectWindows>False</ProtectWindows>
+        </ExcelWorkbook>
+        <Styles>
+            <Style ss:ID="Default" ss:Name="Normal">
+                <Alignment ss:Vertical="Center"/>
+                <Borders/>
+                <Font ss:FontName="游ゴシック" x:CharSet="128" x:Family="Modern" ss:Size="11"
+                      ss:Color="#000000"/>
+                <Interior/>
+                <NumberFormat/>
+                <Protection/>
+            </Style>
+            <Style ss:ID="s62">
+                <Font ss:FontName="游ゴシック" x:CharSet="128" x:Family="Modern" ss:Size="11"
+                      ss:Color="#000000" ss:Bold="1"/>
+            </Style>
+            <Style ss:ID="s63">
+                <NumberFormat ss:Format="Short Date"/>
+            </Style>
+            <Style ss:ID="s65">
+                <Borders>
+                    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+                    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+                    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+                    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+                </Borders>
+            </Style>
+            <Style ss:ID="s66">
+                <Borders>
+                    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+                    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+                    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+                    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+                </Borders>
+                <Font ss:FontName="游ゴシック" x:CharSet="128" x:Family="Modern" ss:Size="11"
+                      ss:Color="#000000" ss:Bold="1"/>
+                <Interior ss:Color="#DDEBF7" ss:Pattern="Solid"/>
+            </Style>
+            <Style ss:ID="s67">
+                <Font ss:FontName="游ゴシック" x:CharSet="128" x:Family="Modern" ss:Size="11"
+                      ss:Color="#FF0000"/>
+            </Style>
+        </Styles>
+        <Worksheet ss:Name="Sheet1">
+            <Table ss:ExpandedColumnCount="19" ss:ExpandedRowCount="{!propertyAndPortalList.size + 6}" x:FullColumns="1"
+                   x:FullRows="1" ss:DefaultColumnWidth="50.25" ss:DefaultRowHeight="18.75"> /* 2022.04.13 ExpandedColumnCount="17"→"19"に変更 CHINTAI対応 */
+                <Column ss:Width="40"/>
+                <Column ss:Width="100"/>
+                <Column ss:Width="100"/>
+                <Column ss:Width="170"/>
+                <Column ss:Width="240"/>
+                <Column ss:Width="150"/>
+                <Column ss:Width="100"/>
+                <Column ss:Width="100"/>
+                <Column ss:Width="170"/>
+                <Column ss:Width="150"/>
+                <Column ss:Width="100"/>
+                <Column ss:Width="100"/>
+                <Column ss:Width="100"/>
+                <Column ss:Width="100"/>
+                <Column ss:Width="100"/> /* 2022.04.13 CHINTAI対応追加 */
+                <Column ss:Width="150"/>
+                <Column ss:Width="150"/>
+                <Column ss:Width="150"/>
+				<Column ss:Width="150"/> /* 2022.04.13 CHINTAI対応追加 */
+               
+                <Row ss:AutoFitHeight="0">
+                    <Cell ss:StyleID="s62">
+                        <PhoneticText xmlns="urn:schemas-microsoft-com:office:excel">イッカツカクニン(チョウキ)ブッケンイチラン</PhoneticText>
+                        <Data ss:Type="String">一括確認(長期)物件一覧</Data>
+                    </Cell>
+                </Row>
+                <Row ss:AutoFitHeight="0">
+                    <Cell ss:StyleID="s67"><Data ss:Type="String">{!errorMessage}</Data></Cell>
+                </Row>
+                <Row ss:AutoFitHeight="0">
+                    <Cell><Data ss:Type="String">店舗</Data></Cell>
+                    <Cell ss:StyleID="s63"><Data ss:Type="String">
+                        <apex:outputText value="{!shopName}" rendered="{!shopName != null}">
+                        </apex:outputText>
+                        </Data></Cell>
+                </Row>
+                <Row ss:AutoFitHeight="0">
+                    <Cell><Data ss:Type="String">実行日</Data></Cell>
+                    <Cell ss:StyleID="s63"><Data ss:Type="String">
+                        <apex:outputText value="{0, date, yyyy/MM/dd}" rendered="{!today != null}">
+                            <apex:param value="{!today}"/>
+                        </apex:outputText>
+                        </Data></Cell>
+                </Row>
+                <Row ss:Index="6" ss:AutoFitHeight="0">
+                    <Cell ss:StyleID="s66"><Data ss:Type="String">No.</Data></Cell>
+                    <Cell ss:StyleID="s66">
+                        <PhoneticText xmlns="urn:schemas-microsoft-com:office:excel">イッカツカクニンビ</PhoneticText>
+                        <Data ss:Type="String">一括確認日</Data>
+                    </Cell>
+                    <Cell ss:StyleID="s66"><PhoneticText xmlns="urn:schemas-microsoft-com:office:excel">ケイカニッスウ</PhoneticText>
+                        <Data ss:Type="String">経過日数</Data>
+                    </Cell>
+                    <Cell ss:StyleID="s66">
+                        <PhoneticText xmlns="urn:schemas-microsoft-com:office:excel">タテモノメイ</PhoneticText>
+                        <Data ss:Type="String">建物名</Data>
+                    </Cell>
+                    <Cell ss:StyleID="s66">
+                        <PhoneticText xmlns="urn:schemas-microsoft-com:office:excel">ジュウショ</PhoneticText>
+                        <Data ss:Type="String">住所</Data>
+                    </Cell>
+                    <Cell ss:StyleID="s66">
+                        <PhoneticText xmlns="urn:schemas-microsoft-com:office:excel">ヘヤバンゴウ</PhoneticText>
+                        <Data ss:Type="String">部屋番号</Data>
+                    </Cell>
+                    <Cell ss:StyleID="s66">
+                        <PhoneticText xmlns="urn:schemas-microsoft-com:office:excel">ゲンキョウ</PhoneticText>
+                        <Data ss:Type="String">現況</Data>
+                    </Cell>
+                    <Cell ss:StyleID="s66">
+                        <PhoneticText xmlns="urn:schemas-microsoft-com:office:excel">シャシンマイスウ</PhoneticText>
+                        <Data ss:Type="String">写真枚数</Data>
+                    </Cell>
+                    <Cell ss:StyleID="s66">
+                        <PhoneticText xmlns="urn:schemas-microsoft-com:office:excel">モトヅケギョウシャ</PhoneticText>
+                        <Data ss:Type="String">元付業者</Data>
+                    </Cell>
+                    <Cell ss:StyleID="s66">
+                        <PhoneticText xmlns="urn:schemas-microsoft-com:office:excel">デンワバンゴウ(モトヅケギョウシャ)</PhoneticText>
+                        <Data ss:Type="String">電話番号(元付業者)</Data>
+                    </Cell>
+                    <Cell ss:StyleID="s66">
+                        <PhoneticText xmlns="urn:schemas-microsoft-com:office:excel">テイキソウシン</PhoneticText>
+                        <Data ss:Type="String">定期送信</Data>
+                    </Cell>
+                    <Cell ss:StyleID="s66">
+                        <PhoneticText xmlns="urn:schemas-microsoft-com:office:excel">ケイサイサキ(SUUMO)</PhoneticText>
+                        <Data ss:Type="String">掲載先(SUUMO)</Data>
+                    </Cell>
+                    <Cell ss:StyleID="s66">
+                        <PhoneticText xmlns="urn:schemas-microsoft-com:office:excel">ケイサイサキ(HOME'S)</PhoneticText>
+                        <Data ss:Type="String">掲載先(HOME'S)</Data>
+                    </Cell>
+                    <Cell ss:StyleID="s66">
+                        <PhoneticText xmlns="urn:schemas-microsoft-com:office:excel">ケイサイサキ(at home)</PhoneticText>
+                        <Data ss:Type="String">掲載先(at home)</Data>
+                    </Cell>
+					/* ▼ 2022.04.13 CHINTAI対応追加 */
+                    <Cell ss:StyleID="s66">
+                        <PhoneticText xmlns="urn:schemas-microsoft-com:office:excel">ケイサイサキ(CHINTAI)</PhoneticText>
+                        <Data ss:Type="String">掲載先(CHINTAI)</Data>
+                    </Cell>
+					/* ▲ 2022.04.13 CHINTAI対応追加 */
+                    <Cell ss:StyleID="s66">
+                        <PhoneticText xmlns="urn:schemas-microsoft-com:office:excel">パノラマケイサイサキ(SUUMO)</PhoneticText>
+                        <Data ss:Type="String">パノラマ掲載先(SUUMO)</Data>
+                    </Cell>
+                    <Cell ss:StyleID="s66">
+                        <PhoneticText xmlns="urn:schemas-microsoft-com:office:excel">パノラマケイサイサキ(HOME'S)</PhoneticText>
+                        <Data ss:Type="String">パノラマ掲載先(HOME'S)</Data>
+                    </Cell>
+                    <Cell ss:StyleID="s66">
+                        <PhoneticText xmlns="urn:schemas-microsoft-com:office:excel">パノラマケイサイサキ(at home)</PhoneticText>
+                        <Data ss:Type="String">パノラマ掲載先(at home)</Data>
+                    </Cell>
+					/* ▼ 2022.04.13 CHINTAI対応追加 */
+					<Cell ss:StyleID="s66">
+                        <PhoneticText xmlns="urn:schemas-microsoft-com:office:excel">パノラマケイサイサキ(CHINTAI)</PhoneticText>
+                        <Data ss:Type="String">パノラマ掲載先(CHINTAI)</Data>
+                    </Cell>
+					/* ▲ 2022.04.13 CHINTAI対応追加 */
+                </Row>
+                <apex:repeat value="{!propertyAndPortalList}" var="p" >
+                    <Row ss:AutoFitHeight="0">
+                        <Cell ss:StyleID="s65" ss:Formula="=ROW()-6"><Data ss:Type="Number"></Data></Cell>
+                        <Cell ss:StyleID="s65"><Data ss:Type="String"><apex:outputText value="{0, date, yyyy/MM/dd}">
+                            <apex:param value="{!p.propertyRecord.BulkConfirmationDate__c}" /></apex:outputText></Data></Cell>
+                        <Cell ss:StyleID="s65"><Data ss:Type="String"><apex:outputText value="{!p.pastDates}" /></Data></Cell>
+                        <Cell ss:StyleID="s65"><Data ss:Type="String"><apex:outputText value="{!p.buildingName}" /></Data></Cell>
+                        <Cell ss:StyleID="s65"><Data ss:Type="String"><apex:outputText value="{!p.buildingAddress}" /></Data></Cell>
+                        <Cell ss:StyleID="s65"><Data ss:Type="String"><apex:outputText value="{!p.name}" /></Data></Cell>
+                        <Cell ss:StyleID="s65"><Data ss:Type="String"><apex:outputText value="{!p.liveStatus}" /></Data></Cell>
+                        <Cell ss:StyleID="s65"><Data ss:Type="String"><apex:outputText value="{!p.propertyRecord.PhotoCount__c}" /></Data></Cell>
+                        <Cell ss:StyleID="s65"><Data ss:Type="String"><apex:outputText value="{!p.formerSupplierName}" /></Data></Cell>
+                        <Cell ss:StyleID="s65"><Data ss:Type="String"><apex:outputText value="{!p.propertyRecord.FormerSupplier__r.Phone}" /></Data></Cell>
+                        <Cell ss:StyleID="s65"><Data ss:Type="String"><apex:outputText value="{!p.FixedTermSend}" /></Data></Cell>
+                        <Cell ss:StyleID="s65"><Data ss:Type="String"><apex:outputText value="{!if(p.portalRecord.IsSuumo__c == true, '〇', '✕')}" /></Data></Cell>
+                        <Cell ss:StyleID="s65"><Data ss:Type="String"><apex:outputText value="{!if(p.portalRecord.IsHomes__c == true, '〇', '✕')}" /></Data></Cell>
+                        <Cell ss:StyleID="s65"><Data ss:Type="String"><apex:outputText value="{!if(p.portalRecord.IsAtHome__c == true, '〇', '✕')}" /></Data></Cell>
+                        <Cell ss:StyleID="s65"><Data ss:Type="String"><apex:outputText value="{!if(p.portalRecord.IsChintaiNet__c == true, '〇', '✕')}" /></Data></Cell> /* 2022.04.13 CHINTAI対応追加 */
+                        <Cell ss:StyleID="s65"><Data ss:Type="String"><apex:outputText value="{!p.isSuumoPanoramaCheck}" /></Data></Cell>
+                        <Cell ss:StyleID="s65"><Data ss:Type="String"><apex:outputText value="{!p.isHomesPanoramaCheck}" /></Data></Cell>
+                        <Cell ss:StyleID="s65"><Data ss:Type="String"><apex:outputText value="{!p.isAtHomePanoramaCheck}" /></Data></Cell>
+						<Cell ss:StyleID="s65"><Data ss:Type="String"><apex:outputText value="{!p.isChintaiPanoramaCheck}" /></Data></Cell> /* 2022.04.13 CHINTAI対応追加 */
+                    </Row>
+                </apex:repeat>
+            </Table>
+            <WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel">
+                <PageSetup>
+                    <Header x:Margin="0.3"/>
+                    <Footer x:Margin="0.3"/>
+                    <PageMargins x:Bottom="0.75" x:Left="0.7" x:Right="0.7" x:Top="0.75"/>
+                </PageSetup>
+                <Unsynced/>
+                <Selected/>
+                <ProtectObjects>False</ProtectObjects>
+                <ProtectScenarios>False</ProtectScenarios>
+            </WorksheetOptions>
+        </Worksheet>
+    </Workbook>
+</apex:page>

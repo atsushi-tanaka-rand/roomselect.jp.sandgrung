@@ -1,0 +1,498 @@
+<!--画像アップロード用 共通部品-->
+<apex:component controller="GD901001Controller" allowDML="true">
+    <apex:attribute name="ParameterClass" type="GD901001ParameterClass" assignTo="{!Parameter}" description="key"/>
+
+    <style type="text/css">
+        label input {
+            display: none;
+        }
+        .upload_button{!Parameter.photosubType} {
+            color: #0000e1;
+            word-break: break-all;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #ffffff;
+            color: #7465ff;
+            display: inline-block;
+            padding: 0 10px;
+        }
+        .drop-zone{!Parameter.photosubType} {
+            position: relative;
+            border: 1px dashed #d2d2d2;
+            margin: 0 auto;
+            text-align: center;    
+            height: {!Parameter.height};
+            width: {!Parameter.width};
+        }
+        .drop-zone-text{!Parameter.photosubType} {
+            padding: 1px 0px;
+        }
+        .overlay-area{!Parameter.photosubType} {
+            display: block;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translateY(-50%) translateX(-50%);
+            -webkit- transform: translateY(-50%) translateX(-50%);
+            padding: 0 auto;
+            width: 100%;
+            height: 100%;
+            color: #F7F7F7;
+            background-color: rgba(0,0,0,.75);
+            opacity: 0;
+        }
+        .overlay{!Parameter.photosubType} {
+            z-index: 100;   /* 前面化 */
+            opacity: 1;     /* 透過解除 */
+        }
+        .overlay-text{!Parameter.photosubType} {
+            display: block;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translateY(-50%) translateX(-50%);
+            -webkit- transform: translateY(-50%) translateX(-50%);
+            color: #F7F7F7;
+        }
+        .no-active{!Parameter.photosubType} {
+            display: none;
+        }
+    </style>
+    <!-- 新規登録時は表示しない -->
+    <apex:commandButton style="display:none;" rerender="dummy"/>
+    <div style="height:100%; {!if(Parameter.isNew=true, 'display:none;','')}">
+        <apex:inputText style="display:none" styleClass="filePath{!Parameter.photosubType}" value="{!Parameter.filePath}" />
+        <apex:inputText style="display:none" styleClass="fileName{!Parameter.photosubType}" value="{!Parameter.fileName}" />
+        <apex:inputText style="display:none" styleClass="fileTag{!Parameter.photosubType}"  value="{!Parameter.fileTag}"  />
+        <div class="drop-zone{!Parameter.photosubType}" id="js-dropzone{!Parameter.photosubType}">
+            <!-- パス有且つドロップ専用エリアでないor 表示しない -->
+            <div style="height:100%; position:relative; {!if((Parameter.filePath = '' || Parameter.isArea=false), '','display:none;')}">
+                <p class="overlay-area{!Parameter.photosubType}" id="js-overlay-area{!Parameter.photosubType}"><br/>ここにドラッグドロップしてください。</p>
+                <div class="ab_center">
+                    <label for="file_upload{!Parameter.photosubType}" class="select-file{!Parameter.photosubType}" id="js-select-file{!Parameter.photosubType}">
+                        <br/>
+                        <div class="upload_button{!Parameter.photosubType}" style="cursor: pointer;">
+                            <apex:image url="{!URLFOR($Resource.designer_file, 'designer_file/images/upload.png')}" style="width:18px;height:15;"/>
+                            ファイルをアップロード
+                        </div>
+                        <input type="file" id="file_upload{!Parameter.photosubType}" accept="image/jpeg, image/jpg" multiple="multiple"/>
+                    </label>
+                    <p class="drop-zone-text{!Parameter.photosubType}">またはファイルをドロップ</p>
+                    <div class="selected-file{!Parameter.photosubType} no-active{!Parameter.photosubType}" id="js-selected-file{!Parameter.photosubType}" />
+                </div>
+            </div>
+            <!-- ドラッグ&ドロップ専用orパスがないor複数選択可能　場合は表示しない -->
+            <div style="{!if(Parameter.filePath != '' && Parameter.isArea=false, ';','display:none;')}">
+                <apex:image alt="" value="{!Parameter.filePath}" style="{!if(Parameter.isArea=true || Parameter.filePath = '', 'display:none;','')}"/>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 各エリアを定義
+        const dropzone{!Parameter.photosubType}     = document.getElementById('js-dropzone{!Parameter.photosubType}');
+        const overlayArea{!Parameter.photosubType}  = document.getElementById('js-overlay-area{!Parameter.photosubType}');
+        const fileInput{!Parameter.photosubType}    = document.getElementById('file_upload{!Parameter.photosubType}');
+        const selectedFile{!Parameter.photosubType} = document.getElementById('js-selected-file{!Parameter.photosubType}');
+
+        // ポップアップ呼び出し
+        function openFileDialog{!Parameter.photosubType}() {
+            $('#file_upload{!Parameter.photosubType}').click();
+        }
+
+        // ドロップ可能エリアに入った時
+        dropzone{!Parameter.photosubType}.addEventListener('dragenter', () => {
+            // styleの変更（反転し、案内を表示）
+            overlayArea{!Parameter.photosubType}.classList.add('overlay{!Parameter.photosubType}');
+        });
+    
+        // ドロップ可能エリアを出た時
+        overlayArea{!Parameter.photosubType}.addEventListener('dragleave', () => {
+            // styleの変更（反転し、案内を消去）
+            overlayArea{!Parameter.photosubType}.classList.remove('overlay{!Parameter.photosubType}');
+        });
+    
+        // ドロップ可能エリアにカーソルがある時
+        overlayArea{!Parameter.photosubType}.addEventListener('dragover', (e) => {
+            e.preventDefault(); // カーソルがドロップエリアの場合はイベントを消去
+        });
+    
+        // ファイルをドロップした時
+        overlayArea{!Parameter.photosubType}.addEventListener('drop', (e) => {
+            e.preventDefault(); // ブラウザのイベントを消去（ブラウザに画像など）
+
+            //styleの変更（反転し、案内を消去）
+            selectedFile{!Parameter.photosubType}.classList.remove('no-active{!Parameter.photosubType}');
+            overlayArea{!Parameter.photosubType}.classList.remove('overlay{!Parameter.photosubType}');
+            // ファイルアップロード
+            filaS3Upload{!Parameter.photosubType}(e.dataTransfer.files);
+        });
+    
+        // ファイルをボタンから選択
+        fileInput{!Parameter.photosubType}.addEventListener('change', () => {
+            //S3へファイルアップロード
+            blockUi();
+            setTimeout(function() {
+                filaS3Upload{!Parameter.photosubType}(fileInput{!Parameter.photosubType}.files);
+            }, 200);
+        });
+
+        // S3へファイルアップロード処理
+        async function filaS3Upload{!Parameter.photosubType}(files) {
+
+            //写真上限枚数設定
+            var photoCount = 0;
+            if ("{!Parameter.photoType}" == "{!PHOTOTYPE_BUILDING}") {                          // 建物写真
+                if ("{!Parameter.photoSubType}" == "{!PHOTOSUBTYPE_BUILDING_SURROUNDING}") {    // 周辺写真
+                    photoCount = {!PHOTOMAXCOUNT_BUILDING_SURROUNDING} - {!Parameter.registPhotoCount};
+                } else {
+                    photoCount = 1 - {!Parameter.registPhotoCount};
+                }
+            }　else if ("{!Parameter.photoType}" == "{!PHOTOTYPE_PROPERTY}") { // 物件写真
+                if ("{!Parameter.photoSubType}" == "{!PHOTOSUBTYPE_PROPERTY_PROPERTYPHOTO}") {      // 物件写真
+                    photoCount = {!PHOTOMAXCOUNT_PORPERTY_PROPERTYPHOTO} - {!Parameter.registPhotoCount};
+                } else if("{!Parameter.photoSubType}" == "{!PHOTOSUBTYPE_PROPERTY_PRIVATEPHOTO}") { // 物件写真（非公開）
+                    photoCount = {!PHOTOMAXCOUNT_PORPERTY_PRIVATEPHOTO} - {!Parameter.registPhotoCount};
+                } else if("{!Parameter.photoSubType}" == "{!PHOTOSUBTYPE_PROPERTY_PANORAMA}") {     // パノラマ写真
+                    photoCount = {!PHOTOMAXCOUNT_PORPERTY_PANORAMA} - {!Parameter.registPhotoCount};
+                } else {
+                    photoCount = 1 - {!Parameter.registPhotoCount};
+                }
+            } else {
+                photoCount = 1 - {!Parameter.registPhotoCount};
+            }
+            // 間取り図については削除機能がない為、随時受け入れ　※画面側で削除処理を呼び出しています。
+            if(files.length > photoCount && "{!Parameter.photoSubType}" != "{!PHOTOSUBTYPE_PROPERTY_ROOMLAYOUT}" 
+                                         && "{!Parameter.photoSubType}" != "{!PHOTOSUBTYPE_PROPERTY_ROOMLAYOUTMEMO}") {
+                unblockUi();
+                await showAlert('写真登録の上限枚数を超過しています。残り登録可能な枚数は' + photoCount + '枚です。');
+                return ;
+            }
+            //拡張子チェック
+            for (let i = 0; i < files.length; i++) {
+                var extension = getExtension{!Parameter.photosubType}(files[i].name, 2);
+                if (extension.toLowerCase() != 'jpg' && extension.toLowerCase() != 'jpeg') {
+                    unblockUi();
+                    await showAlert('{!MSG_E_EXTENSION}');
+                    return ;
+                }
+            }
+
+            var successCnt = 0;
+            var errorCnt   = 0;
+            for (let i = 0; i < files.length; i++) {
+                // 保存先フォルダと保存ファイル名取得
+                var s3FolderPath = getS3FolderPath{!Parameter.photosubType}();
+                var s3FileName   = getS3FileName{!Parameter.photosubType}(i) + '.' + getExtension{!Parameter.photosubType}(files[i].name, 2);
+                // ファイルアップロード
+                if (sendFileS3{!Parameter.photosubType}(files[i], s3FolderPath, s3FileName)) {
+                    // 写真オブジェクトの保存用領域格納
+                    setFilePathFileName{!Parameter.photosubType}(s3FolderPath, s3FileName);
+                    successCnt++;
+                } else {
+                    errorCnt++;
+                }
+            }
+
+            // 圧縮・モザイク処理の呼出し
+            if ("{!Parameter.photoSubType}" != "{!PHOTOSUBTYPE_PROPERTY_PANORAMA}" &&
+            // ポータルサイト構築 変更 Start
+                "{!Parameter.photoSubType}" != "{!PHOTOSUBTYPE_PROPERTY_PROPERTYPHOTO}" && 
+                "{!Parameter.photoType}" != "{!PHOTOTYPE_NEWSRELEASE}" && 
+                "{!Parameter.photoType}" != "{!PHOTOTYPE_SHOP}"){
+            // ポータルサイト構築 変更 End 
+                sendMosaicProcess($('.filePath{!Parameter.photosubType}').val());
+            }
+
+            // ラベリング呼び出し
+            if ("{!Parameter.photosubType}" == "{!PHOTOSUBTYPE_PROPERTY_PROPERTYPHOTO}") {
+                var tag = sendLabelingProcess($('.filePath{!Parameter.photosubType}').val());
+                $('.fileTag{!Parameter.photosubType}').val(tag);
+            }
+
+			//▼ 2022.01.14 No.0688 対応で追加
+			// パノラマ写真圧縮処理
+			if ("{!Parameter.photoSubType}" == "{!PHOTOSUBTYPE_PROPERTY_PANORAMA}"){
+				sendPanoramaCompressProcess($('.filePath{!Parameter.photosubType}').val());
+			}
+			//▲ 2022.01.14 No.0688 対応で追加
+
+            unblockUi();    //ロック解除
+
+            // 終了処理
+            if (files.length <= 0) {
+                // アップロードファイルなし
+            } else if (successCnt == 0 && errorCnt > 0) {
+                // 全てのアップロードに失敗
+                await showAlert('{!MSG_E_UPLOAD_ALL}');
+            } else if (successCnt > 0 && errorCnt > 0) {
+                // アップロード失敗有り
+                await showAlert('{!MSG_E_UPLOAD_CONTAIN}');
+                finishS3Upload("{!Parameter.parameter}");
+            } else if (successCnt > 0 && errorCnt == 0) {
+                // アップロード完了
+                finishS3Upload("{!Parameter.parameter}");
+            }
+        }
+
+            
+
+        // フォルダパス取得
+        function getS3FolderPath{!Parameter.photosubType}() {
+            var folderPath;
+            if ("{!Parameter.photoType}" == "{!PHOTOTYPE_BUILDING}") {
+                folderPath = '{!rootDirectory}/public/salesforce/photo/building_property/{!Parameter.foreignId}/';
+            } else if("{!Parameter.photoType}" == "{!PHOTOTYPE_PROPERTY}") {
+                folderPath = '{!rootDirectory}/public/salesforce/photo/building_property/{!Parameter.foreignId}/{!Parameter.foreignId2}/';
+            } else if("{!Parameter.photoType}" == "{!PHOTOTYPE_SURROUNDING_FACILITY}") {
+                folderPath = '{!rootDirectory}/public/salesforce/photo/surrounding/{!Parameter.foreignId}/';
+            } else if("{!Parameter.photoType}" == "{!PHOTOTYPE_SCHOOL}") {
+                folderPath = '{!rootDirectory}/public/salesforce/photo/school/{!Parameter.foreignId}/';
+            } else if("{!Parameter.photoType}" == "{!PHOTOTYPE_HOSPITAL}") {
+                folderPath = '{!rootDirectory}/public/salesforce/photo/hospital/{!Parameter.foreignId}/';
+            } else if("{!Parameter.photoType}" == "{!PHOTOTYPE_STATION}") {
+                folderPath = '{!rootDirectory}/public/salesforce/photo/station/{!Parameter.foreignId}/';
+            // ポータルサイト構築 変更 Start
+            } else if ("{!Parameter.photoType}" == "{!PHOTOTYPE_NEWSRELEASE}") { // ニュースリリース掲載写真
+                folderPath = '{!rootDirectory}/public/salesforce/photo/news_release/{!Parameter.foreignId}/';
+            } else if ("{!Parameter.photoType}" == "{!PHOTOTYPE_SHOP}") { // 店舗写真
+                folderPath = '{!rootDirectory}/public/salesforce/photo/shop/{!Parameter.foreignId}/';
+            // ポータルサイト構築 変更 End  
+            
+            }
+            return folderPath;
+        }
+
+        // ファイル名取得
+        function getS3FileName{!Parameter.photosubType}(index) {
+            var now = new Date();
+            var fileName = now.getFullYear().toString()
+                         + ( '00' + (now.getMonth() + 1)).slice( -2 )
+                         + ( '00' + now.getDate()).slice( -2 )
+                         + ( '00' + now.getHours()).slice( -2 )
+                         + ( '00' + now.getMinutes()).slice( -2 )
+                         + ( '00' + now.getSeconds()).slice( -2 );
+            fileName = "{!Parameter.photoSubType}" +  ( '00' + index ).slice( -2 ) + fileName;
+            return fileName;
+        }
+
+        // 拡張子取得
+        function getExtension{!Parameter.photosubType}(fileName, index) {
+            return fileName.match(/(.*)(?:\.([^.]+$))/)[index];
+        }
+
+        // S3へファイル送信（同期）
+        function sendFileS3{!Parameter.photosubType}(file, s3FoldePath, s3FileName) {
+            try {
+                // 認証文字列作成
+                var fd = new FormData();
+                fd.append('acl', 'public-read');
+                fd.append('x-amz-algorithm', 'AWS4-HMAC-SHA256');
+                fd.append('Content-Type', 'image/jpeg');
+                fd.append('success_action_status', '200');
+                fd.append('x-amz-signature', '{!sSignature}');
+                fd.append('policy', '{!sPolicy}');
+                fd.append('key', s3FoldePath + s3FileName);
+                fd.append('x-amz-credential', '{!sCredential}');
+                fd.append('x-amz-date', '{!sTimestamp}');
+                fd.append('file', file);
+
+                // XMLHttpRequestを設定
+                var isSuccess = false;
+                var xhr = new XMLHttpRequest();
+                xhr.onreadystatechange  = function () {
+                    if (xhr.readyState == 4 && ((xhr.status >= 200 && xhr.status < 300) || (xhr.status == 304))) {
+                        isSuccess = true;
+                    }
+                };
+
+                // S3へファイル送信（同期）
+                xhr.open('POST', '{!sS3Path}', false);
+                xhr.send(fd);
+                if (isSuccess) {
+                    return true;
+                } else {
+                    return false;
+                }
+            } catch(e) {
+                return false;
+            }
+        }
+
+        // ファイルパス,ファイル名の設定(Apex側受け渡し用)
+        function setFilePathFileName{!Parameter.photosubType}(folderPath, fileName) {
+            // ファイルパスとファイル名設定
+            var tempPath = $('.filePath{!Parameter.photosubType}').val();
+            var tempName = $('.fileName{!Parameter.photosubType}').val();
+            tempPath += !(tempPath == null || tempPath == "") ? "," : "";
+            tempName += !(tempName == null || tempName == "") ? "," : "";
+            $('.filePath{!Parameter.photosubType}').val(tempPath + '{!sS3Path}/' + folderPath + fileName);
+            $('.fileName{!Parameter.photosubType}').val(tempName + fileName);
+        }
+
+        // 圧縮・モザイク処理の実行　問合せNo0454_0455にて変更（1度に実行せずに小分けで実行する）
+        function sendMosaicProcess(photoUrls) {
+            try {
+
+                // モザイク処理実行フラグ取得
+                var isMosaic;
+                if ({!Parameter.isMosaic}) {
+                    isMosaic = 'TRUE';
+                } else {
+                    isMosaic = 'FALSE';
+                }
+                var photoUrlList = photoUrls.split(',');
+                var ary  = [];
+                for (let i = 0; i < photoUrlList.length; i++) {
+                    var hash = {PhotoUrl: photoUrlList[i], ApiKey: "{!mosaicApiKey}", Mosaic: isMosaic};
+                    ary.push(hash);
+
+                    // 処理実行判定
+                    if(!checkExecutionProcess(i,photoUrlList.length)){
+                        continue;
+                    }
+                    var mosaicParamJson = {mosaic: ary};
+                    // 一括処理数になれば処理実行
+                    console.log('mosaicParamJson='+mosaicParamJson);
+                    var [resJson,isSuccess] = sendProcess(mosaicParamJson,'{!mosaicApiUrl}');
+                    // 処理成功判定
+                    if (isSuccess && resJson['mosaic'].length > 0) {
+                        for (let mosaicCount = 0; mosaicCount < resJson['mosaic'].length; mosaicCount++) {
+                            if (resJson['mosaic'][mosaicCount]['Label'] != 'OK') {
+                                // 失敗
+                                return false;
+                            }
+                        }
+                    }
+                    ary  = []; 
+                }
+                return true;
+            } catch(e) {
+                return false;
+            }
+        }
+
+        // ラベリング処理の実行　問合せNo0454_0455にて変更（1度に実行せずに小分けで実行する）
+        function sendLabelingProcess(photoUrls) {
+            try{
+                var photoUrlList = photoUrls.split(',');
+                var ary  = [];        
+                var tag = '';
+                for (let i = 0; i < photoUrlList.length; i++) {
+                    var hash = {PhotoUrl: photoUrlList[i], ApiKey: "{!labelingApiKey}"};
+                    ary.push(hash);
+
+                    // 処理実行判定
+                    if(!checkExecutionProcess(i,photoUrlList.length)){
+                        continue;
+                    }
+                    var labelingParamJson = {labeling: ary};
+                    // 一括処理数になれば処理実行
+                    var [resJson,isSuccess] = sendProcess(labelingParamJson,'{!labelingApiUrl}');
+                    // 返却文字列作成（ラベリング結果）
+                    if (isSuccess && resJson['labeling'].length > 0) {
+                        var tagAry = [];
+
+                        // 複数回のラベル処理実行に伴いタグの文字列の区切り「,」の設定
+                        if(tag != ''){
+                            tag += ',';                            
+                        }
+
+                        for (let labelcount = 0; labelcount < resJson['labeling'].length; labelcount++) {
+                            // タグを設定する
+                            tagAry.push(resJson['labeling'][labelcount]['Label']);
+                        }
+                        tag += tagAry.join(',');
+                    }
+                    ary  = []; 
+                }
+                console.log('tag='+tag);
+                return tag;
+            } catch(e) {
+                return '';
+            }
+        }
+
+		//▼ 2022.01.14 No.0688 対応で追加
+		// パノラマ写真圧縮処理 
+		function sendPanoramaCompressProcess(photoUrls) {
+			try {
+				var photoUrlList = photoUrls.split(',');
+				var ary  = [];
+				for (let i = 0; i < photoUrlList.length; i++) {
+					var hash = {PhotoUrl: photoUrlList[i], ApiKey: "{!panoramaCompressApiKey}", Size: "{!panoramaPhotoCompressSize}"};
+					ary.push(hash);
+
+					// 処理実行判定
+					if(!checkExecutionProcess(i,photoUrlList.length)){
+						continue;
+					}
+					var panoramaCompressParamJson = {compression: ary};
+					console.log(panoramaCompressParamJson);
+					// 一括処理数になれば処理実行
+					var [resJson,isSuccess] = sendProcess(panoramaCompressParamJson,'{!panoramaCompressApiUrl}');
+					// 処理成功判定
+					if (isSuccess && resJson['compression'].length > 0) {
+						for (let compressionCount = 0; compressionCount < resJson['compression'].length; compressionCount++) {
+							console.log(resJson['compression'][compressionCount]);
+							if (resJson['compression'][compressionCount]['Compression'] != 'OK') {
+								// 失敗
+								console.log('失敗：'+ resJson['compression'][compressionCount]['Message']);
+								return false;
+							}
+						}
+					}
+					ary  = []; 
+				}
+				return true;
+			} catch(e) {
+				console.log(e);
+				return false;
+			}
+		}
+		//▲ 2022.01.14 No.0688 対応で追加
+
+        // モザイク、ラベル、パノラマ写真圧縮の実行処理
+        // 戻り値は実行結果（resJson）と成功フラグ（isSuccess）を返す
+        function sendProcess(paramJson,apiURL) {
+            var isSuccess = false;
+            var param = JSON.stringify(paramJson);
+
+            // リクエスト送信（同期）
+            var resJson = null;
+            var xhr = new XMLHttpRequest();
+            xhr.onreadystatechange  = function () {
+                if (xhr.readyState == 4 && ((xhr.status >= 200 && xhr.status < 300) || (xhr.status == 304))) {
+                    isSuccess = true;
+                    resJson = JSON.parse(xhr.responseText);
+                }
+            };
+            xhr.open('POST', apiURL, false);
+            xhr.setRequestHeader('content-type', 'application/json');
+            xhr.send(param);
+
+            return [resJson,isSuccess];
+        }
+
+        // APIの実行判定（true：実行、false：実行しない）
+        function checkExecutionProcess(forCount,photoUrlListlength){
+            // 1件の実行の場合、実行
+            if(forCount == 0 && photoUrlListlength == 1){
+                return true;
+            }
+
+            // 複数件でリクエスト送信一括処理数になった場合、実行
+            if((forCount + 1) % {!submitRequestBulkProcessCount} == 0){
+                return true;
+            }
+
+            // 複数件で最後の件数の場合、実行
+            if(forCount == photoUrlListlength -1){
+                return true;
+            }
+
+            // 上記判定にならない場合、実行しない
+            return false;
+        }
+    </script>
+</apex:component>

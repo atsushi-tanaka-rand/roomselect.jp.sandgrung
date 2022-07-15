@@ -1,0 +1,688 @@
+<!--ﾒﾝﾃﾅﾝｽ一覧-->
+<apex:page controller="GD601001Controller" docType="html-5.0" standardStylesheets="false" title="ﾒﾝﾃﾅﾝｽ一覧">
+    
+    <head>
+        
+        <meta charset="utf-8"/>
+        
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+        
+        <meta name="format-detection" content="telephone=no"/>
+        
+        <meta name="robots" content="noindex"/>
+        
+        <title>ﾒﾝﾃﾅﾝｽ一覧</title>
+        <apex:includeScript value="{!URLFOR($Resource.jQuery, 'jQuery/jquery-3.6.0.min.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.jQuery, 'jQuery/jquery.blockUI.js')}"/>
+        <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/reset.min.css')}"/>
+        <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/foundation.css')}"/>
+        <apex:stylesheet value="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css"/>    
+        <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/modaal.css')}"/>
+        <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/style.css')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.designer_file,'designer_file/js/modaal.js')}"/> 
+        <apex:includeScript value="{!URLFOR($Resource.external_file, 'external_file/common_screen_util.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.external_file, 'external_file/input_rules.js')}"/>
+        <apex:stylesheet value="{!URLFOR($Resource.external_file, 'external_file/common_style.css')}"/>
+        <apex:stylesheet value="{!URLFOR($Resource.jQuery,'jQuery/jQueryUI/jquery-ui.css')}" />
+        <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jQueryUI/jquery-ui.min.js')}" />
+    </head>        
+    <script type="text/javascript">
+    
+    //完了確認メッセージ
+    async function checkmaintenanceComplete(index) {
+        var message = "{!MSG_PROP_I_MAINTENANCE_COMPLETED}";
+        if (await showConfirm(message)) {
+            blockUi();
+            $('.selectIndex').val(index);
+            maintenanceComplete();
+        }
+    }
+    </script>
+    
+    <body id="gf101002">
+        
+        <main>
+            <apex:form id="GD101002form">
+                <apex:outputPanel id="message" >
+                    <apex:pageMessages />
+                </apex:outputPanel>
+                
+                <article>
+                    <section class="">
+                        <section style="display:flex">
+                            <h1 class="fontb font2rem" style="margin-bottom: 10px">メンテナンス一覧</h1>
+                            <apex:commandButton style=" visibility:hidden;" rerender="dummy"/> 
+                        </section>
+                        <section>
+                            
+                            <div class="border-g pd20">
+                                
+                                <div class="back_graydark pd3 mb20">検索</div>
+                                
+                                <div class="flex-wrap  flex_wrap justify-between  ">
+                                    
+                                    <div class=" mb10 wd32 wd49_md wd100_xs">
+                                        
+                                        <div class="information_title">
+                                            検索対象地区
+                                            <apex:image url="/img/msg_icons/info16.png" title="--なし--の場合、全地区を対象とします。"  />
+                                        </div>
+                                        <apex:selectList styleClass="form-control" value="{!district}" size="1" tabindex="1" >
+                                            <apex:selectOptions value="{!searchDistrictList}"/>
+                                            <apex:actionSupport event="onchange" action="{!changeDistrict}" rerender="amountLowerLimit, amountUpperLimit" />  
+                                        </apex:selectList>
+                                        
+                                    </div>
+                                    
+                                    <div class=" mb10 wd32 wd49_md wd100_xs">
+                                        
+                                        <apex:outputPanel id="amountLowerLimit" >
+                                            <div class="information_title">取扱い物件　金額(下限)</div>
+                                            
+                                            <div class="information_contents">
+                                                <apex:outputText value="{0, Number, ###,###}">
+                                                    <apex:param value="{!amountLowerLimit}"/>
+                                                </apex:outputText>
+                                            </div>
+                                            
+                                        </apex:outputPanel>
+                                    </div>
+                                    
+                                    <div class=" mb10 wd32 wd49_md wd100_xs">
+                                        <apex:outputPanel id="amountUpperLimit" >
+                                            
+                                            <div class="information_title">取扱い物件　金額(上限)</div>
+                                            
+                                            <div class="information_contents">
+                                                <apex:outputText value="{0, Number, ###,###}">
+                                                    <apex:param value="{!amountUpperLimit}"/>
+                                                </apex:outputText>
+                                            </div>
+                                            
+                                        </apex:outputPanel>
+                                    </div>
+                                    
+                                </div>
+                                
+                                <div>メンテ残または当日更新を検索</div>
+                                
+                                <div class="flex-wrap  flex_wrap mb20">
+                                    
+                                    <div class="mr20">
+                                        <apex:commandLink value="新規追加(残)" styleClass="blue" onclick="blockUi();" action="{!addnewNotPastSearch}" oncomplete="unblockUi();if(!{! hasErrorMessage}){}else{gotoTop()}" rerender="message, automaintenanceList" tabindex="2" rendered="{! !isOpenError}" ></apex:commandLink>
+                                        <apex:outputLabel value="新規追加(残)" rendered="{!isOpenError}" />
+                                    </div>
+                                    
+                                    <div class="mr20">
+                                        <apex:commandLink value="更新(居住中→空室)(残)" styleClass="blue" onclick="blockUi();" action="{!occupiedtovacantupdateNotPastSearch}" oncomplete="unblockUi();if(!{! hasErrorMessage}){}else{gotoTop()}" rerender="message, automaintenanceList" tabindex="3" rendered="{! !isOpenError}" ></apex:commandLink>
+                                        <apex:outputLabel value="更新(居住中→空室)(残)" rendered="{!isOpenError}" />
+                                    </div>
+                                    
+                                    <div class="mr20">
+                                        <apex:commandLink value="更新(条件変更)(当日)" styleClass="blue" onclick="blockUi();" action="{!conditionchangeupdateNotPastSearch}" oncomplete="unblockUi();if(!{! hasErrorMessage}){}else{gotoTop()}" rerender="message, automaintenanceList" tabindex="4" rendered="{! !isOpenError}" ></apex:commandLink>
+                                        <apex:outputLabel value="更新(条件変更)(当日)" rendered="{!isOpenError}" />
+                                    </div>
+                                    
+                                    <div class="mr20">
+                                        <apex:commandLink value="掲載終了(当日)" styleClass="blue" onclick="blockUi();" action="{!endofpostingNotPastSearch}" oncomplete="unblockUi();if(!{! hasErrorMessage}){}else{gotoTop()}" rerender="message, automaintenanceList" tabindex="5" rendered="{! !isOpenError}" ></apex:commandLink>
+                                        <apex:outputLabel value="掲載終了(当日)" rendered="{!isOpenError}" />
+                                    </div>
+                                    
+                                </div>
+                                <!-- 問合せNo0431で変更 -->
+                                <div>過去<span style="color:red">※3ヵ月前まで検索可能</span></div>
+                                
+                                <div class="flex-wrap  flex_wrap justify-between align_center ">
+                                    
+                                    <div class=" mb10 wd32 wd49_md wd100_xs">
+                                        
+                                        <div class="information_title">取込日From</div>
+                                        
+                                        <div>
+                                            
+                                            <div class="posi_re">
+                                                <apex:input type="date" styleClass="form-control" value="{! fromImportDate}"
+                                                            onkeydown="dateInputKeydownFocusAdjust(this, event)"
+                                                            onblur="clearValidateErrorValue(this)"
+                                                            html-min="1700-01-01" html-max="4000-12-31" tabIndex="6"/>
+                                            </div>
+                                            
+                                        </div>
+                                        
+                                    </div>
+                                    
+                                    <div class=" mb10 wd32 wd49_md wd100_xs">
+                                        
+                                        <div class="information_title">取込日To</div>
+                                        
+                                        <div>
+                                            
+                                            <div class="posi_re">
+                                                <apex:input type="date" styleClass="form-control" value="{! toImportDate}"
+                                                            onkeydown="dateInputKeydownFocusAdjust(this, event)"
+                                                            onblur="clearValidateErrorValue(this)"
+                                                            html-min="1700-01-01" html-max="4000-12-31" tabIndex="7"/>
+                                            </div>
+                                            
+                                        </div>
+                                        
+                                    </div>
+                                    
+                                    
+                                    
+                                    <div class=" mb10 wd32 wd49_md wd100_xs"></div>
+                                    
+                                </div>
+                                
+                                <div class="flex-wrap flex_wrap align_center  mb20">
+                                    
+                                    <div class="mr20">
+                                        <apex:commandLink value="新規追加" styleClass="blue" onclick="blockUi();" action="{!addnewPastSearch}" oncomplete="unblockUi();if(!{! hasErrorMessage}){}else{gotoTop()}" rerender="message, automaintenanceList" tabindex="8" rendered="{! !isOpenError}" ></apex:commandLink>
+                                        <apex:outputLabel value="新規追加" rendered="{!isOpenError}" />
+                                    </div>
+                                    
+                                    <div class="mr20">
+                                        <apex:commandLink value="更新(居住中→空室)" styleClass="blue" onclick="blockUi();" action="{!occupiedtovacantupdatePastSearch}" oncomplete="unblockUi();if(!{! hasErrorMessage}){}else{gotoTop()}" rerender="message, automaintenanceList" tabindex="9" rendered="{! !isOpenError}" ></apex:commandLink>
+                                        <apex:outputLabel value="更新(居住中→空室)" rendered="{!isOpenError}" />
+                                    </div>
+                                    
+                                    <div class="mr20">
+                                        <apex:commandLink value="更新(条件変更)" styleClass="blue" onclick="blockUi();" action="{!conditionchangeupdatePastSearch}" oncomplete="unblockUi();if(!{! hasErrorMessage}){}else{gotoTop()}" rerender="message, automaintenanceList" tabindex="10" rendered="{! !isOpenError}" ></apex:commandLink>
+                                        <apex:outputLabel value="更新(条件変更)" rendered="{!isOpenError}" />
+                                    </div>
+                                    
+                                    <div class="mr20">
+                                        <apex:commandLink value="掲載終了" styleClass="blue" onclick="blockUi();" action="{!endofpostingPastSearch}" oncomplete="unblockUi();if(!{! hasErrorMessage}){}else{gotoTop()}" rerender="message, automaintenanceList" tabindex="11" rendered="{! !isOpenError}" ></apex:commandLink>
+                                        <apex:outputLabel value="掲載終了" rendered="{!isOpenError}" />
+                                    </div>
+                                    
+                                </div>
+                                
+                                
+                                
+                                <apex:outputPanel id="automaintenanceList" >
+                                    <div class="back_graydark posi_re mb30 pd3">{!automaintenanceType}&nbsp;<apex:outputLabel rendered="{!automaintenanceList.size > 0}"><span class="blue_maru text-center">{!automaintenanceList.size}</span></apex:outputLabel>
+                                        
+                                        <div class="ab_btn">
+                                            <apex:commandButton value="　出力　" styleClass="btn-w-2 blue" disabled="{!automaintenanceList.size == 0 ||isOpenError}" onclick="blockUi();" oncomplete=" showPage('TD601001View', '_self', '', 'automaintenanceType={!automaintenanceType}&fromImportDate={!searchFromImportDate}&toImportDate={!searchToImportDate}&district={!searchDistrict}&amountLowerLimit={!searchAmountLowerLimit}&amountUpperLimit={!searchAmountUpperLimit}&isCompletedFlag={!searchIsCompletedFlagString}&isUp={!isUp}'); unblockUi(); " tabindex="12" ></apex:commandButton>
+                                            
+                                        </div>
+                                        
+                                    </div>
+                                    
+                                    <apex:outputPanel id="automaintenanceTypeAddnew" rendered="{!automaintenanceType == automaintenanceTypeAddnew}" >
+                                        <table  class="gray mb30 nowrap" style="height:502px;">
+                                            <tbody>
+                                                
+                                                <tr>
+                                                    
+                                                    <th></th>
+                                                    
+                                                    <th>建物名</th>
+                                                    
+                                                    <th>部屋番号</th>
+                                                    
+                                                    <th>建物名寄せ</th>
+                                                    
+                                                    <th>物件名寄せ</th>
+                                                    
+                                                    <th>業者名寄せ</th>
+                                                    
+                                                    <th>点数</th>
+                                                    
+                                                    <th>写真</th>
+                                                    
+                                                    <th>クローリング元</th>
+                                                    
+                                                    <th>自動メンテナンス内容</th>
+                                                    
+                                                    <th>更新日時</th>
+                                                    
+                                                    <th>完了</th>
+                                                    
+                                                </tr>
+                                                
+                                                <apex:variable var="num" value="1" />
+                                                <apex:repeat value="{!automaintenanceList}" var="maintenance">
+                                                    <tr>
+                                                        
+                                                        <td>{!VALUE(num)}</td>
+                                                        
+                                                        <td><apex:commandLink value="{!maintenance.Building__r.Name}"
+                                                                              onclick=" showPage('GA104003View', '', 'TRUE', 'Id={!maintenance.Building__c}');"
+                                                                              rerender="dummy" tabindex="13" /> </td>
+                                                        
+                                                        <td><apex:commandLink value="{!maintenance.Property__r.Name}"
+                                                                              onclick=" showPage('GA104006View', '', 'TRUE', 'propertyId={!maintenance.Property__c}&FormMode=自動');"
+                                                                              rerender="dummy" tabindex="13" /> </td>
+                                                        
+                                                        <td><apex:commandLink value="名寄せ"
+                                                                              onclick=" showPage('GD601006View', '', 'TRUE', 'Id={!maintenance.Building__c}&Mode=建物名寄せ');"
+                                                                              rendered="{! maintenance.Building__c != null && !maintenance.Building__r.IsMergeCompletedFlag__c}"
+                                                                              rerender="dummy" tabindex="13" /> </td>
+                                                        
+                                                        <td><apex:commandLink value="名寄せ"
+                                                                              onclick=" showPage('GD601006View', '', 'TRUE', 'Id={!maintenance.Building__c}&Mode=物件名寄せ');"
+                                                                              rendered="{! maintenance.Property__c != null && !maintenance.Property__r.IsMergeCompletedFlag__c}"
+                                                                              rerender="dummy" tabindex="13" /> </td>
+                                                        
+                                                        <td><apex:commandLink value="名寄せ"
+                                                                              onclick=" showPage('GD101005View', '', 'TRUE', 'Id={!maintenance.FormerSupplier__c}');"
+                                                                              rendered="{! maintenance.FormerSupplier__c != null && !maintenance.FormerSupplier__r.IsMergeCompletedFlag__c}"
+                                                                              rerender="dummy" tabindex="13" /> </td>
+                                                        
+                                                        <td><apex:outputLabel value="{!maintenance.Property__r.Score__c}"/></td>
+                                                        
+                                                        <td><apex:outputLabel value="{!maintenance.Property__r.PhotoCount__c}"/></td>
+                                                        
+                                                        <td><apex:outputLabel value="{!maintenance.CrawlingSource__c}"/></td>
+                                                        
+                                                        <td style="white-space:normal;"><apex:outputField value="{!maintenance.AutoMaintenance__c}"/></td>
+                                                        
+                                                        <td>
+                                                            <apex:outputField value="{!maintenance.SystemModstamp}" />
+                                                        </td>
+                                                        
+                                                        <td>
+                                                            <apex:commandLink value="完了" styleClass="blue" onclick="checkmaintenanceComplete({!VALUE(num)})" rerender="dummy" rendered="{! searchIsCompletedFlag == FALSE}" />
+                                                        </td>
+                                                        
+                                                    </tr>
+                                                    <apex:variable var="num" value="{!VALUE(num) + 1}" />
+                                                </apex:repeat>
+                                            </tbody>
+                                            
+                                        </table>
+                                    </apex:outputPanel>
+                                    <apex:outputPanel id="automaintenanceTypeOccupiedtovacantupdate" rendered="{!automaintenanceType == automaintenanceTypeOccupiedtovacantupdate}" >
+                                        <table  class="gray mb30 nowrap" style="height:502px;">
+                                            
+                                            <tbody>
+                                                
+                                                <tr>
+                                                    
+                                                    <th></th>
+                                                    
+                                                    <th>建物名</th>
+                                                    
+                                                    <th>部屋番号</th>
+                                                    
+                                                    <th>業者名寄せ</th>
+                                                    
+                                                    <th>点数</th>
+                                                    
+                                                    <th>写真</th>
+                                                    
+                                                    <th>写真最終更新日</th>
+                                                    
+                                                    <th>最終手動更新日</th>
+                                                    
+                                                    <th>クローリング元</th>
+                                                    
+                                                    <th>自動メンテナンス内容</th>
+                                                    
+                                                    <th>更新日時</th>
+                                                    
+                                                    <th>完了</th>
+                                                    
+                                                </tr>
+            
+                                                <apex:variable var="num" value="1" />
+                                                <apex:repeat value="{!automaintenanceList}" var="maintenance">
+                                                    <tr>
+                                                        
+                                                        <td>{!VALUE(num)}</td>
+                                                        
+                                                        <td><apex:commandLink value="{!maintenance.Building__r.Name}"
+                                                                              onclick=" showPage('GA104003View', '', 'TRUE', 'Id={!maintenance.Building__c}');"
+                                                                              rerender="dummy" tabindex="13" /> </td>
+                                                        
+                                                        <td><apex:commandLink value="{!maintenance.Property__r.Name}"
+                                                                              onclick=" showPage('GA104006View', '', 'TRUE', 'propertyId={!maintenance.Property__c}&FormMode=自動');"
+                                                                              rerender="dummy" tabindex="13" /> </td>
+                                                        
+                                                        <td><apex:commandLink value="名寄せ"
+                                                                              onclick=" showPage('GD101005View', '', 'TRUE', 'Id={!maintenance.FormerSupplier__c}');"
+                                                                              rendered="{! maintenance.FormerSupplier__c != null && !maintenance.FormerSupplier__r.IsMergeCompletedFlag__c}"
+                                                                              rerender="dummy" tabindex="13" /> </td>
+                                                        
+                                                        <td><apex:outputLabel value="{!maintenance.Property__r.Score__c}"/></td>
+                                                        
+                                                        <td><apex:outputLabel value="{!maintenance.Property__r.PhotoCount__c}"/></td>
+                                                        
+                                                        <td>
+                                                            <apex:outputtext value="{0, date, yyyy/MM/dd}">
+                                                                <apex:param value="{!maintenance.Property__r.PhotoLastModifiedDate__c}" />
+                                                            </apex:outputtext>
+                                                        </td>
+                                                        
+                                                        <td>
+                                                            <apex:outputtext value="{0, date, yyyy/MM/dd}">
+                                                                <apex:param value="{!maintenance.Property__r.ManualMaintenanceDate__c}" />
+                                                            </apex:outputtext>
+                                                        </td>
+                                                        <td><apex:outputLabel value="{!maintenance.CrawlingSource__c}"/></td>
+                                                        
+                                                        <td style="white-space:normal;"><apex:outputField value="{!maintenance.AutoMaintenance__c}"/></td>
+                                                        
+                                                        <td>
+                                                            <apex:outputField value="{!maintenance.SystemModstamp}" />
+                                                        </td>
+                                                        
+                                                        <td>
+                                                            <apex:commandLink value="完了" styleClass="blue" onclick="checkmaintenanceComplete({!VALUE(num)})" rerender="dummy" rendered="{! searchIsCompletedFlag == FALSE}" />
+                                                        </td>
+                                                        
+                                                    </tr>
+                                                    <apex:variable var="num" value="{!VALUE(num) + 1}" />
+                                                </apex:repeat>
+                                                
+                                            </tbody>
+                                            
+                                        </table>
+                                    </apex:outputPanel>
+                                    <apex:outputPanel id="automaintenanceTypeConditionchangeupdate" rendered="{!automaintenanceType == automaintenanceTypeConditionchangeupdate}" >
+                                        <table class="gray mb30 nowrap" style="height:502px;">
+                                            
+                                            <tbody>
+                                                
+                                                <tr>
+                                                    
+                                                    <th></th>
+                                                    
+                                                    <th>建物名</th>
+                                                    
+                                                    <th>部屋番号</th>
+                                                    
+                                                    <th>業者名寄せ</th>
+                                                    
+                                                    <th>点数</th>
+                                                    
+                                                    <th>写真</th>
+                                                    
+                                                    <th>写真最終更新日</th>
+                                                    
+                                                    <th>最終手動更新日</th>
+                                                    
+                                                    <th>クローリング元</th>
+                                                    
+                                                    <th>自動メンテナンス内容</th>
+                                                    
+                                                    <th>更新日時</th>
+                                                    
+                                                </tr>
+            
+                                                <apex:variable var="num" value="1" />
+                                                <apex:repeat value="{!automaintenanceList}" var="maintenance">
+                                                    <tr>
+                                                        
+                                                        <td>{!VALUE(num)}</td>
+                                                        
+                                                        <td><apex:commandLink value="{!maintenance.Building__r.Name}"
+                                                                              onclick=" showPage('GA104003View', '', 'TRUE', 'Id={!maintenance.Building__c}');"
+                                                                              rerender="dummy" tabindex="13" /> </td>
+                                                        
+                                                        <td><apex:commandLink value="{!maintenance.Property__r.Name}"
+                                                                              onclick=" showPage('GA104006View', '', 'TRUE', 'propertyId={!maintenance.Property__c}&FormMode=自動');"
+                                                                              rerender="dummy" tabindex="13" /> </td>
+                                                        
+                                                        <td><apex:commandLink value="名寄せ"
+                                                                              onclick=" showPage('GD101005View', '', 'TRUE', 'Id={!maintenance.FormerSupplier__c}');"
+                                                                              rendered="{! maintenance.FormerSupplier__c != null && !maintenance.FormerSupplier__r.IsMergeCompletedFlag__c}"
+                                                                              rerender="dummy" tabindex="13" /> </td>
+                                                        
+                                                        <td><apex:outputLabel value="{!maintenance.Property__r.Score__c}"/></td>
+                                                        
+                                                        <td><apex:outputLabel value="{!maintenance.Property__r.PhotoCount__c}"/></td>
+                                                        
+                                                        <td>
+                                                            <apex:outputtext value="{0, date, yyyy/MM/dd}">
+                                                                <apex:param value="{!maintenance.Property__r.PhotoLastModifiedDate__c}" />
+                                                            </apex:outputtext>
+                                                        </td>
+                                                        
+                                                        <td>
+                                                            <apex:outputtext value="{0, date, yyyy/MM/dd}">
+                                                                <apex:param value="{!maintenance.Property__r.ManualMaintenanceDate__c}" />
+                                                            </apex:outputtext>
+                                                        </td>
+                                                        <td><apex:outputLabel value="{!maintenance.CrawlingSource__c}"/></td>
+                                                        
+                                                        <td style="white-space:normal;"><apex:outputField value="{!maintenance.AutoMaintenance__c}"/></td>
+                                                        
+                                                        <td>
+                                                            <apex:outputField value="{!maintenance.SystemModstamp}" />
+                                                        </td>
+                                                        
+                                                    </tr>
+                                                    <apex:variable var="num" value="{!VALUE(num) + 1}" />
+                                                </apex:repeat>
+                                            </tbody>
+                                            
+                                        </table>
+                                    </apex:outputPanel>
+                                    <apex:outputPanel id="automaintenanceTypeEndofposting" rendered="{!automaintenanceType == automaintenanceTypeEndofposting}" >
+                                        
+                                        <table class="gray mb30 nowrap" style="height:502px;">
+                                            
+                                            <tbody>
+                                                
+                                                <tr>
+                                                    
+                                                    <th></th>
+                                                    
+                                                    <th>建物名</th>
+                                                    
+                                                    <th>部屋番号</th>
+                                                    
+                                                    <th>業者名寄せ</th>
+                                                    
+                                                    <th>更新日時</th>
+                                                    
+                                                    <th>点数</th>
+                                                    
+                                                    <th>写真</th>
+                                                    
+                                                    <th>写真最終更新日</th>
+                                                    
+                                                    <th>最終手動更新日</th>
+                                                    
+                                                    <th>クローリング元</th>
+                                                    
+                                                    <th>自動メンテナンス内容</th>
+                                                    
+                                                </tr>
+            
+                                                <apex:variable var="num" value="1" />
+                                                <apex:repeat value="{!automaintenanceList}" var="maintenance">
+                                                    <tr>
+                                                        
+                                                        <td>{!VALUE(num)}</td>
+                                                        
+                                                        <td><apex:commandLink value="{!maintenance.Building__r.Name}"
+                                                                                onclick=" showPage('GA104003View', '', 'TRUE', 'Id={!maintenance.Building__c}');"
+                                                                                rerender="dummy" tabindex="13" /> </td>
+                                                        
+                                                        <td><apex:commandLink value="{!maintenance.Property__r.Name}"
+                                                                                onclick=" showPage('GA104006View', '', 'TRUE', 'propertyId={!maintenance.Property__c}&FormMode=自動');"
+                                                                                rerender="dummy" tabindex="13" /> </td>
+                                                        
+                                                        <td><apex:commandLink value="名寄せ" onclick=" showPage('GD101005View', '', 'TRUE', 'Id={!maintenance.FormerSupplier__c}');"
+                                                                                rendered="{! maintenance.FormerSupplier__c != null && !maintenance.FormerSupplier__r.IsMergeCompletedFlag__c}"
+                                                                                rerender="dummy" tabindex="13" /> </td>
+                                                        
+                                                        <td>
+                                                            <apex:outputField value="{!maintenance.SystemModstamp}" />
+                                                        </td>
+                                                        
+                                                        <td><apex:outputLabel value="{!maintenance.Property__r.Score__c}"/></td>
+                                                        
+                                                        <td><apex:outputLabel value="{!maintenance.Property__r.PhotoCount__c}"/></td>
+                                                        
+                                                        <td>
+                                                            <apex:outputtext value="{0, date, yyyy/MM/dd}">
+                                                                <apex:param value="{!maintenance.Property__r.PhotoLastModifiedDate__c}" />
+                                                            </apex:outputtext>
+                                                        </td>
+                                                        
+                                                        <td>
+                                                            <apex:outputtext value="{0, date, yyyy/MM/dd}">
+                                                                <apex:param value="{!maintenance.Property__r.ManualMaintenanceDate__c}" />
+                                                            </apex:outputtext>
+                                                        </td>
+                                                        <td><apex:outputLabel value="{!maintenance.CrawlingSource__c}"/></td>
+                                                        
+                                                        <td style="white-space:normal;"><apex:outputField value="{!maintenance.AutoMaintenance__c}"/></td>
+                                                        
+                                                    </tr>
+                                                    <apex:variable var="num" value="{!VALUE(num) + 1}" />
+                                                </apex:repeat>
+                                            </tbody>
+                                            
+                                        </table>
+                                    </apex:outputPanel>
+                                </apex:outputPanel>
+                                
+                            </div>
+                            
+                        </section>
+                        
+                        <!-- actionfunction -->
+                        <apex:actionFunction name="maintenanceComplete" action="{!maintenanceComplete}"
+                                            oncomplete="unblockUi();if(!{! hasErrorMessage}){}else{gotoTop()}" rerender="message, automaintenanceList" />
+                        <apex:input styleClass="selectIndex" style="display:none" value="{!index}" />
+
+                    </section>
+                    
+                </article>
+            </apex:form>
+        </main>
+        
+        
+        
+        <script>
+        
+        $(function() {
+            
+            var Accordion = function(el, multiple) {
+                
+                this.el = el || {};
+                
+                this.multiple = multiple || false;
+                
+                
+                
+                // Variables privadas
+                
+                var links = this.el.find('.link');
+                
+                // Evento
+                
+                links.on('click', {el: this.el, multiple: this.multiple}, this.dropdown)
+                
+            }
+            
+            
+            
+            Accordion.prototype.dropdown = function(e) {
+                
+                var $el = e.data.el;
+                
+                $this = $(this),
+                    
+                    $next = $this.next();
+                
+                
+                
+                $next.slideToggle();
+                
+                $this.parent().toggleClass('open');
+                
+                
+            }
+            
+            
+            
+            var accordion = new Accordion($('#accordion'), false);
+            
+        });
+        
+        
+        
+        $(function() {
+            
+            $('#btn').on('click', function(e) {
+                
+                var textList = document.getElementById('accordion');
+                
+                
+                let elements = textList.getElementsByTagName('li');
+                
+                Array.prototype.forEach.call(elements, function(element) {
+                    
+                    element.classList.remove('open','default');
+                    
+                    $('.submenu-defalt').fadeOut()
+                    
+                });
+                
+            });
+            
+        });
+        
+        </script>
+        
+        <script>
+        
+        
+        
+        function AllChecked(){
+            
+            var all = document.stationform.all.checked;
+            
+            for (var i=0; i<document.stationform.station_name.length; i++){
+                
+                document.stationform.station_name[i].checked = all;
+                
+            }
+            
+        }
+        
+        
+        
+        function　DisChecked(){
+            
+            var checks = document.stationform.station_name;
+            
+            var checksCount = 0;
+            
+            for (var i=0; i<checks.length; i++){
+                
+                if(checks[i].checked == false){
+                    
+                    document.stationform.all.checked = false;
+                    
+                }else{
+                    
+                    checksCount += 1;
+                    
+                    if(checksCount == checks.length){
+                        
+                        document.stationform.all.checked = true;
+                        
+                    }
+                    
+                }
+                
+            }
+            
+        }
+        
+        
+        
+        </script>
+        
+    </body>
+    
+    
+</apex:page>

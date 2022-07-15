@@ -1,0 +1,298 @@
+<!-- 周辺施設登録 -->
+<apex:page standardStylesheets="false" docType="html-5.0" controller="GF702002Controller" title="周辺施設登録">
+   <head>
+      <meta charset="utf-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <meta name="format-detection" content="telephone=no" />
+      <meta name="robots" content="noindex" />
+      <title>周辺施設登録</title>
+      <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/reset.min.css')}" />
+      <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/foundation.css')}" />
+      <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/modaal.css')}" />
+      <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/style.css')}" />
+      <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery-3.6.0.min.js')}" />
+      <apex:includeScript value="{!URLFOR($Resource.designer_file, 'designer_file/js/modaal.js')}" />
+      <apex:stylesheet value="https://use.fontawesome.com/releases/v5.0.6/css/all.css" />
+
+      <apex:stylesheet value="{!URLFOR($Resource.external_file, 'external_file/common_style.css')}" />
+      <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery.blockUI.js')}" />
+      <apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/common_screen_util.js')}" />
+      <apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/input_rules.js')}" />
+      <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jQueryUI/jquery-ui.min.js')}" />
+      <apex:stylesheet value="{!URLFOR($Resource.jQuery,'jQuery/jQueryUI/jquery-ui.css')}" />
+      <style type="text/css">
+
+        input[type="radio"] {
+          display: inline;
+          margin: auto 10px 5px;
+          margin-right: 0px;
+        }
+
+        #gf702002 {
+          padding:10px 20px;
+        }
+
+        .btn-primary {
+          width:200px;
+        }
+
+        .photo-None-Icon {
+          pointer-events: none;
+        }
+        
+        .height100-per {
+          height: 100%
+        }
+
+        .height15-em {
+          height: 1.5em;
+        }
+      </style>
+   </head> 
+  <body id="gf702002">
+    <main>
+      <article>
+        <apex:form >
+          <apex:pageMessages id="messageArea" />
+          <section>
+            <section class="flex-wrap">
+              <h1 class="fontb font2rem">周辺施設</h1>
+            </section>
+            <section>
+              <div class="border-g ">
+                <!-- タイトル（施設名） -->
+                <div class="flex-wrap flex_wrap justify-between back_graydark pdr30 pdl30 pdt10px pdb10px pdr10_xs pdl10_xs">
+                  <h2 class="fontb font18">
+                    <apex:outputText value="{! screenSurroundingFacility.Name }"/>
+                  </h2>
+                </div>
+
+                <!-- 詳細エリア -->
+                <div class="pdr30 pdl30 pdr10_xs pdl10_xs mt30">
+                  <!-- 施設名 -->
+                  <div class="flex-wrap flex_wrap justify-between align_center ">
+                    <div class=" mb10 wd100 wd100_md wd100_xs">
+                      <div class="information_title">施設名</div>
+                      <div>
+                        <apex:inputText styleClass="form-control" value="{! screenSurroundingFacility.Name }" maxlength="80" tabindex="1" />
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- 住所 -->
+                  <div class="flex-wrap flex_wrap justify-between align_center ">
+                    <div class="wd100 wd100_md wd100_xs">
+                      <div class="information_title">住所</div>
+                      <div class="information_contents">
+                        <apex:outputText value="{! screenSurroundingFacility.Address }" />
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- 緯度・経度 -->
+                  <div class="flex-wrap flex_wrap justify-between">
+                    <div class=" mb10 wd45 wd49_md wd100_xs">
+                      <div class="information_title">緯度</div>
+                      <div class="information_contents">
+                        <apex:outputText value="{! screenSurroundingFacility.Latitude }" />
+                      </div>
+                    </div>
+                     
+                    <div class="mb10 wd45 wd49_md wd100_xs">
+                      <div class="information_title">経度</div>
+                      <div class="information_contents">
+                        <apex:outputText value="{! screenSurroundingFacility.Longitude }" />
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- 備考 -->
+                  <div class=" mb10 wd100">
+                    <div class="information_title">備考</div>
+                    <div>
+                      <apex:inputText styleClass="form-control" value="{! screenSurroundingFacility.Remarks }" maxlength="255" tabindex="2" />
+                    </div>
+                  </div>
+
+                  <!-- 写真情報エリア -->
+                  <ul id="accordion" class="accordion-defalt">
+                    <li class="default open">
+                      <div class="link">
+                        <i class="fa fa-chevron-up"></i>写真
+                      </div>
+                  
+                      <ul class="submenu-defalt">
+                        <li>
+                          <apex:outputPanel id="photoBlock" layout="block" styleClass="mb50_xs30 wd33">
+                            <!-- アイコンエリア -->
+                            <apex:outputPanel rendered="{! !isOpenError }">
+                              <div class="posi_re mb10 height15-em">
+                                <div class="ab_right flex-wrap">
+
+                                  <!-- 写真表示 -->
+                                  <div class="download_icon">
+                                    <a href="{! screenSurroundingFacility.PhotoFilePath }" class="{! screenSurroundingFacility.PhotoNoneIconClass }" tabindex="3">
+                                      <apex:image alt="" url="{! URLFOR($Resource.designer_file, 'designer_file/images/download.png') }" />
+                                    </a>
+                                  </div>
+
+                                  <!-- 削除 -->
+                                  <div class="dustbox_icon ml10">
+                                    <a href="#">
+                                      <apex:commandLink onclick="clickDelPhoto()" styleClass="{! screenSurroundingFacility.PhotoNoneIconClass }" reRender="dummy" tabindex="4">
+                                        <apex:image alt="" url="{! URLFOR($Resource.designer_file, 'designer_file/images/dustbox.png') }" />
+                                      </apex:commandLink>
+                                    </a>
+                                  </div>
+                                </div>
+                              </div>
+                            </apex:outputPanel>
+                        
+                            <!-- 未アップロード写真 -->
+                            <apex:outputPanel id="photoUploadBlock" layout="block" styleClass="img-wrapper" rendered="{! NOT(isOpenError || !screenSurroundingFacility.isPhotoNone) }">
+                              <div class="img-wrapper-inner">
+                                <apex:pageBlock >
+                                  <div class="ab_center height100-per">
+                                    <c:GD901001View ParameterClass="{! screenSurroundingFacility.GD901001Parameter }" />
+                                  </div>
+                                </apex:pageBlock>
+                              </div>
+                            </apex:outputPanel>
+
+                            <!-- アップロード済写真 -->
+                            <apex:outputPanel layout="block" styleClass="flex-wrap flex_wrap justify-between align_center" rendered="{! NOT(isOpenError || screenSurroundingFacility.isPhotoNone) }">
+                              <div class="img-wrapper md10">
+                                <div class="img-wrapper-inner">
+                                  <apex:image alt="" value="{! screenSurroundingFacility.PhotoFilePath }" styleClass="img-contain" />
+                                </div>
+                              </div>
+                            </apex:outputPanel>
+                        
+                            <!-- モザイク有・無 -->
+                            <apex:outputPanel layout="block" styleClass="flex-wrap flex_wrap mt10" rendered="{! !isOpenError }">
+                              <div class="flex-wrap">
+                                <apex:selectRadio value="{! screenSurroundingFacility.selectedMosaic }" onchange="blockUi()" tabindex="5">
+                                  <apex:selectOptions value="{! photoMosaicSelectOption }"/>
+                                </apex:selectRadio>
+                                <apex:actionSupport event="onchange" action="{! setParamMoosaic }" oncomplete="unblockUi()" reRender="photoUploadBlock"/>
+                              </div>
+                            </apex:outputPanel>
+                          </apex:outputPanel>
+                        </li>
+                      </ul>
+                    </li>
+                  </ul>
+
+                </div>
+              </div>
+
+              <!-- ボタンエリア -->
+              <div class="flex-wrap justify-center flex-xs-xolumn  mt60">
+                <apex:commandButton styleClass="btn btn-cancel text-center mauto_xs mr10"
+                                    value="キャンセル" onclick="closePage();" tabindex="6" />
+                <apex:commandButton styleClass="btn btn-primary text-center mauto_xs mr10" 
+                                    value="保存"  disabled="{! isOpenError }" onclick="clickSave()" rerender="dummy" tabindex="7" />
+              </div>
+            </section>
+          </section>
+
+          <!-- アクションファンクション -->
+          <apex:actionFunction name="updateCompletePhoto" action="{! updateCompletePhoto }" oncomplete="unblockUi(); if({! hasErrorMessage }){gotoTop(); return false;}" rerender="messageArea, photoBlock" />
+          <apex:actionFunction name="deletePhoto" action="{! deletePhoto }" oncomplete="unblockUi(); if({! hasErrorMessage }){gotoTop(); return false;}" reRender="messageArea, photoBlock, linkTabIndex"/>
+          <apex:actionFunction name="saveSurroundingFacility" action="{! saveSurroundingFacility }" oncomplete="unblockUi(); if({! hasErrorMessage }){gotoTop(); return false;} saveComplete()" reRender="accordionScript, messageArea" />
+
+        </apex:form>
+      </article>
+    </main>
+  </body>
+
+  <script type="text/javascript">
+
+       /**
+        * 写真アップロード後処理（画像アップロード用 共通部品）
+        */
+       function finishS3Upload(parameter) {
+           blockUi();
+           updateCompletePhoto();
+       }
+
+       /**
+        * 写真削除押下処理
+        */
+       async function clickDelPhoto() {
+           var message = "{! MSG_COM_V_DELETE }";
+           if (await showConfirm(message)) {
+               blockUi();
+               deletePhoto();
+           }
+       }
+         
+       /**
+        * 保存押下処理
+        */
+       async function clickSave(){
+           var message = "{! MSG_COM_V_SAVE }";
+           if (await showConfirm(message)) {
+               blockUi();
+               saveSurroundingFacility();
+           }
+       }
+
+       /**
+        * 保存完了処理
+        */
+       async function saveComplete(){
+           await showAlert("{! MSG_COM_I_SAVE }");
+           closePage();
+       }   
+  </script>
+
+  <!-- リンクのタブインデックス制御 -->
+  <apex:outputPanel id="linkTabIndex" >
+    <script type="text/javascript">
+        $(function() {
+            /**
+            * 非活性のリンクをタブストップの対象外に設定
+            */
+            $("a.photo-None-Icon").each(function() {
+                $(this).prop("tabIndex", -1);
+            }); 
+        });
+    </script>
+  </apex:outputPanel> 
+
+  <!-- セクションのドロップダウンイベント -->
+  <apex:outputPanel id="accordionScript" >
+    <script>
+        $(function() {
+            /**
+             * クリックイベントの重複回避
+             */
+            let Accordion = function(el, multiple) {
+                this.el = el || {};
+                this.multiple = multiple || false;
+               
+                let links = this.el.find('.link');
+               
+                // Evento
+                links.off('click');
+                links.on('click', {el: this.el, multiple: this.multiple}, this.dropdown)
+            }
+            
+            /**
+             * セクションの開閉
+             */
+            Accordion.prototype.dropdown = function(e) {
+                let $el = e.data.el;
+                let $this = $(this);
+                let $next = $this.next();
+               
+                $next.slideToggle();
+                $this.parent().toggleClass('open');
+            }
+            
+            let accordion = new Accordion($('#accordion'), false);
+         });    
+      </script>
+  </apex:outputPanel>        
+</apex:page>

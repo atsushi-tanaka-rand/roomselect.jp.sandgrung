@@ -1,0 +1,71 @@
+<apex:component controller="GF101004Modal1Controller">
+    <apex:attribute name="ParameterClass" type="GF101004Modal1ParameterClass" assignTo="{!Parameter}" description="key"/>
+    
+    <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery-3.6.0.min.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery.blockUI.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/common_screen_util.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.designer_file, 'designer_file/js/modaal.js')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/reset.min.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/foundation.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/style.css')}"/>
+    <apex:stylesheet value="https://use.fontawesome.com/releases/v5.0.6/css/all.css"/>
+    
+    <apex:form id="GF101004Modal1Form" >
+        <apex:pageBlock rendered="{!Parameter.noFirst}">
+            <apex:pageMessages />
+            <apex:outputText rendered="{!init}" />
+            
+            <section style="display:flex">
+                <div class="modal-header">
+                    <h4 class="modal-title fontb mb20">保証プラン明細登録</h4>
+                </div>
+                <apex:commandButton style=" visibility:hidden;" rerender="dummy"/> 
+            </section>
+           
+            
+            <div class="modal-body">
+                <div class=" mb10">
+                    <div class="information_title">プラン明細</div>
+                    <apex:input type="text" styleClass="form-control" value="{! modalParameter.planDetail }" onchange="correctInputRules(this,'text','255')"/>
+                </div>
+                <div class="mb10">
+                    <div class="information_title">保証料金の母数</div>
+                    
+                    <apex:selectRadio value="{! modalParameter.isRentFeeType}" styleClass="displayRadio flex-wrap mb10">
+                        <apex:selectOptions value="{! isRentFeeTypeRadioButton}" />
+                    </apex:selectRadio>
+                    
+                </div>
+                <div class="flex-wrap  flex_wrap justify-between align_center ">
+                    <div class=" mb10 wd49 wd100_xs">
+                        <div class="information_title">初回保証料(％)</div>
+                        <apex:input type="text" styleClass="form-control" value="{!modalParameter.firstFeeDepositRate}" onchange="correctInputRules(this,'number','3','2','100')"/>
+                    </div>
+                    <div class=" mb10 wd49 wd100_xs">
+                        <div class="information_title">初回保証料(円)</div>
+                        <apex:input type="text" styleClass="form-control" value="{!modalParameter.firstFeeDepositYen}" onchange="correctInputRules(this,'currency','7')"/>
+                    </div>
+                </div>
+                <div class="flex-wrap  flex_wrap justify-between align_center ">
+                    <div class=" mb10 wd49 wd100_xs">
+                        <div class="information_title">月額保証料(％)</div>
+                        <apex:input type="text" styleClass="form-control" value="{!modalParameter.depositRate}" onchange="correctInputRules(this,'number','3','2','100')"/>
+                    </div>
+                    <div class=" mb10 wd49 wd100_xs">
+                        <div class="information_title">月額保証料(円)</div>
+                        <apex:input type="text" styleClass="form-control" value="{!modalParameter.depositYen}" onchange="correctInputRules(this,'currency','7')"/>
+                    </div>
+                </div>
+                <div class="mb30">
+                    <div class="information_title">備考</div>
+                    <apex:input type="text" styleClass="form-control" value="{!modalParameter.depositRemarks}" onchange="correctInputRules(this,'text','255')"/>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <div class="flex-wrap justify-around flex_wrap">
+                    <apex:commandButton styleClass="mb10 message btn btn-primary btn-submit text-center" value="設定" onclick="blockUi();" action="{! closeModal}" oncomplete="unblockUi(); if({! !hasErrorMessage}){closeDialogModal1();}" rerender="GF101004Modal1Form"/>
+                </div>
+            </div>
+        </apex:pageBlock>
+    </apex:form>
+</apex:component>

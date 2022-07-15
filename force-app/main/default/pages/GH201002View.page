@@ -1,0 +1,1045 @@
+<!--店舗登録-->
+<apex:page controller="GH201002Controller"  docType="html-5.0" id="page" standardStylesheets="false" title="店舗登録">
+
+    <head>
+        <title>店舗登録</title>
+        
+        <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/reset.min.css')}" />
+        <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/foundation.css')}" />
+        <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/modaal.css')}" />
+        <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/style.css')}" />
+        <apex:stylesheet value="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+        <apex:stylesheet value="{!URLFOR($Resource.external_file, 'external_file/common_style.css')}" />
+        <apex:stylesheet value="{!URLFOR($Resource.jQuery,'jQuery/jQueryUI/jquery-ui.css')}" />
+        
+        <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery-3.6.0.min.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery.blockUI.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jQueryUI/jquery-ui.min.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.designer_file, 'designer_file/js/modaal.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/common_screen_util.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/input_rules.js')}" />
+    </head>
+
+
+    <script type="text/javascript">
+        //削除確認メッセージ
+        async function checkDelete(){
+            var message = "{! MSG_COM_V_DELETE}";
+            var retVal = await showConfirm(message);
+            if (retVal) {
+                blockUi();
+                targetRecordDelete();
+            }                      
+        }
+        
+        //保存確認メッセージ
+        async function checkSave(){
+            var message = "{! MSG_COM_V_SAVE}";
+            var retVal = await showConfirm(message);
+            if (retVal) {
+                blockUi();
+                save();
+            }          
+        }
+        
+        //削除完了メッセージ
+        async function alertDeleteFinish(){
+            //完了メッセージ
+            await showAlert("{! MSG_COM_I_DELETE}");
+            
+            //画面を閉じる
+            closePage();
+        } 
+        
+        //保存完了メッセージ
+        async function alertSaveFinish(){
+            //完了メッセージ
+            await showAlert("{! MSG_COM_I_SAVE}");
+            
+            //画面を閉じる
+            closePage();
+        }    
+
+    </script>
+
+    <!-- ポータルサイト構築 追加 Start -->
+    <style type="text/css">
+        /* 画像表示のサイズ調整 */
+        @media print, screen and (max-width: 980px) {
+            .flex-wrap2{
+                display: block;important;
+                width: 100%;
+            }
+        }
+    </style>
+    <!-- ポータルサイト構築 追加 End -->
+
+    <body>
+        <main id="gf101002">
+            <article>
+                <apex:form id="form">
+                     
+                    
+                    <!-- actionFunction -->
+                    <apex:actionFunction action="{! targetRecordSave}"   name="save"
+                                         oncomplete="unblockUi();if(!{! hasErrorMessage}){alertSaveFinish()  }else{gotoTop()}" reRender="messageArea"/>
+                    <apex:actionFunction action="{! targetRecordDelete}" name="targetRecordDelete"
+                                         oncomplete="unblockUi();if(!{! hasErrorMessage}){alertDeleteFinish()}else{gotoTop()}" reRender="messageArea"/>
+                    <apex:actionFunction name="GA102006FormClose" action="{!GA102006FormClose}" rerender="shopInformation" />
+
+                    <!-- ポータルサイト構築 追加 Start -->
+                    <!-- 写真アップロード処理 -->
+                    <apex:actionFunction name="updateShopPhoto" action="{!updateShopPhoto}" oncomplete="unblockUi()" 
+                                         rerender="photoData, messageArea" />
+                    <!-- 写真削除処理 -->
+                    <apex:actionFunction name="deleteShopPhoto" action="{!deleteShopPhoto}" oncomplete="unblockUi()" 
+                                         rerender="photoData, messageArea" />
+                    <!-- ポータルサイト構築 追加 End -->
+                    
+                    <section style="display:flex">
+                        <h1 class="fontb font3rem" style="margin-bottom: 10px">店舗登録</h1>
+                        <apex:commandButton style=" visibility:hidden;" rerender="dummy"/> 
+                    </section>
+                    <section>
+                        <div class="text-right mt30">
+                        </div>
+                        <div class="flex-wrap justify-between  mb10">
+                            <h1 class="fontb font18">{! screenTargetRecord.titleName}</h1>
+<!--
+                            <div class="flex-wrap">
+                                <apex:commandbutton value="削除" rendered="{! NOT(isNew)}" styleclass="btn-w-2 btn-w-2-l blue" disabled="{! isOpenError}" 
+                                                    onclick="checkDelete()" rerender="dummy" 
+                                                    tabIndex="500" />
+                            </div>                       
+-->
+                        </div>
+                    </section>
+
+                    <section>
+                        <ul id="accordion" class="accordion-defalt">
+                            <li class="default open">
+                            <apex:pageMessages id="messageArea" />
+                                <div class="link">
+                                    <i class="fa fa-chevron-up"></i>店舗情報</div>
+                                <ul class="submenu-defalt">
+                                    <li>
+                                        <apex:outputPanel layout="block" styleClass="flex-wrap  flex_wrap justify-between align_center"  id="shopInformation" >
+                                            
+                                            <div class=" mb10 wd24_no_min wd49_md wd100_xs">
+                                                <div class="information_title">店舗名</div>
+                                                <div>
+                                                    <apex:input type="text" styleClass="form-control" value="{! screenTargetRecord.name}" onchange="correctInputRules(this,'text', '80')" tabIndex="1"/>
+                                                </div>
+                                            </div>
+                                            <div class=" mb10 wd24_no_min wd49_md wd100_xs">
+                                                <div class="information_title">メール</div>
+                                                <div>
+                                                    <apex:input type="text" styleClass="form-control" value="{! screenTargetRecord.email}" onchange="correctInputRules(this,'email', '80')" tabIndex="2"/>
+                                                </div>
+                                            </div>
+                                            <div class=" mb10 wd24_no_min wd49_md wd100_xs">
+                                                <div class="information_title">TEL</div>
+                                                <div>
+                                                    <apex:input type="tel" styleClass="form-control" value="{! screenTargetRecord.phone}" onchange="correctInputRules(this,'tel')" tabIndex="3"/>
+                                                </div>
+                                            </div>
+                                            <div class=" mb10 wd24_no_min wd49_md wd100_xs">
+                                                <div class="information_title">FAX</div>
+                                                <div>
+                                                    <apex:input type="tel" styleClass="form-control" value="{! screenTargetRecord.fax}" onchange="correctInputRules(this,'tel')" tabIndex="4"/>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class=" mb10 wd24_no_min wd49_md wd100_xs">
+                                                <div class="information_title">郵便番号
+                                                    <apex:commandButton styleClass="blue btn-normal-detail txt-deco-none" value="郵便番号検索・住所検索"
+                                                                        rerender="GA102006Form" status="loadComponent" action="{!GA102006FormOpen}"
+                                                                        oncomplete="jQuery('#dialog-GA102006Form').dialog('open');" tabindex="6" disabled="{!isOpenError}"/>
+                                                </div>
+                                                <div>
+                                                    <apex:input type="text" styleClass="form-control" value="{! screenTargetRecord.postalCode}"
+                                                                onchange="correctInputRules(this,'postalCode', '8')" tabIndex="5"/>
+                                                </div>
+                                            </div>
+
+                                            <div class=" mb10 wd24_no_min wd49_md wd100_xs">
+                                                <div class="information_title">都道府県</div>
+                                                <div style="margin-bottom:0">
+                                                <apex:selectList styleClass="form-control" size="1" value="{!screenTargetRecord.state}" tabIndex="7">
+                                                    <apex:selectOptions value="{!SelectStateList}" />
+                                                </apex:selectList>
+                                                </div>
+                                            </div>
+
+                                            <div class="mb10 wd24_no_min wd49_md wd100_xs">
+                                                <div class="information_title">住所1（丁目まで）</div>
+                                                <div>
+                                                    <apex:input type="text" styleClass="form-control" value="{! screenTargetRecord.city}" onchange="correctInputRules(this,'text','60')" tabIndex="8"/>
+                                                </div>
+                                            </div>
+                                            <div class=" mb10 wd24_no_min wd49_md wd100_xs">
+                                                <div class="information_title">住所２（番地以降）</div>
+                                                <div>
+                                                    <apex:input type="text" styleClass="form-control" value="{! screenTargetRecord.street}" onchange="correctInputRules(this,'text','255')" tabIndex="9"/>
+                                                </div>
+                                            </div>
+                                            <div class=" mb10 wd24_no_min wd49_md wd100_xs">
+                                                <div class="information_title">取扱地区</div>
+                                                <div>
+                                                <apex:selectList styleClass="form-control" size="1" value="{!screenTargetRecord.district}" tabIndex="10">
+                                                    <apex:selectOptions value="{!SelectDistrictList}" />
+                                                </apex:selectList>
+                                                </div>
+                                            </div>
+                                            <div class=" mb10 wd24_no_min wd49_md wd100_xs">
+                                                <div class="information_title">営業時間</div>
+                                                <div>
+                                                    <apex:input type="text" styleClass="form-control" value="{! screenTargetRecord.businessHours}" onchange="correctInputRules(this,'text','100')" tabIndex="101"/>
+                                                </div>
+                                            </div>
+                                            <div class=" mb10 wd24_no_min wd49_md wd100_xs">
+                                                <div class="information_title">定休日</div>
+                                                <div>
+                                                    <apex:input type="text" styleClass="form-control" value="{! screenTargetRecord.regularHoliday}" onchange="correctInputRules(this,'text','50')" tabIndex="102"/>
+                                                </div>
+                                            </div>
+                                            <div class=" mb10 wd24_no_min wd49_md wd100_xs">
+                                                <div class="information_title">
+                                                    <apex:outputText value="店舗URL" rendered="{! IF(isNew==true || screenTargetRecord.targetRecord.Homepage__c==null, TRUE, FALSE)}"/>
+                                                    <apex:commandLink value="店舗URL" rendered="{! IF(isNew==false && screenTargetRecord.targetRecord.Homepage__c!=null, TRUE, FALSE)}"
+                                                                      styleClass="mailLink" oncomplete="window.open('{!screenTargetRecord.targetRecord.Homepage__c}','');"
+                                                                      reRender="dummy" tabIndex="103"/>
+                                                </div>
+                                                <div>
+                                                    <apex:input styleClass="form-control" type="text" value="{! screenTargetRecord.homepage}"
+                                                                tabIndex="104"/>
+                                                </div>
+                                            </div>
+                                            <div class=" mb10 wd24_no_min wd49_md wd100_xs">
+                                                <div class="information_title">会社名</div>
+                                                <div>
+                                                    <apex:input type="text" styleClass="form-control" value="{! screenTargetRecord.companyName}" onchange="correctInputRules(this,'text','255')" tabIndex="105"/>
+                                                </div>
+                                            </div>
+                                            <div class=" mb10 wd24_no_min wd49_md wd100_xs">
+                                                <div class="information_title">資格免許番号</div>
+                                                <div>
+                                                    <apex:input type="text" styleClass="form-control" value="{! screenTargetRecord.qualificationLicensesNumber}" onchange="correctInputRules(this,'text','255')" tabIndex="106"/>
+                                                </div>
+                                            </div>
+                                            <div class=" mb10 wd49 wd49_md wd100_xs">
+                                                <div class="information_title">加盟協会</div>
+                                                <div>
+                                                    <apex:input type="text" styleClass="form-control" value="{! screenTargetRecord.affiliationAssociation}" onchange="correctInputRules(this,'text','255')" tabIndex="107"/>
+                                                </div>
+                                            </div>
+                                            <div class=" mb10 wd24_no_min wd49_md wd100_xs">
+                                                <div class="information_title">インボイス制度登録番号</div>
+                                                <div>
+                                                    <apex:input type="text" styleClass="form-control" value="{! screenTargetRecord.invoiceRegistNumber}" onchange="correctInputRules(this,'text','255')" tabIndex="108"/>
+                                                </div>
+                                            </div>
+                                            <div class=" mb10 wd24_no_min wd49_md wd100_xs">
+                                                <!-- ポータルサイト構築 追加 Start -->
+                                                <div class="information_title">アクセス</div>
+                                                <div>
+                                                    <apex:input type="text" styleClass="form-control" value="{! screenTargetRecord.access}" onchange="correctInputRules(this,'text','255')" tabIndex="109"/>
+                                                </div>
+                                                <!-- ポータルサイト構築 追加 End -->
+                                            </div>
+
+                                            <!-- ポータルサイト構築 追加 Start -->
+                                            <div class=" mb10 wd49 wd49_md wd100_xs">
+                                                <div class="information_title">駐車場</div>
+                                                <div>
+                                                    <apex:input type="text" styleClass="form-control" value="{! screenTargetRecord.parking}" onchange="correctInputRules(this,'text','255')" tabIndex="110"/>
+                                                </div>
+                                            </div>
+
+                                            <div class=" mb10 wd24_no_min wd49_md wd100_xs">
+                                                <div class="information_title"></div>
+                                                <!-- div class="information_contents">
+                                                    レイアウト調整用のダミー
+                                                </div -->
+                                            </div>
+                                            <div class=" mb10 wd24_no_min wd49_md wd100_xs">
+                                                <div class="information_title"></div>
+                                                <!-- div class="information_contents">
+                                                    レイアウト調整用のダミー
+                                                </div -->
+                                            </div>
+                                            <div class=" mb10 wd49_md wd100 wd100_xs">
+                                                <div class="information_title">店舗紹介</div>
+                                                <div>
+                                                    <apex:inputTextarea id="shopIntroduce" value="{! screenTargetRecord.shopIntroduce}" onchange="correctInputRules(this,'text',131072)"
+                                                                        cols="40" rows="6" styleClass="form-control" style="font-size:80%" tabindex="111" />
+                                                </div>
+                                            </div>
+                                            <!-- ポータルサイト構築 追加 End -->
+                                        </apex:outputPanel>
+
+                                        <!-- ポータルサイト構築 追加 Stert -->
+                                        <!-- 画像 -->
+                                        <apex:outputPanel id="photoData" layout="block"  style="{!IF(OR(isOpenError || isNew),'display: none;','')}">
+                                            <div class="flex-wrap2 flex-wrap justify-between ">
+                                            <!-- <div class="mb50_xs30 flex-wrap"> -->
+                                                <!-- メイン -->
+                                                <div class="flex-wrap2 mb10 wd30 pic">
+                                                    <div class="wd100">
+                                                        <div>メイン</div>
+                                                        <!-- アップロード -->
+                                                        <apex:outputPanel rendered="{!OR(isNew || isOpenError || screenTargetRecord.photoFilePath1==null)}">
+                                                            <div class="box ratio-1_1 mb10 wd80">
+                                                                <div class="ab_center" >
+                                                                    <div class="img-wrapper  img-wrapper_wide  md10">
+                                                                        <div class="img-wrapper-inner">
+                                                                            <c:GD901001View ParameterClass="{!shopPhotoGD901001Parameter1}" />
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </apex:outputPanel>
+                                                        <div class="posi_re mb10" style="height:1em">
+                                                            <apex:outputPanel styleClass="ab_right flex-wrap" rendered="{!OR(isNew || isOpenError || screenTargetRecord.photoFilePath1!=null)}">
+                                                                <div class="download_icon">
+                                                                    <!-- ダウンロード -->
+                                                                    <a href="{!screenTargetRecord.photoFilePath1}">
+                                                                        <apex:image alt="" url="{!URLFOR($Resource.designer_file, 'designer_file/images/download.png')}" />
+                                                                    </a>
+                                                                </div>
+                                                                <div class="dustbox_icon ml10">
+                                                                    <!-- 削除 -->
+                                                                    <a href="#">
+                                                                        <apex:commandLink onclick="checkTargetIndexDelete(1)" rerender="dummy" >
+                                                                            <apex:image alt="" url="{!URLFOR($Resource.designer_file, 'designer_file/images/dustbox.png')}" />
+                                                                        </apex:commandLink>
+                                                                    </a>
+                                                                </div>
+                                                            </apex:outputPanel>
+                                                            
+                                                        </div>
+                                                        <apex:outputPanel rendered="{!OR(isNew || isOpenError || screenTargetRecord.photoFilePath1!=null)}">
+                                                            <div class="box ratio-1_1 mb10 wd80">
+                                                                <div class="ab_center">
+                                                                    <div class="img-wrapper  img-wrapper_wide  md10">
+                                                                        <div class="img-wrapper-inner">
+                                                                            <apex:image alt="" value="{! screenTargetRecord.photoFilePath1}" styleClass="img-contain"/>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </apex:outputPanel>
+                                                    </div>
+                                                </div>
+
+                                                <!-- サブ１ -->
+                                                <div class="flex-wrap2 mb10 wd30 pic">
+                                                    <div class="wd100">
+                                                        <div>サブ１</div>
+                                                        <!-- アップロード -->
+                                                        <apex:outputPanel rendered="{!OR(isNew || isOpenError || screenTargetRecord.photoFilePath2==null)}">
+                                                            <div class="box ratio-1_1 mb10 wd80">
+                                                                <div class="ab_center" >
+                                                                    <div class="img-wrapper  img-wrapper_wide  md10">
+                                                                        <div class="img-wrapper-inner">
+                                                                            <c:GD901001View ParameterClass="{!shopPhotoGD901001Parameter2}" />
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </apex:outputPanel>
+                                                        <div class="posi_re mb10" style="height:1em">
+                                                            <apex:outputPanel styleClass="ab_right flex-wrap" rendered="{!OR(isNew || isOpenError || screenTargetRecord.photoFilePath2!=null)}">
+                                                                <div class="download_icon">
+                                                                    <!-- ダウンロード -->
+                                                                    <a href="{!screenTargetRecord.photoFilePath2}">
+                                                                        <apex:image alt="" url="{!URLFOR($Resource.designer_file, 'designer_file/images/download.png')}" />
+                                                                    </a>
+                                                                </div>
+                                                                <div class="dustbox_icon ml10">
+                                                                    <!-- 削除 -->
+                                                                    <a href="#">
+                                                                        <apex:commandLink onclick="checkTargetIndexDelete(2)" rerender="dummy" >
+                                                                            <apex:image alt="" url="{!URLFOR($Resource.designer_file, 'designer_file/images/dustbox.png')}" />
+                                                                        </apex:commandLink>
+                                                                    </a>
+                                                                </div>
+
+                                                            </apex:outputPanel>
+                                                            
+                                                        </div>
+                                                        <apex:outputPanel rendered="{!OR(isNew || isOpenError || screenTargetRecord.photoFilePath2!=null)}">
+                                                            <div class="box ratio-1_1 mb10 wd80">
+                                                                <div class="ab_center">
+                                                                    <div class="img-wrapper  img-wrapper_wide  md10">
+                                                                        <div class="img-wrapper-inner">
+                                                                            <apex:image alt="" value="{! screenTargetRecord.photoFilePath2}" styleClass="img-contain"/>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </apex:outputPanel>
+                                                    </div>
+                                                </div>
+
+                                                <!-- サブ２ -->
+                                                <div class="flex-wrap2 mb10 wd30 pic">
+                                                    <div class="wd100">
+                                                        <div>サブ２</div>
+                                                        <!-- アップロード -->
+                                                        <apex:outputPanel rendered="{!OR(isNew || isOpenError || screenTargetRecord.photoFilePath3==null)}">
+                                                            <div class="box ratio-1_1 mb10 wd80">
+                                                                <div class="ab_center" >
+                                                                    <div class="img-wrapper  img-wrapper_wide  md10">
+                                                                        <div class="img-wrapper-inner">
+                                                                            <c:GD901001View ParameterClass="{!shopPhotoGD901001Parameter3}" />
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </apex:outputPanel>
+                                                        <div class="posi_re mb10" style="height:1em">
+                                                            <apex:outputPanel styleClass="ab_right flex-wrap" rendered="{!OR(isNew || isOpenError || screenTargetRecord.photoFilePath3!=null)}">
+                                                                <div class="download_icon">
+                                                                    <!-- ダウンロード -->
+                                                                    <a href="{!screenTargetRecord.photoFilePath3}">
+                                                                        <apex:image alt="" url="{!URLFOR($Resource.designer_file, 'designer_file/images/download.png')}" />
+                                                                    </a>
+                                                                </div>
+                                                                <div class="dustbox_icon ml10">
+                                                                    <!-- 削除 -->
+                                                                    <a href="#">
+                                                                        <apex:commandLink onclick="checkTargetIndexDelete(3)" rerender="dummy" >
+                                                                            <apex:image alt="" url="{!URLFOR($Resource.designer_file, 'designer_file/images/dustbox.png')}" />
+                                                                        </apex:commandLink>
+                                                                    </a>
+                                                                </div>
+
+                                                            </apex:outputPanel>
+                                                            
+                                                        </div>
+                                                        <apex:outputPanel rendered="{!OR(isNew || isOpenError || screenTargetRecord.photoFilePath3!=null)}">
+                                                            <div class="box ratio-1_1 mb10 wd80">
+                                                                <div class="ab_center">
+                                                                    <div class="img-wrapper  img-wrapper_wide  md10">
+                                                                        <div class="img-wrapper-inner">
+                                                                            <apex:image alt="" value="{! screenTargetRecord.photoFilePath3}" styleClass="img-contain"/>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </apex:outputPanel>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                        
+                                            <div class="flex-wrap2 flex-wrap justify-between ">
+                                                <!-- サブ３ -->
+                                                <div class="flex-wrap2 mb10 wd30 pic">
+                                                    <div class="wd100">
+                                                        <div>サブ３</div>
+                                                        <!-- アップロード -->
+                                                        <apex:outputPanel rendered="{!OR(isNew || isOpenError || screenTargetRecord.photoFilePath4==null)}">
+                                                            <div class="box ratio-1_1 mb10 wd80">
+                                                                <div class="ab_center" >
+                                                                    <div class="img-wrapper  img-wrapper_wide  md10">
+                                                                        <div class="img-wrapper-inner">
+                                                                            <c:GD901001View ParameterClass="{!shopPhotoGD901001Parameter4}" />
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </apex:outputPanel>
+                                                        <div class="posi_re mb10" style="height:1em">
+                                                            <apex:outputPanel styleClass="ab_right flex-wrap" rendered="{!OR(isNew || isOpenError || screenTargetRecord.photoFilePath4!=null)}">
+                                                                <div class="download_icon">
+                                                                    <!-- ダウンロード -->
+                                                                    <a href="{!screenTargetRecord.photoFilePath4}">
+                                                                        <apex:image alt="" url="{!URLFOR($Resource.designer_file, 'designer_file/images/download.png')}" />
+                                                                    </a>
+                                                                </div>
+                                                                <div class="dustbox_icon ml10">
+                                                                    <!-- 削除 -->
+                                                                    <a href="#">
+                                                                        <apex:commandLink onclick="checkTargetIndexDelete(4)" rerender="dummy" >
+                                                                            <apex:image alt="" url="{!URLFOR($Resource.designer_file, 'designer_file/images/dustbox.png')}" />
+                                                                        </apex:commandLink>
+                                                                    </a>
+                                                                </div>
+                                                            </apex:outputPanel>
+                                                            
+                                                        </div>
+                                                        <apex:outputPanel rendered="{!OR(isNew || isOpenError || screenTargetRecord.photoFilePath4!=null)}">
+                                                            <div class="box ratio-1_1 mb10 wd80">
+                                                                <div class="ab_center">
+                                                                    <div class="img-wrapper  img-wrapper_wide  md10">
+                                                                        <div class="img-wrapper-inner">
+                                                                            <apex:image alt="" value="{! screenTargetRecord.photoFilePath4}" styleClass="img-contain"/>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </apex:outputPanel>
+                                                    </div>
+                                                </div>
+                                                <!-- サブ４ -->
+                                                <div class="flex-wrap2 mb10 wd30 pic">
+                                                    <div class="wd100">
+                                                        <div>サブ４</div>
+                                                        <!-- アップロード -->
+                                                        <apex:outputPanel rendered="{!OR(isNew || isOpenError || screenTargetRecord.photoFilePath5==null)}">
+                                                            <div class="box ratio-1_1 mb10 wd80">
+                                                                <div class="ab_center" >
+                                                                    <div class="img-wrapper  img-wrapper_wide  md10">
+                                                                        <div class="img-wrapper-inner">
+                                                                            <c:GD901001View ParameterClass="{!shopPhotoGD901001Parameter5}" />
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </apex:outputPanel>
+                                                        <div class="posi_re mb10" style="height:1em">
+                                                            <apex:outputPanel styleClass="ab_right flex-wrap" rendered="{!OR(isNew || isOpenError || screenTargetRecord.photoFilePath5!=null)}">
+                                                                <div class="download_icon">
+                                                                    <!-- ダウンロード -->
+                                                                    <a href="{!screenTargetRecord.photoFilePath5}">
+                                                                        <apex:image alt="" url="{!URLFOR($Resource.designer_file, 'designer_file/images/download.png')}" />
+                                                                    </a>
+                                                                </div>
+                                                                <div class="dustbox_icon ml10">
+                                                                    <!-- 削除 -->
+                                                                    <a href="#">
+                                                                        <apex:commandLink onclick="checkTargetIndexDelete(5)" rerender="dummy" >
+                                                                            <apex:image alt="" url="{!URLFOR($Resource.designer_file, 'designer_file/images/dustbox.png')}" />
+                                                                        </apex:commandLink>
+                                                                    </a>
+                                                                </div>
+                                                            </apex:outputPanel>
+                                                        </div>
+
+                                                        <apex:outputPanel rendered="{!OR(isNew || isOpenError || screenTargetRecord.photoFilePath5!=null)}">
+                                                            <div class="box ratio-1_1 mb10 wd80">
+                                                                <div class="ab_center">
+                                                                    <div class="img-wrapper  img-wrapper_wide  md10">
+                                                                        <div class="img-wrapper-inner">
+                                                                            <apex:image alt="" value="{! screenTargetRecord.photoFilePath5}" styleClass="img-contain"/>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </apex:outputPanel>
+                                                    </div>
+                                                </div>
+                                                <!-- サブ５ -->
+                                                <div class="flex-wrap2 mb10 wd30 pic">
+                                                    <div class="wd100">
+                                                        <div>サブ５</div>
+                                                        <!-- アップロード -->
+                                                        <apex:outputPanel rendered="{!OR(isNew || isOpenError || screenTargetRecord.photoFilePath6==null)}">
+                                                            <div class="box ratio-1_1 mb10 wd80">
+                                                                <div class="ab_center" >
+                                                                    <div class="img-wrapper  img-wrapper_wide  md10">
+                                                                        <div class="img-wrapper-inner">
+                                                                            <c:GD901001View ParameterClass="{!shopPhotoGD901001Parameter6}" />
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </apex:outputPanel>
+                                                        <div class="posi_re mb10" style="height:1em">
+                                                            <apex:outputPanel styleClass="ab_right flex-wrap" rendered="{!OR(isNew || isOpenError || screenTargetRecord.photoFilePath6!=null)}">
+                                                                <div class="download_icon">
+                                                                    <!-- ダウンロード -->
+                                                                    <a href="{!screenTargetRecord.photoFilePath6}">
+                                                                        <apex:image alt="" url="{!URLFOR($Resource.designer_file, 'designer_file/images/download.png')}" />
+                                                                    </a>
+                                                                </div>
+                                                                <div class="dustbox_icon ml10">
+                                                                    <!-- 削除 -->
+                                                                    <a href="#">
+                                                                        <apex:commandLink onclick="checkTargetIndexDelete(6)" rerender="dummy" >
+                                                                            <apex:image alt="" url="{!URLFOR($Resource.designer_file, 'designer_file/images/dustbox.png')}" />
+                                                                        </apex:commandLink>
+                                                                    </a>
+                                                                </div>
+
+                                                            </apex:outputPanel>
+                                                            
+                                                        </div>
+                                                        <apex:outputPanel rendered="{!OR(isNew || isOpenError || screenTargetRecord.photoFilePath6!=null)}">
+                                                            <div class="box ratio-1_1 mb10 wd80">
+                                                                <div class="ab_center">
+                                                                    <div class="img-wrapper  img-wrapper_wide  md10">
+                                                                        <div class="img-wrapper-inner">
+                                                                            <apex:image alt="" value="{! screenTargetRecord.photoFilePath6}" styleClass="img-contain"/>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </apex:outputPanel>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="flex-wrap2 flex-wrap justify-between ">
+                                                <!-- サブ６ -->
+                                                <div class="flex-wrap2 mb10 wd30 pic">
+                                                    <div class="wd100">
+                                                        <div>サブ６</div>
+                                                        <!-- アップロード -->
+                                                        <apex:outputPanel rendered="{!OR(isNew || isOpenError || screenTargetRecord.photoFilePath7==null)}">
+                                                            <div class="box ratio-1_1 mb10 wd80">
+                                                                <div class="ab_center" >
+                                                                    <div class="img-wrapper  img-wrapper_wide  md10">
+                                                                        <div class="img-wrapper-inner">
+                                                                            <c:GD901001View ParameterClass="{!shopPhotoGD901001Parameter7}" />
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </apex:outputPanel>
+                                                        <div class="posi_re mb10" style="height:1em">
+                                                            <apex:outputPanel styleClass="ab_right flex-wrap" rendered="{!OR(isNew || isOpenError || screenTargetRecord.photoFilePath7!=null)}">
+                                                                <div class="download_icon">
+                                                                    <!-- ダウンロード -->
+                                                                    <a href="{!screenTargetRecord.photoFilePath7}">
+                                                                        <apex:image alt="" url="{!URLFOR($Resource.designer_file, 'designer_file/images/download.png')}" />
+                                                                    </a>
+                                                                </div>
+                                                                <div class="dustbox_icon ml10">
+                                                                    <!-- 削除 -->
+                                                                    <a href="#">
+                                                                        <apex:commandLink onclick="checkTargetIndexDelete(7)" rerender="dummy" >
+                                                                            <apex:image alt="" url="{!URLFOR($Resource.designer_file, 'designer_file/images/dustbox.png')}" />
+                                                                        </apex:commandLink>
+                                                                    </a>
+                                                                </div>
+                                                            </apex:outputPanel>
+                                                            
+                                                        </div>
+                                                        <apex:outputPanel rendered="{!OR(isNew || isOpenError || screenTargetRecord.photoFilePath7!=null)}">
+                                                            <div class="box ratio-1_1 mb10 wd80">
+                                                                <div class="ab_center">
+                                                                    <div class="img-wrapper  img-wrapper_wide  md10">
+                                                                        <div class="img-wrapper-inner">
+                                                                            <apex:image alt="" value="{! screenTargetRecord.photoFilePath7}" styleClass="img-contain"/>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </apex:outputPanel>
+                                                    </div>
+                                                </div>
+                                                <!-- サブ７ -->
+                                                <div class="flex-wrap2 mb10 wd30 pic">
+                                                    <div class="wd100">
+                                                        <div>サブ７</div>
+                                                        <!-- アップロード -->
+                                                        <apex:outputPanel rendered="{!OR(isNew || isOpenError || screenTargetRecord.photoFilePath8==null)}">
+                                                            <div class="box ratio-1_1 mb10 wd80">
+                                                                <div class="ab_center" >
+                                                                    <div class="img-wrapper  img-wrapper_wide  md10">
+                                                                        <div class="img-wrapper-inner">
+                                                                            <c:GD901001View ParameterClass="{!shopPhotoGD901001Parameter8}" />
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </apex:outputPanel>
+                                                        <div class="posi_re mb10" style="height:1em">
+                                                            <apex:outputPanel styleClass="ab_right flex-wrap" rendered="{!OR(isNew || isOpenError || screenTargetRecord.photoFilePath8!=null)}">
+                                                                <div class="download_icon">
+                                                                    <!-- ダウンロード -->
+                                                                    <a href="{!screenTargetRecord.photoFilePath8}">
+                                                                        <apex:image alt="" url="{!URLFOR($Resource.designer_file, 'designer_file/images/download.png')}" />
+                                                                    </a>
+                                                                </div>
+                                                                <div class="dustbox_icon ml10">
+                                                                    <!-- 削除 -->
+                                                                    <a href="#">
+                                                                        <apex:commandLink onclick="checkTargetIndexDelete(8)" rerender="dummy" >
+                                                                            <apex:image alt="" url="{!URLFOR($Resource.designer_file, 'designer_file/images/dustbox.png')}" />
+                                                                        </apex:commandLink>
+                                                                    </a>
+                                                                </div>
+                                                            </apex:outputPanel>
+                                                        </div>
+
+                                                        <apex:outputPanel rendered="{!OR(isNew || isOpenError || screenTargetRecord.photoFilePath8!=null)}">
+                                                            <div class="box ratio-1_1 mb10 wd80">
+                                                                <div class="ab_center">
+                                                                    <div class="img-wrapper  img-wrapper_wide  md10">
+                                                                        <div class="img-wrapper-inner">
+                                                                            <apex:image alt="" value="{! screenTargetRecord.photoFilePath8}" styleClass="img-contain"/>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </apex:outputPanel>
+                                                    </div>
+                                                </div>
+
+                                                <!-- ▼問合せNo0535で変更 -->
+                                                <!-- 外観写真 -->
+                                                <div class="flex-wrap2 mb10 wd30 pic">
+                                                    <div class="wd100">
+                                                        <div>外観</div>
+                                                        <!-- アップロード -->
+                                                        <apex:outputPanel rendered="{!OR(isNew || isOpenError || screenTargetRecord.appearancePhotoFilePath==null)}">
+                                                            <div class="box ratio-1_1 mb10 wd80">
+                                                                <div class="ab_center" >
+                                                                    <div class="img-wrapper  img-wrapper_wide  md10">
+                                                                        <div class="img-wrapper-inner">
+                                                                            <c:GD901001View ParameterClass="{!shopPhotoGD901001ParameterAppearance}" />
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </apex:outputPanel>
+                                                        <div class="posi_re mb10" style="height:1em">
+                                                            <apex:outputPanel styleClass="ab_right flex-wrap" rendered="{!OR(isNew || isOpenError || screenTargetRecord.appearancePhotoFilePath!=null)}">
+                                                                <div class="download_icon">
+                                                                    <!-- ダウンロード -->
+                                                                    <a href="{!screenTargetRecord.appearancePhotoFilePath}">
+                                                                        <apex:image alt="" url="{!URLFOR($Resource.designer_file, 'designer_file/images/download.png')}" />
+                                                                    </a>
+                                                                </div>
+                                                                <div class="dustbox_icon ml10">
+                                                                    <!-- 削除 -->
+                                                                    <a href="#">
+                                                                        <apex:commandLink onclick="checkTargetIndexDelete(9)" rerender="dummy" >
+                                                                            <apex:image alt="" url="{!URLFOR($Resource.designer_file, 'designer_file/images/dustbox.png')}" />
+                                                                        </apex:commandLink>
+                                                                    </a>
+                                                                </div>
+                                                            </apex:outputPanel>
+                                                        </div>
+
+                                                        <apex:outputPanel rendered="{!OR(isNew || isOpenError || screenTargetRecord.appearancePhotoFilePath!=null)}">
+                                                            <div class="box ratio-1_1 mb10 wd80">
+                                                                <div class="ab_center">
+                                                                    <div class="img-wrapper  img-wrapper_wide  md10">
+                                                                        <div class="img-wrapper-inner">
+                                                                            <apex:image alt="" value="{! screenTargetRecord.appearancePhotoFilePath}" styleClass="img-contain"/>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </apex:outputPanel>
+                                                    </div>
+                                                </div>
+                                                <!-- ▲問合せNo0535で変更 -->
+                                            </div>
+                                            <apex:inputHidden id="selectPhotoIndex" value="{!selectPhotoIndex}" />
+                                        </apex:outputPanel> 
+                                        <!-- ポータルサイト構築 追加 End -->
+                                    </li>
+                                </ul>
+                            </li>
+                            <li class="default open">
+                                <div class="link">
+                                    <i class="fa fa-chevron-up"></i>システム利用情報</div>
+                                <ul class="submenu-defalt ensen">
+                                    <li>
+                                        <div class="flex-wrap  flex_wrap justify-between align_center ">
+                                            <div class=" mb10 wd24_no_min wd49_md wd100_xs">
+                                                <div class="information_title">システム利用開始日</div>
+                                                <div>
+                                                    <apex:input type="date" styleClass="form-control" value="{! screenTargetRecord.systemUseStartDate}"
+                                                                onkeydown="dateInputKeydownFocusAdjust(this, event)"
+                                                                onblur="clearValidateErrorValue(this)" html-min="1700-01-01" html-max="4000-12-31" tabIndex="201"/>
+                                                </div>
+                                            </div>
+                                            <div class=" mb10 wd24_no_min wd49_md wd100_xs">
+                                                <div class="information_title">システム利用終了日</div>
+                                                <div>
+                                                    <apex:input type="date" styleClass="form-control" value="{! screenTargetRecord.systemUseEndDate}"
+                                                                onkeydown="dateInputKeydownFocusAdjust(this, event)"
+                                                                onblur="clearValidateErrorValue(this)" html-min="1700-01-01" html-max="4000-12-31" tabIndex="202"/>
+                                                </div>
+                                            </div>
+                                            <div class=" mb10 wd24_no_min wd49_md wd100_xs">
+                                            </div>
+                                            <div class=" mb10 wd24_no_min wd49_md wd100_xs">
+                                            </div>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </li>
+                            <li class="default open">
+                                <div class="link">
+                                    <i class="fa fa-chevron-up"></i>ポータル連携情報</div>
+                                <ul class="submenu-defalt ensen">
+                                    <li>
+                                            
+                                        <div class="flex-wrap  flex_wrap justify-between align_center ">
+                                            <div class=" mb10 wd24_no_min wd49_md wd100_xs">
+                                                <div class="information_title">ポータル連携開始日</div>
+                                                <div>
+                                                    <apex:input type="date" styleClass="form-control" value="{! screenTargetRecord.potalCooperationStartDate}"
+                                                                onkeydown="dateInputKeydownFocusAdjust(this, event)"
+                                                                onblur="clearValidateErrorValue(this)" html-min="1700-01-01" html-max="4000-12-31" tabIndex="203"/>
+                                                </div>
+                                            </div>
+                                            <div class=" mb10 wd24_no_min wd49_md wd100_xs">
+                                                <div class="information_title">ポータル連携終了日</div>
+                                                <div>
+                                                    <apex:input type="date" styleClass="form-control" value="{! screenTargetRecord.potalCooperationEndDate}"
+                                                                onkeydown="dateInputKeydownFocusAdjust(this, event)"
+                                                                onblur="clearValidateErrorValue(this)" html-min="1700-01-01" html-max="4000-12-31" tabIndex="204"/>
+                                                </div>
+                                            </div>
+                                            <div class=" mb10 wd24_no_min wd49_md wd100_xs">
+                                                <div class="information_title">SUUMO会社コード</div>
+                                                <div>
+                                                    <apex:input type="text" styleClass="form-control" value="{! screenTargetRecord.suumoCompanyCode}" onchange="correctInputRules(this,'text','6')" tabIndex="205"/>
+                                                </div>
+                                            </div>
+                                            <div class=" mb10 wd24_no_min wd49_md wd100_xs">
+                                                <div class="information_title">SUUMO支店コード</div>
+                                                <div>
+                                                    <apex:input type="text" styleClass="form-control" value="{! screenTargetRecord.suumoBranchCode}" onchange="correctInputRules(this,'text','3')" tabIndex="206"/>
+                                                </div>
+                                            </div>
+                                            <div class=" mb10 wd24_no_min wd49_md wd100_xs">
+                                                <div class="information_title">athome貴社ID</div>
+                                                <div>
+                                                    <apex:input type="text" styleClass="form-control" value="{! screenTargetRecord.athomeYourCompanyId}" onchange="correctInputRules(this,'text','3')" tabIndex="207"/>
+                                                </div>
+                                            </div>
+                                            <div class=" mb10 wd24_no_min wd49_md wd100_xs">
+                                                <div class="information_title">athome貴社店舗ID</div>
+                                                <div>
+                                                    <apex:input type="text" styleClass="form-control" value="{! screenTargetRecord.athomeYourShopId}" onchange="correctInputRules(this,'text','20')" tabIndex="208"/>
+                                                </div>
+                                            </div>
+                                            <div class=" mb10 wd24_no_min wd49_md wd100_xs">
+                                                <div class="information_title">HOME'S会員番号</div>
+                                                <div>
+                                                    <apex:input type="text" styleClass="form-control" value="{! screenTargetRecord.homesMemberNumber}" onchange="correctInputRules(this,'text','7')" tabIndex="209"/>
+                                                </div>
+                                            </div>
+                                            <div class=" mb10 wd24_no_min wd49_md wd100_xs">
+                                            </div>
+                                            <!-- ▼ 2022.03.24 CHINTAI対応により追記 -->
+											<div class=" mb10 wd24_no_min wd49_md wd100_xs">
+												<div class="information_title">CHINTAI店舗コード</div>
+												<div>
+													<apex:input type="text" styleClass="form-control" value="{! screenTargetRecord.chintaiCompanyCode}" onchange="correctInputRules(this,'text','9')" tabIndex="210"/>
+												</div>
+											</div>
+											<div class=" mb10 wd24_no_min wd49_md wd100_xs">
+												<div class="information_title">CHINTAIパノラマ掲載契約</div>
+												<div>
+													<apex:inputCheckbox id="isChintaiPanoramaContract" value="{!screenTargetRecord.isChintaiPanoramaContract}"  tabIndex="211"/>
+													<apex:outputLabel for="isChintaiPanoramaContract" styleClass="serach_check" />
+												</div>
+											</div>
+											<div class=" mb10 wd24_no_min wd49_md wd100_xs">
+											</div>
+											<div class=" mb10 wd24_no_min wd49_md wd100_xs">
+											</div>
+                                            <!-- ▲ 2022.03.24 CHINTAI対応により追記 -->
+                                        </div>
+                                    </li>
+                                </ul>
+                            </li>
+
+                        </ul>
+                    </section>
+
+                    <section>
+                        <h2 class="font18">ポータルサイト物件登録件数状況</h2>
+                        <div class="x_data_area ">
+                            <!-- ロック部分 -->
+                            <div class="lock_box">
+                                <table class="width300 data gray no_y_scroll">
+                                    <col style="width: 50%;" />
+                                    <col style="width: 50%;" />
+                                    <tr class="r_none">
+                                        <th>ポータル</th>
+                                        <th class="r_none">掲載方法</th>
+                                    </tr>
+                                    <tr class="r_none">
+                                        <td class="fontb">掲載地区</td>
+                                        <td></td>
+                                    </tr>
+                                    <tr>
+                                        <td>SUUMO</td>
+                                        <td>{! IF(screenTargetRecord.isSuumoPropertyShow, '物件名', '以外')}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>HOME'S</td>
+                                        <td>{! IF(screenTargetRecord.isHomesPropertyShow, '物件名', '以外')}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>athome</td>
+                                        <td>{! IF(screenTargetRecord.isAtHomePropertyShow, '物件名', '以外')}</td>
+                                    </tr>
+                                    <!-- ▼ 2022.03.24 CHINTAI対応により追記 -->
+									<tr>
+										<td>CHINTAI</td>
+										<td>{! IF(screenTargetRecord.isChintaiPropertyShow, '物件名', '以外')}</td>
+									</tr>
+                                    <!-- ▲ 2022.03.24 CHINTAI対応により追記 -->
+                                </table>
+                            </div>
+                            <!-- /ロック部分 -->
+                            <!-- 横スクロール部分 -->
+                            <div class="x_scroll_box" style="overflow-x: hidden;"><!-- 2022.03.24 CHINTAI対応にて不要なスクロールバーがあったためstyle追加 -->
+                                <table class="width2500 data gray ">
+                                    <apex:repeat value="{!portalSiteStatementList}" var="p" >
+                                        <col style="width: {!portalSiteStatementWith}%;" />
+                                    </apex:repeat>
+                                    <tr>
+                                        <apex:repeat value="{!portalSiteStatementList}" var="p" >
+                                            <th class="width_district">{!p.district}</th>
+                                        </apex:repeat>
+                                    </tr>
+                                    <tr>
+                                        <apex:repeat value="{!portalSiteStatementList}" var="p" >
+                                            <td>{!p.maruBatsu}</td>
+                                        </apex:repeat>
+                                    </tr>
+                                    <tr>
+                                        <apex:repeat value="{!portalSiteStatementList}" var="p" >
+                                            <td>{!p.suumoCount}件</td>
+                                        </apex:repeat>
+                                    </tr>
+                                    <tr>
+                                        <apex:repeat value="{!portalSiteStatementList}" var="p" >
+                                            <td>{!p.homesCount}件</td>
+                                        </apex:repeat>
+                                    </tr>
+                                    <tr>
+                                        <apex:repeat value="{!portalSiteStatementList}" var="p" >
+                                            <td>{!p.athomeCount}件</td>
+                                        </apex:repeat>
+                                    </tr>
+                                    <!-- ▼ 2022.03.24 CHINTAI対応により追記 -->
+									<tr>
+										<apex:repeat value="{!portalSiteStatementList}" var="p">
+											<td>{!p.chintaiCount}件</td>
+										</apex:repeat>
+									</tr>
+                                    <!-- ▲ 2022.03.24 CHINTAI対応により追記 -->
+                                </table>
+                            </div>
+                            <!-- /横スクロール部分 -->
+                        </div>
+                        <div class="flex-wrap justify-center flex-xs-xolumn  mt60">
+                            <apex:commandbutton value="キャンセル" styleclass="btn btn-cancel text-center mauto_xs mr10" oncomplete="closePage()" tabIndex="301" />
+                            <apex:commandbutton value="保存"       styleclass="btn btn-primary text-center mauto_xs ml10" disabled="{! isOpenError}"
+                                                onclick="checkSave()" rerender="dummy" tabIndex="302" />
+                        </div>
+                        
+                    </section>
+                    
+                    <!-- ポータルサイト構築 追加 Start -->
+                    <script>
+                        function finishS3Upload(parameter) {
+                            //画像アップロード完了後に実行する処理
+                            blockUi();
+                            document.getElementById("{!$Component.selectPhotoIndex}").value = parameter;
+                            updateShopPhoto();
+                        }
+
+                        // 画像削除確認メッセージ（index指定系）
+                        async function checkTargetIndexDelete(index) {
+                            var message = "{!MSG_COM_V_DELETE}";
+                            if (await showConfirm(message)) {
+                                blockUi();
+                                document.getElementById("{!$Component.selectPhotoIndex}").value = index;
+                                deleteShopPhoto();
+                            }
+                        }
+                    </script>
+                    <!-- ポータルサイト構築 追加 End -->
+                    
+                </apex:form>
+            </article>
+        </main>
+
+            
+    
+    <!-- 【モーダルダイアログ】 -->
+    <div id="dialog-GA102006Form" title="">
+        <apex:outputPanel id="GA102006DialogPanel">
+            <c:GA102006View ParameterClass="{!GA102006Parameter}" />
+        </apex:outputPanel>
+    </div>
+    
+      
+      <!-- 【JAVASCRIPT】 -->
+      <script language="javascript" type="text/javascript">
+        jQuery(function() {
+
+            if(document.body.clientWidth > 800){
+                clientWidth = 800;
+            }else{
+                clientWidth = document.body.clientWidth;
+            }
+                        
+            //ダイアログを表示
+            jQuery( "#dialog-GA102006Form" ).dialog({
+                modal: true,
+                autoOpen: false,
+                width: clientWidth,
+            });
+        });
+        
+        function closeGA102006View(){
+            
+            jQuery( "#dialog-GA102006Form" ).dialog( "close" );
+            GA102006FormClose();
+        }
+        </script> 
+        <script>
+            /* $(function() {
+                $('table').resizableColumns();
+            }); */
+            $(function () {
+                var Accordion = function (el, multiple) {
+                    this.el = el || {};
+                    this.multiple = multiple || false;
+
+                    // Variables privadas
+                    var links = this.el.find('.link');
+                    // Evento
+                    links.on('click', { el: this.el, multiple: this.multiple }, this.dropdown)
+                }
+
+                Accordion.prototype.dropdown = function (e) {
+                    var $el = e.data.el;
+                    $this = $(this),
+                        $next = $this.next();
+
+                    $next.slideToggle();
+                    $this.parent().toggleClass('open');
+
+                    if (!e.data.multiple) {
+                        // $el.find('.submenu-defalt').not($next).slideUp().parent().removeClass('open');
+                    };
+                }
+
+                var accordion = new Accordion($('#accordion'), false);
+            });
+
+            $(function () {
+                $('#btn').on('click', function (e) {
+
+                    var textList = document.getElementById('accordion');
+
+                    let elements = textList.getElementsByTagName('li');
+                    Array.prototype.forEach.call(elements, function (element) {
+                        element.classList.remove('open', 'default');
+                        $('.submenu-defalt').fadeOut()
+                    });
+
+                });
+            });
+        </script>
+    </body>
+
+</apex:page>

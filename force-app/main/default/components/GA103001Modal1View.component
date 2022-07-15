@@ -1,0 +1,140 @@
+<!--入居者モーダル画面-->
+
+<apex:component controller="GA103001Modal1Controller">
+    <apex:attribute name="ParameterClass" type="GA103001Modal1ParameterClass" assignTo="{!Parameter}" description="key"/>
+    
+    <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery-3.6.0.min.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery.blockUI.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/common_screen_util.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.designer_file, 'designer_file/js/modaal.js')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/reset.min.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/foundation.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/style.css')}"/>
+    <apex:stylesheet value="https://use.fontawesome.com/releases/v5.0.6/css/all.css"/>
+    <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery.autoKana.js')}"/>
+    
+    <!-- 独自のスタイルシート -->
+    <style type="text/css">
+        /* jqueryで設定されている スタイルを解除する */
+        .ui-widget input, .ui-widget select{
+        font-size: 0.9em;
+        font-family: monospace;
+        }
+    </style>
+    
+    <apex:form id="GA103001Modal1Form">
+        <apex:pageBlock rendered="{!Parameter.noFirst}">
+            <apex:pageMessages />
+           
+            <apex:outputText rendered="{!init}" />
+            
+            <!-- ここにお客様のhtmlの表示部分を張り付け  -->
+            
+            <div id="modal" ><!--style="display:none;"-->
+                <div class="modal-body">
+                    <section style="display:flex">
+                        <div class="mb10">
+                            <div class="information_title fontb font16">入居者情報</div>
+                        </div>
+                        <apex:commandButton style=" visibility:hidden;" rerender="dummy"/> 
+                    </section>
+                    
+                    
+                    <div class="flex-wrap flex_wrap justify-between flex-xs-xolumn  mt30">
+                        
+                        <div class="wd47 mb10">
+                            <div class="information_title">姓</div>
+                            <apex:input type="text" value="{! modalParameter.lastName}"  styleClass="form-control lastNameTenant" onchange="correctInputRules(this,'text','30')"  />
+                        </div>
+                        
+                        <div class="wd47 mb10">
+                            <div class="information_title">名</div>
+                            <apex:input type="text" value="{! modalParameter.firstName}"  styleClass="form-control firstNameTenant" onchange="correctInputRules(this,'text','30')" />
+                        </div>
+                        
+                        <div class="wd47 mb10">
+                            <div class="information_title">姓(フリガナ)</div>
+                            <apex:input type="text" value="{! modalParameter.lastNameKana}" styleClass="form-control lastNameKanaTenant" onchange="correctInputRules(this,'textKana','30')"/>
+                        </div>
+                        
+                        <div class="wd47 mb10">
+                            <div class="information_title">名(フリガナ)</div>
+                            <apex:input type="text" value="{! modalParameter.firstNameKana}" styleClass="form-control firstNameKanaTenant"  onchange="correctInputRules(this,'textKana','30')" />
+                        </div>
+                        
+                        <div class="wd47 mb10">
+                            <div class="information_title">生年月日</div>
+                            <div class="posi_re">
+                                <apex:input type="date" value="{! modalParameter.birthdate}" styleClass="form-control modalBirthDate"
+                                            onkeydown="dateInputKeydownFocusAdjust(this, event)"
+                                            onblur="if(clearValidateErrorValue(this)){dateChangedTenant()}" html-min="1700-01-01" html-max="4000-12-31">
+                                    <!--↓生年月日が変更された瞬間に年齢を再描画-->
+                                </apex:input>
+                                <!--<apex:image alt="日付検索" url="{!URLFOR($Resource.designer_file, 'designer_file/images/calendar.png')}" styleClass="input_calender"/>-->
+                            </div>
+                        </div>
+                        
+                        <apex:outputPanel styleClass="wd47 mb10" id="age" >
+                            <div class="information_title">年齢</div>
+                            <div class="information_contents" ><apex:outputLabel value="{! modalParameter.age}" style="border: 0;"  /></div>                                                                              
+                        </apex:outputPanel>
+
+                        <div class="wd47 mb10">
+                            <div class="information_title">続柄</div>
+                            <apex:selectList value="{! modalParameter.relationship}" size="1" styleClass="form-control" >
+                                <apex:selectOptions value="{! SelectRelationshipList}"/>
+                            </apex:selectList>      
+                        </div>
+                        
+                        <div class="wd47 mb10">
+                            <div class="information_title">職種</div>
+                            <apex:selectList value="{! modalParameter.jobType}" size="1" styleClass="form-control"  >
+                                <apex:selectOptions value="{! SelectJobTypeList}"/>
+                            </apex:selectList>   
+                        </div>
+                        
+                        <div class="wd47 mb10">
+                            <div class="information_title">備考</div>
+                            <div>
+                                <apex:inputTextarea value="{! modalParameter.remarks}" onchange="correctInputRules(this,'text', '255')" 
+                                                    styleClass="form-control" cols="20" rows="3" style="font-size:80%"  required="required" id="id_content" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="modal-footer">
+                    <div class="flex-wrap justify-around flex_wrap">
+                        <apex:commandButton styleClass="mb10 message btn btn-primary btn-submit text-center" value="登録" onclick="blockUi();" action="{! closeTenantModal}" oncomplete="unblockUi(); if({! !hasErrorMessage}){closeGA103001View();}" rerender="GA103001Modal1Form" />
+                    </div>
+                </div>
+                
+            </div>
+            <script type="text/javascript">
+            $(document).ready(
+                function() {
+
+                	$('.modalBirthDate').val('{! Text(modalParameter.birthdate)}'); //なぜか誕生日が入っているので、強制的に上書く
+                    
+                    $('.lastNameTenant').blur();//フォーカスを外す
+                    
+                    $.fn.autoKana('.lastNameTenant', '.lastNameKanaTenant', {
+                        katakana : true  //true：カタカナ、false：ひらがな（デフォルト）
+                    });            
+                    $.fn.autoKana('.firstNameTenant', '.firstNameKanaTenant', {
+                        katakana : true  //true：カタカナ、false：ひらがな（デフォルト）
+                    });
+
+                });
+            //カナの自動入力設定後、フォーカスを再設定（こうしないとフォーカスを一度外さないと動作しない）
+            $(function(){
+                $('.lastNameTenant').focus();
+            });
+            </script>
+
+            <apex:actionFunction name="dateChangedTenant" action="{!ageRecalculateTenant}" reRender="age"/>
+        </apex:pageBlock>
+    </apex:form>
+    
+    
+</apex:component>

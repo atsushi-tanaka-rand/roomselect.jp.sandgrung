@@ -1,0 +1,113 @@
+<!-- 文例集選択 -->
+<apex:component controller="GL101001Modal2Controller" allowDML="true">
+	<apex:attribute name="ParameterClass" type="GL101001Modal2ParameterClass" assignTo="{!parameter}" description="key" />
+
+	<apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/reset.min.css')}" />
+	<apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/foundation.css')}" />
+	<apex:stylesheet value="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+	<apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/modaal.css')}" />
+	<apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/style.css')}" />
+	<apex:stylesheet value="{!URLFOR($Resource.external_file, 'external_file/common_style.css')}" />
+	<apex:stylesheet value="{!URLFOR($Resource.jQuery,'jQuery/jQueryUI/jquery-ui.css')}" />
+
+	<apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery-3.6.0.min.js')}" />
+	<apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery.blockUI.js')}" />
+	<apex:includeScript value="{!URLFOR($Resource.designer_file, 'designer_file/js/modaal.js')}" />
+	<apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/common_screen_util.js')}" />
+	<apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/input_rules.js')}" />
+	<apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jQueryUI/jquery-ui.min.js')}" />
+
+	<apex:form >
+		<apex:pageBlock rendered="{! parameter.noFirst }">
+			<apex:outputText rendered="{! init }" />
+			<div>
+				<ul class="accordion">
+					<apex:repeat value="{! screenExampleSentence.exampleSentenceMap }" var="folder">
+						<li>
+							<div class="link">
+								<apex:outputText value="{! folder }" />
+								<i class="fa fa-chevron-down"></i>
+							</div>
+							<ul class="submenu">
+								<apex:repeat value="{! screenExampleSentence.exampleSentenceMap[folder] }" var="exampleSentence">
+									<li>
+										<apex:commandLink value="{! exampleSentence.Name }"
+											oncomplete="clickExampleSentence('{! screenExampleSentence.selectExampleSentence }');"
+										>
+											<apex:param name="sentenceText"
+												value="{! exampleSentence.ExampleSentence__c }"
+												assignTo="{! screenExampleSentence.selectExampleSentence }"
+											/>
+										</apex:commandLink>
+									</li>
+								</apex:repeat>
+							</ul>
+						</li>
+					</apex:repeat>
+				</ul>
+			</div>
+
+			<script>
+				$(function () {
+					/**
+					 * クリックイベントの重複回避
+					 */
+					let Accordion = function (el, multiple) {
+						this.el = el || {};
+						this.multiple = multiple || false;
+
+						let links = this.el.find(".link");
+						links.off("click");
+						links.on("click", { el: this.el, multiple: this.multiple }, this.dropdown);
+					};
+
+					/**
+					 * セクションの開閉
+					 */
+					Accordion.prototype.dropdown = function (e) {
+						let $el = e.data.el;
+						let $this = $(this);
+						let $next = $this.next();
+
+						$next.slideToggle();
+						$this.parent().toggleClass("open");
+
+						if (!e.data.multiple) {
+							$el.find(".submenu").not($next).slideUp().parent().removeClass("open");
+						}
+					};
+
+					// セクション開閉イベントの設定
+					new Accordion($(".accordion"), false);
+				});
+
+				/**
+				 * 文例押下処理
+				 * @param {String} exampleSentence 文例
+				 */
+				function clickExampleSentence(exampleSentence) {
+					// 文例集選択モーダルの終了
+					closeDialogModal2();
+
+					// クリップボードへのコピー
+					writeClipBoard(exampleSentence);
+				}
+
+				/**
+				 * クリップボード書き込み処理
+				 * @param {String} text 書き込み値
+				 */
+				function writeClipBoard(text) {
+					new ClipBoard()
+						.writeText(text)
+						.then(function (message) {
+							return showAlert(message);
+						})
+						.catch(function (error) {
+							return showAlert(error.message);
+						});
+				}
+			</script>
+		</apex:pageBlock>
+	</apex:form>
+</apex:component>

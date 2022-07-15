@@ -1,0 +1,185 @@
+<!-- LINEユーザ一覧 -->
+<apex:page docType="html-5.0" standardStylesheets="false" controller="GL101002Controller" title="LINEユーザ一覧">
+    <apex:form id="form" html-novalidate="novalidate" >
+
+        <head>
+            <meta charset="utf-8" />
+            <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+            <meta name="format-detection" content="telephone=no" />
+            <meta name="robots" content="noindex" />
+            <title>LINEユーザ一覧"</title>
+            <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/reset.min.css')}" />
+            <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/foundation.css')}" />
+            <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/modaal.css')}" />
+            <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/style.css')}" />
+            <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery-3.6.0.min.js')}" />
+            <apex:includeScript value="{!URLFOR($Resource.designer_file, 'designer_file/js/modaal.js')}" />
+            <apex:stylesheet value="https://use.fontawesome.com/releases/v5.0.6/css/all.css" />
+
+            <apex:stylesheet value="{!URLFOR($Resource.external_file, 'external_file/common_style.css')}" />
+            <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery.blockUI.js')}" />
+            <apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/common_screen_util.js')}" />
+            <apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/input_rules.js')}" />
+            <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jQueryUI/jquery-ui.min.js')}" />
+            <apex:stylesheet value="{!URLFOR($Resource.jQuery,'jQuery/jQueryUI/jquery-ui.css')}" />
+        </head>
+
+        <!-- 内部CSS -->
+        <style type="text/css">
+            main {
+                padding: 10px 20px;
+            }
+
+            table.gray {
+                height:520px;
+                white-space: nowrap !important;
+            }
+
+            .notReplied {
+                color: red;
+            }
+
+            .hiddenbtn{
+                visibility:hidden;
+                width: 0;
+                height: 0;
+            }
+        </style>
+        
+        <body>
+            <main>
+                <article>
+                    <!-- 検索条件部 -->
+                    <section>
+                        <apex:pagemessages id="messageArea"/>
+    
+                        <h1 class="fontb font2rem mb10 mt10">LINEユーザ一覧
+                            <!-- 非表示検索ボタン（Enterキー押下時動作用の隠し項目） -->
+                            <apex:commandButton styleclass="hiddenbtn"
+                            disabled="{!isOpenError}"
+                            onclick="blockUi();searchLineUser();" />
+                        </h1>
+
+                        <apex:outputPanel id="searchCond" layout="block" styleClass="border-g-3 mb60" >
+                            <div class="flex-wrap flex_wrap justify-between align_center">
+                                <div class="mb10 wd32 wd49_md wd100_xs">
+                                    <div>お客様名</div>
+                                    <apex:input type="text" styleClass="form-control" value="{! screenLineUser.condUserName }" onchange="correctInputRules(this,'text', '80'); changeFlagSet();" />
+                                </div>
+                                <div class="mb10 wd32 wd49_md wd100_xs">
+                                    <div>電話番号</div>
+                                    <apex:input type="text" styleClass="form-control" value="{! screenLineUser.condPhone }" onchange="correctInputRules(this,'text', '40');" />
+                                </div>
+                                <div class="mb10 wd32 wd49_md wd100_xs">
+                                    <div>LINE ID</div>
+                                    <apex:input type="text" styleClass="form-control" value="{! screenLineUser.condLineId }" onchange="correctInputRules(this,'text', '30'); changeFlagSet();"/>
+                                </div>
+                            </div>
+                            <div class="flex-wrap  flex_wrap justify-between align_center">
+                                <div class="mb10 wd32 wd49_md wd100_xs">
+                                    <div>ステータス</div>
+                                    <apex:selectList styleClass="form-control" size="1" value="{! screenLineUser.selectCondStatus }">
+                                        <apex:selectOptions value="{! screenLineUser.condStatus }" />   
+                                    </apex:selectList>
+                                </div>
+                                
+                                <div class="mb10 wd32 wd49_md wd100_xs">
+                                    <div>対応店舗</div>
+                                    <apex:selectList styleClass="form-control" size="1" onchange="blockUi(); chgShop();" value="{! screenLineUser.selectCondCorrespondShop }">
+                                        <apex:selectOptions value="{! screenLineUser.condCorrespondShop }" />
+                                    </apex:selectList>
+                                </div>
+                                <div class="mb10 wd32 wd49_md wd100_xs">
+                                    <div>最終返信者</div>
+                                    <apex:selectList styleClass="form-control" size="1" value="{! screenLineUser.selectCondLastReplyer }">
+                                        <apex:selectOptions value="{! screenLineUser.condLastReplyer }" />
+                                    </apex:selectList>
+                                </div>
+                            </div>
+                            <div class="text-center">
+                                <apex:commandButton styleClass="btn btn-submit btn-primary" 
+                                                    value="検索"
+                                                    onclick="blockUi();searchLineUser();"
+                                                    disabled="{! isOpenError }"/>
+                            </div>
+                        </apex:outputPanel>
+                    </section>
+
+                    <!-- 検索結果部 -->
+                    <section>
+                        <apex:outputPanel id="searchResultDetail" layout="block" >
+                            <h2 class="fontb font2rem">検索結果</h2>
+                            <table class="gray">
+                                <tr>
+                                    <th>お客様名</th>
+                                    <th>電話番号</th>
+                                    <th>LINE ID</th>
+                                    <th>LINE名</th>
+                                    <th>ステータス</th>
+                                    <th>対応店舗</th>
+                                    <th>最終受信時刻</th>
+                                    <th>最終送信時刻</th>
+                                    <th>最終返信者</th>
+                                    <th>ともだち追加時刻</th>
+                                    <th></th>
+                                </tr>
+                                <apex:repeat value="{! screenLineUser.searchResultList }" var="searchResult">
+                                    <tr>
+                                        <td>
+                                            <apex:commandLink value="{! searchResult.userName }"
+                                                            rendered="{! searchResult.accountId != null }"
+                                                            onclick="showPage('GA102001View', '', 'true'
+                                                                    , 'AccountId={! searchResult.accountId }&Corresponds={! searchResult.correspondId}')"
+                                                            rerender="dummy" />
+                                        </td>
+                                        <td>{! searchResult.Phone }</td>
+                                        <td>
+                                            <apex:commandLink value="{! searchResult.LineId }"
+                                                            onclick="showPage('GL101001View', '', 'true' 
+                                                                    , 'lineMemberId={! searchResult.lineMemberId }&correspondId={! searchResult.correspondId}')"
+                                                            rerender="dummy" />
+                                        </td>
+                                        <td>{! searchResult.lineName }</td>
+                                        <td class="{! searchResult.notReplied }">
+                                            {! searchResult.Status }
+                                        </td>
+                                        <td>{! searchResult.correspondShop }</td>
+                                        <td>{! searchResult.lastReciveTime }</td>
+                                        <td>{! searchResult.lastSendTime }</td>
+                                        <td>{! searchResult.lastReplyer }</td>
+                                        <td>{! searchResult.AddFriendTime }</td>
+                                        <td>
+                                            <apex:commandButton styleClass="btn btn-submit btn-primary wd100px"
+                                                                value="紐づけ"
+                                                                onclick="blockUi(); showPage('GL101003View', '', 'true' , 'lineMemberId={! searchResult.lineMemberId}&correspondId={! searchResult.correspondId}')"
+                                                                oncomplete="unblockUi(); if({! hasErrorMessage }){ gotoTop(); }"
+                                                                rendered="{! searchResult.isLinking }"
+                                                                reRender="dummy"/>
+                                        </td>
+                                    </tr>
+                                </apex:repeat>
+                            </table>
+                        </apex:outputPanel>
+                    </section>
+                </article>
+            </main>
+
+            <apex:actionFunction name="chgShop" action="{! chgShop }" oncomplete="unblockUi();" reRender="messageArea, searchCond" />
+            <apex:actionFunction name="searchLineUser" action="{! searchLineUser}" oncomplete="unblockUi(); if({! hasErrorMessage }){ gotoTop(); };" reRender="searchResultDetail, messageArea"/>
+        </body>
+        <!-- 【JAVASCRIPT】 -->
+        <script language="javascript" type="text/javascript">
+            /**
+             * 「apex:commandButton」から「apex:actionFunction」呼び出しており、
+             * 描画処理の競合を避けるために、「apex:commandButton」の「submit」を停止
+             * @return {Boolean} false 「false」は「submit」の停止
+             */
+            $('form').on('submit', function() {
+
+                // 処理を中断
+                return false;
+
+            });
+        </script>
+    </apex:form>
+</apex:page>

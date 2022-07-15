@@ -1,0 +1,997 @@
+<!--業者登録-->
+<apex:page controller="GD101002Controller" docType="html-5.0" standardStylesheets="false" title="業者登録">
+  <head>
+      <meta charset="utf-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <meta name="format-detection" content="telephone=no" />
+      <meta name="robots" content="noindex" />
+      <title>業者登録</title>
+      <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/reset.min.css')}" />
+      <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/foundation.css')}" />
+      <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/modaal.css')}" />
+      <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/style.css')}" />
+      <apex:stylesheet value="https://use.fontawesome.com/releases/v5.0.6/css/all.css" />
+      <apex:stylesheet value="{!URLFOR($Resource.external_file, 'external_file/common_style.css')}" />
+      <apex:stylesheet value="{!URLFOR($Resource.jQuery,'jQuery/jQueryUI/jquery-ui.css')}" />
+      
+      <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery-3.6.0.min.js')}" />
+      <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery.autoKana.js')}"/>
+      <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery.blockUI.js')}" />
+      <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jQueryUI/jquery-ui.min.js')}" />
+      <apex:includeScript value="{!URLFOR($Resource.designer_file, 'designer_file/js/modaal.js')}" />
+      <apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/common_screen_util.js')}" />
+      <apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/input_rules.js')}" />
+
+  <!-- 内部CSS定義 -->
+  <style type="text/css">
+    .section-btn {
+      padding: 0px 14px;
+    }
+  </style>
+  </head>
+  <apex:form id="form">
+    <body id="ga104006">
+      <main>
+        <apex:pageMessages id="messageArea"/>
+          <article>
+          <section class="post-pop">
+            <section style="display:flex">
+                <h1 class="fontb font2rem">業者登録</h1>
+                <apex:commandButton style=" visibility:hidden;" rerender="dummy"/> 
+            </section>
+    
+            <section>
+              <div class="border-g ">
+        
+                <div class="flex-wrap justify-between back_graydark pdr30 pdl30 pdt10px pdb10px pdr10_xs pdl10_xs ">
+                    <h2 class="fontb font18">{! screenTargetRecord.titleName}</h2>
+                    <div class="flex-wrap">
+                      <apex:commandButton styleClass="btn-w-2 " value="削除" rendered="{! NOT(isNew)}" style="padding:0px 14px;" disabled="{!isOpenError}" 
+                                          onclick="checkDelete('deleteButton')" reRender="dummy" tabIndex="1" />
+                    </div>
+
+        
+                </div>
+        
+                <div class="back_graylite  pdr30 pdl30 pdt10px pdb10px pdr10_xs pdl10_xs flex-wrap flex_wrap justify-between">
+        
+                  <div class="flex-wrap  justify-between wd44 wd100_md mb10">
+        
+                    <div class="">
+                      <div class="wd60">業者種別</div>
+        
+                      <div class="flex-wrap flex_wrap justify-between" >
+                          <apex:inputCheckbox id="sc1" value="{! screenTargetRecord.targetRecord.IsOwner__c}" disabled="true"/><apex:outputLabel style="cursor:default;" styleClass="serach_check mr10" >オーナー</apex:outputLabel>
+                          <apex:inputCheckbox id="sc2" value="{! screenTargetRecord.targetRecord.IsManagementCompany__c}" disabled="true"/><apex:outputLabel style="cursor:default;" styleClass="serach_check mr10">管理会社</apex:outputLabel>
+                          <apex:inputCheckbox id="sc3" value="{! screenTargetRecord.targetRecord.IsSubLease__c}" disabled="true"/><apex:outputLabel style="cursor:default;" styleClass="serach_check mr10">サブリース</apex:outputLabel>
+                      </div>
+                    </div>
+        
+                    <div class="wd40 left-border pdl7">
+                      <div>郵便番号</div>
+                      <div>{! screenTargetRecord.targetRecord.PostalCode__c}</div>
+                    </div>
+
+                  </div>
+        
+                  <div class="flex-wrap flex_wrap justify-between wd55 wd100_md mb10">
+        
+                    <div class="wd40 left-border pdl7 pdleft0_xs border-left-none_xs wd20_md">
+                      <div>住所</div>
+                      <div>{! screenTargetRecord.targetRecord.Address__c}</div>
+                    </div>
+        
+                    <div class="wd20  left-border pdl7 wd20_md">
+                      <div>電話番号</div>
+                      <div>{! screenTargetRecord.targetRecord.Phone}</div>
+                    </div>
+        
+                    <div class="wd40 left-border pdl7 wd20_md">
+                      <div>FAX</div>
+                      <div>{! screenTargetRecord.targetRecord.Fax}</div>
+                    </div>
+        
+                  </div>
+      
+                </div>
+      
+                <div class="tab_wrap">
+      
+                  <input id="tab1" type="radio" name="tab_btn" checked = "checked"/>
+                  <input id="tab2" type="radio" name="tab_btn"/>
+                  <input id="tab3" type="radio" name="tab_btn"/>
+      
+                  <div class="tab_area flex-wrap ">
+                    <label class="tab1_label" for="tab1">詳細</label>
+                    <label class="tab2_label" for="tab2">関連</label>
+                    <label class="tab3_label" for="tab3">ポータル掲載設定</label>
+                  </div>
+      
+                  <div class="panel_area">
+                    <div id="panel1" class="tab_panel">
+                      <ul id="accordion" class="accordion-defalt">
+                        <li class="default open">
+        
+                        <div class="link"><i class="fa fa-chevron-up"></i>基本情報</div>
+        
+                          <ul class="submenu-defalt">
+                            <li>
+                              <apex:outputPanel id="basicInfo" styleClass="flex-wrap  flex_wrap justify-between align_center ">
+          
+                                <div class="mb10 wd100">
+                                  <div class="information_title">業者種別</div>
+                                  <apex:inputCheckbox id="tab1_c_1" value="{! screenTargetRecord.isOwner}"/><apex:outputLabel for="tab1_c_1" styleClass="serach_check">オーナー</apex:outputLabel>
+                                  <apex:inputCheckbox id="tab1_c_2" value="{! screenTargetRecord.isManagementCompany}"/><apex:outputLabel for="tab1_c_2" styleClass="serach_check">管理会社</apex:outputLabel>
+                                  <apex:inputCheckbox id="tab1_c_3" value="{! screenTargetRecord.isSubLease}"/><apex:outputLabel for="tab1_c_3" styleClass="serach_check">サブリース</apex:outputLabel>
+                                </div>
+          
+                                <div class="mb10 wd32_8 wd100_xs">
+                                  <div class="information_title">業者名</div>
+                                  <div><apex:input type="text" value="{! screenTargetRecord.name}" styleClass="form-control Name" onchange="correctInputRules(this,'text', '255')"/></div>
+                                </div>
+          
+                                <div class="mb10 wd32_8 wd100_xs">
+                                  <div   class="information_title">業者名(カナ)</div>
+                                  <div><apex:input type="text" value="{! screenTargetRecord.nameKana}" styleClass="form-control NameKana" onchange="correctInputRules(this,'textKana', '120')"/></div>
+                                </div>
+          
+                                <div class="mb10 wd32_8 wd100_xs">
+                                  <div class="information_title flex-wrap  flex_wrap justify-between">
+                                    <div>郵便番号</div>
+                                    <div class="mb3">
+                                      <apex:commandButton styleClass="blue btn-normal-detail txt-deco-none" value="郵便番号・住所検索" disabled="{! isOpenError}" onclick="blockUi();"
+                                      action="{!openModal}" rerender="basicInfo,dialogPanel1" status="loadComponent" oncomplete="unblockUi(); jQuery('#dialog-modal1').dialog('open');" />
+                                    </div>
+                                  </div>
+                                  <div><apex:input type="text" value="{! screenTargetRecord.postalCode}" styleClass="form-control" onchange="correctInputRules(this,'postalCode')"/></div>
+                                </div>
+          
+                                <div class="mb10 wd32_8 wd100_xs">
+                                  <div class="information_title">都道府県</div>
+                                  <apex:selectList value="{!screenTargetRecord.state}" size="1" styleClass="form-control">
+                                      <apex:selectOptions value="{! SelectStateList}"/>
+                                  </apex:selectList>
+                                </div>
+          
+                                <div class="mb10 wd32_8 wd100_xs">
+                                  <div class="information_title">住所1(市区町村)</div>    
+                                  <div><apex:input type="text" value="{! screenTargetRecord.city}" styleClass="form-control" onchange="correctInputRules(this,'text', '50')"/></div>
+                                </div>
+
+                                <div class="mb10 wd32_8 wd100_xs">
+                                  <div class="information_title">住所2(丁目・番地)</div>
+                                  <div><apex:input type="text" value="{! screenTargetRecord.street}" styleClass="form-control" onchange="correctInputRules(this,'text', '255')"/></div>
+                                </div>
+          
+                                <div class="mb10 wd32_8 wd100_xs">
+                                  <div class="information_title">電話番号</div>
+                                  <div><apex:input type="tel" value="{! screenTargetRecord.phone}" styleClass="form-control" onchange="correctInputRules(this,'tel')"/></div>
+                                </div>
+          
+                                <div class="mb10 wd32_8 wd100_xs">
+                                  <div class="information_title">FAX</div>
+                                  <div><apex:input type="tel" value="{! screenTargetRecord.fax}" styleClass="form-control" onchange="correctInputRules(this,'tel')"/></div>
+                                </div>
+          
+                                <div class="mb10 wd32_8 wd100_xs">
+                                  <div class="information_title">
+                                    <apex:outputText value="メール" rendered="{! IF(isNew==true || screenTargetRecord.targetRecord.Email__c==null, TRUE, FALSE)}"/>
+                                    <apex:commandLink rendered="{! IF(isNew==false && screenTargetRecord.targetRecord.Email__c!=null, TRUE, FALSE)}" styleClass="mailLink" 
+                                                      oncomplete="showPage('GA102004View', '', 'true', 'accountId={! targetId}')" reRender="dummy">
+                                                      メール                
+                                    </apex:commandLink>
+
+                                  </div>      
+                                  <div><apex:input type="text" value="{! screenTargetRecord.email}" styleClass="form-control" onchange="correctInputRules(this,'email')"/></div>
+                                </div>
+          
+                                <div class="mb10 wd32_8 wd100_xs">
+                                  <div class="information_title">一般/業物</div>
+                                  <apex:selectList value="{! screenTargetRecord.ippamGyobutsu}" size="1" styleClass="form-control">
+                                    <apex:selectOptions value="{! SelectIppamGyobutsuList}"/>
+                                  </apex:selectList>                              
+                                </div>
+          
+                                <div class="mb10 wd32_8 wd100_xs">
+                                  <div class="information_title">定期送信</div>
+                                  <apex:selectList value="{! screenTargetRecord.fixedTermSend}" size="1" styleClass="form-control">
+                                    <apex:selectOptions value="{! SelectFixedTermSendList}"/>
+                                  </apex:selectList>                              
+                                </div>
+          
+                                <div class="mb10 wd32_8 wd100_xs">
+                                  <div class="information_title">紹介</div>
+                                  <apex:selectList value="{! screenTargetRecord.introduction}" size="1" styleClass="form-control">
+                                    <apex:selectOptions value="{! SelectIntroductionList}"/>
+                                  </apex:selectList>                              
+                                </div>
+          
+                                <div class="mb10 wd32_8 wd100_xs">
+                                  <div class="information_title">更新料表記</div>
+                                  <apex:selectList value="{! screenTargetRecord.renewalFeeShow}" size="1" styleClass="form-control">
+                                    <apex:selectOptions value="{! SelectRenewalFeeShowList}"/>
+                                  </apex:selectList>                              
+                                </div>
+          
+                                <div class="mb10 wd32_8 wd100_xs">
+                                  <div class="information_title">定額補修費表記</div>
+                                  <apex:selectList value="{! screenTargetRecord.cleaningFeeShow}" size="1" styleClass="form-control">
+                                    <apex:selectOptions value="{! SelectCleaningFeeShowList}"/>
+                                  </apex:selectList>                              
+                                </div>
+                                
+                                <div class="mb10 wd32_8 wd100_xs">
+                                  <!--
+                                  <div class="information_title">suumo保証人代行会社区分コード</div>
+                                  <apex:selectList value="{! screenTargetRecord.guarantorAgencyCompanyType}" size="1" styleClass="form-control">
+                                    <apex:selectOptions value="{! SelectGuarantorAgencyCompanyTypeList}"/>
+                                  </apex:selectList> 
+                                  -->  
+                                </div>
+                              
+                                <div class="mb10 wd100 ">
+                                  <div class="information_title">備考（公開）</div>
+                                  <div><apex:input type="text" value="{! screenTargetRecord.remarksPublic}" styleClass="form-control" onchange="correctInputRules(this,'text', '131072')"/></div>
+                                </div>
+                                <div class="mb10 wd100 ">
+                                  <div class="information_title">備考（非公開）</div>
+                                  <div class="information_contents" style="margin-bottom:0">
+                                      <apex:outputField value="{! screenTargetRecord.targetRecord.RemarksPrivate__c}"/>
+                                  </div>
+                                </div>
+                                <!-- <div class="mb10 wd32_8 wd100_xs"></div> -->
+          
+                              </apex:outputPanel>
+                            </li>
+                          </ul>
+                        </li>
+          
+                        <li class="default open">
+          
+                          <div class="link"><i class="fa fa-chevron-up"></i>担当者情報</div>
+          
+                          <ul class="submenu-defalt">
+                            <li>
+          
+                              <div class="flex-wrap  flex_wrap justify-between align_center ">
+                              
+                                <div class="mb10 wd32_8 wd100_xs">
+                                  <div class="information_title">担当者名</div>
+                                  <div><apex:input type="text" value="{! screenTargetRecord.representative}" styleClass="form-control" onchange="correctInputRules(this,'text', '80')"/></div>
+                                </div>
+          
+                                <div class="mb10 wd32_8 wd100_xs">
+                                  <div class="information_title">担当電話番号</div>
+                                  <div><apex:input type="tel" value="{! screenTargetRecord.representativePhone}" styleClass="form-control" onchange="correctInputRules(this,'tel')"/></div>
+                                </div>
+          
+                                <div class="mb10 wd32_8 wd100_xs"></div>
+          
+                              </div>
+                            </li>
+                          </ul>
+                        </li>
+          
+                        <li class="default open">
+          
+                          <div class="link"><i class="fa fa-chevron-up"></i>電物</div>
+          
+                          <ul class="submenu-defalt">
+                            <li>
+                              <div class="flex-wrap  flex_wrap justify-between align_center ">
+                                
+                                <div class="mb10 wd32_8 wd100_xs">
+                                  <div class="information_title">電物日</div>
+                                  <div Class="information_contents" style="margin-bottom:0">
+                                    <apex:outputText value="{0, date, yyyy/MM/dd}" >
+                                      <apex:param value="{! screenTargetRecord.dembutsuDate}"/>
+                                    </apex:outputText>
+                                  </div>
+                                </div>
+          
+                                <div class="mb10 wd32_8 wd100_xs">
+                                  <div class="information_title">電物ステータス</div>
+                                  <div Class="information_contents" style="margin-bottom:0">
+                                    <apex:outputText value="{! screenTargetRecord.dembutsuStatus}"/>
+                                  </div>
+                                </div>
+          
+                                <div class="mb10 wd32_8 wd100_xs">
+                                  <div class="information_title">電物担当者</div>
+                                  <div Class="information_contents" style="margin-bottom:0">
+                                    <apex:outputText value="{! screenTargetRecord.dembutsuStaff}"/>
+                                  </div>                                
+                                </div>
+          
+                                <div class="mb10 wd100">
+                                  <div class="information_title">電物メモ</div>
+                                  <div Class="information_contents" style="margin-bottom:0">
+                                    <apex:outputText value="{! screenTargetRecord.dembutsuEventMemo}"/>
+                                  </div>  
+                                </div>
+          
+                              </div>
+                            </li>
+                          </ul>
+                        </li>
+          
+                        <li class="default open">
+          
+                          <div class="link"><i class="fa fa-chevron-up"></i>クローリング</div>
+          
+                          <ul class="submenu-defalt">
+                            <li>
+                              <div class="flex-wrap  flex_wrap justify-between align_center ">
+
+                                <div class="mb10 wd32_8 wd100_xs">
+                                  <div class="information_title">取込先</div>
+                                  <div>
+                                    <apex:selectList styleClass="form-control" value="{!screenTargetRecord.importType}" size="1" >
+                                        <apex:selectOptions value="{!SelectImportTypeList}"/>
+                                    </apex:selectList>
+                                  </div>
+                                </div>
+          
+                                <div class="mb10 wd32_8 wd100_xs">
+                                  <div class="information_title">メンテナンス業者コード</div>
+                                  <div Class="information_contents" style="margin-bottom:0">
+                                    <apex:outputText value="{! screenTargetRecord.maintenanceSupplierCode}"/>
+                                  </div>                                  
+                                </div>
+          
+                                <div class="mb10 wd32_8 wd100_xs"></div>
+                                <div class="mb10 wd32_8 wd100_xs"></div>
+                              </div>
+                            </li>
+                          </ul>
+                        </li>
+          
+                      </ul>
+          
+                      </div>
+                      <!-- 関連タブ -->
+                      <div id="panel2" class="tab_panel">
+        
+                        <ul id="accordion2" class="accordion-defalt">
+
+                          <li class="default open ">
+                            <div class="link posi_re"><i class="fa fa-chevron-up"></i>保証会社プラン
+                              <div class="ab_btn">
+                                <div class="flex-wrap">
+                                  <!-- 一括変更のsubmitイベントはjsより停止 -->
+                                  <apex:commandButton value="一括変更" id="bulkChgGuaranteeidCorp" styleClass="btn-w-2 btn-w-2-r blue section-btn" disabled="{! isOpenError }" 
+                                                      onclick="openSupplierPlanBulkChgGuaranteeidCorpProcess();" />
+                                  <apex:commandButton value="追加" styleClass="btn-w-2  btn-w-2-r blue " style="padding:0px 14px;"  action="{! openGuaranteeModal}" onclick="blockUi();" disabled="{!isOpenError}" 
+                                                      rerender="guaranteeList,dialogPanel2" status="loadComponent" oncomplete="unblockUi(); jQuery('#dialog-modal2').dialog('open');" />
+                                  <apex:commandButton value="削除" styleClass="btn-w-2  btn-w-2-l blue " style="padding:0px 14px;" reRender="dummy" disabled="{!isOpenError}" 
+                                                      onclick="checkDelete('deleteGuarantee')" />
+                                </div>
+                              </div>
+                            </div>
+
+                            <apex:outputPanel id="guaranteeList">
+                              <ul class="submenu-defalt">
+                              <li>
+                                <table class="gray mb30" style="height:277px;">
+                                  <tbody>
+                                    <tr>
+                                      <th class="wd0 "></th>
+                                      <th class="wd7">保証会社名</th>
+                                      <th class="wd6">プラン名</th>
+                                      <th class="wd7">保証内容</th>
+                                      <th class="wdlast">保証備考</th>
+                                    </tr>
+
+                                    <apex:variable var="num" value="0" />
+                                    <apex:repeat value="{!screenGuaranteeList}" var="D" >
+                                      <tr>
+                                        <td><apex:inputCheckbox id="panel2_r_1" value="{! D.guaranteeCheck}"/><apex:outputLabel for="panel2_r_1" styleClass="serach_check3"></apex:outputLabel></td>
+                                        <td>
+                                          <apex:commandLink reRender="dummy" onclick="showPage('GF101002View', '', 'true', 'id={! screenGuaranteeList[VALUE(num)].guaranteeItem.Account__c}')" value="{! D.guaranteeItem.Account__r.Name}"/>
+                                        </td>
+                                        <td>{! D.guaranteeItem.ItemName__c}</td>
+                                        <td>
+                                          <apex:outputField value="{! D.guaranteeItem.AssuranceContent__c}"/>
+                                          <apex:outputText value="{! D.assuranceContentPlus}" escape="false"/>
+                                        </td>
+                                        <td>{! D.guaranteeItem.Remarks__c}</td>
+                                      </tr>
+                                    <apex:variable var="num" value="{!VALUE(num)+1}" />
+                                    </apex:repeat>
+              
+                                  </tbody>
+          
+                                </table>
+          
+                              </li>
+          
+                              </ul>
+                            </apex:outputPanel>
+                          </li>
+        
+                          <li class="default open ">
+                            <div class="link posi_re"><i class="fa fa-chevron-up"></i>火災保険会社プラン
+                              <div class="ab_btn">
+                                <div class="flex-wrap">
+                                  <!-- 一括変更のsubmitイベントはjsより停止 -->
+                                  <apex:commandButton value="一括変更" id="bulkChgFireInsuranceCorp" styleClass="btn-w-2 btn-w-2-r blue section-btn" disabled="{! isOpenError }" 
+                                                      onclick="openSupplierPlanBulkChgFireInsuranceCorpProcess();" />
+                                  <apex:commandButton value="追加" styleClass="btn-w-2  btn-w-2-r blue " style="padding:0px 14px;"  action="{! openFireModal}" onclick="blockUi();" disabled="{!isOpenError}" 
+                                                      rerender="fire,dialogPanel3" status="loadComponent" oncomplete="unblockUi(); jQuery('#dialog-modal3').dialog('open');" />
+                                  <apex:commandButton value="削除" styleClass="btn-w-2  btn-w-2-l blue " style="padding:0px 14px;" reRender="dummy" disabled="{!isOpenError}" 
+                                                      onclick="checkDelete('deleteFire')" /> 
+                                </div>
+                              </div>
+                            </div>
+
+                          <apex:outputPanel id="fire">
+                            <ul class="submenu-defalt">
+                              <li>
+                                <table class="gray mb30" style="height:270px;">
+                                  <tbody>
+
+                                    <tr>
+                                      <th class="wd0"></th>
+                                      <th class="wd7">火災保険会社名</th>
+                                      <th class="wd6">プラン名</th>
+                                      <th class="wd7">保険内容</th>
+                                      <th class="wdlast">保証備考</th>
+                                    </tr>
+  
+                                    <apex:variable var="num" value="0" />
+                                    <apex:repeat value="{!screenFireList}" var="D" >
+                                      <tr>
+                                        <td><apex:inputCheckbox id="panel2_r_1" value="{! D.fireCheck}"/><apex:outputLabel for="panel2_r_1" styleClass="serach_check3"></apex:outputLabel></td>
+                                        <td>
+                                          <apex:commandLink reRender="dummy" onclick="showPage('GF801002View', '', 'true', 'id={! screenfireList[VALUE(num)].fireItem.Account__c}')" value="{! D.fireItem.Account__r.Name}"/>
+                                        </td>
+                                        <td>{! D.fireItem.ItemName__c}</td>
+                                        <td><apex:outputField value="{! D.fireItem.FireInsurance__c}"/></td>
+                                        <td>{! D.fireItem.Remarks__c}</td>
+                                      </tr>
+                                    <apex:variable var="num" value="{!VALUE(num)+1}" />
+                                    </apex:repeat>
+
+                                  </tbody>
+                                </table>
+                              </li>
+                            </ul>
+                          </apex:outputPanel>
+                          
+                          </li>
+        
+                          <li class="default open ">      
+                            <div class="link posi_re"><i class="fa fa-chevron-up"></i>管理会社指定商品
+                              <div class="ab_btn">
+                                <div class="flex-wrap">
+                                  <!-- 一括変更のsubmitイベントはjsより停止 -->
+                                  <apex:commandButton value="一括変更" id="bulkChgManaCorpItem" styleClass="btn-w-2 btn-w-2-r blue section-btn" disabled="{! isOpenError }" 
+                                                      onclick="openSupplierPlanBulkChgManaCorpItemProcess();" />
+                                  <apex:commandButton value="追加" styleClass="btn-w-2  btn-w-2-r blue " style="padding:0px 14px;"  action="{! openManagementCompanyItemModal}" onclick="blockUi();" disabled="{!isOpenError}" 
+                                                      status="loadComponent" oncomplete="unblockUi(); jQuery('#dialog-modal4').dialog('open');" reRender="managementCompanyItem,dialogPanel4" />
+                                  <apex:commandButton value="削除" styleClass="btn-w-2  btn-w-2-l blue " style="padding:0px 14px;" disabled="{!isOpenError}" 
+                                                      onclick="checkDelete('deleteManaComItem')" reRender="dummy" />
+                                </div>
+                              </div>
+                            </div>
+        
+                          <apex:outputPanel id="managementCompanyItem">
+                            <ul class="submenu-defalt">
+                            <li>
+        
+                              <table class="gray mb30" style="height:270px;">
+                                <tbody>
+
+                                  <tr>
+                                    <th class="wd0"></th>
+                                    <th class="wd7">商品名</th>
+                                    <th class="wd6">金額/税</th>
+                                    <th class="wdlast">支払区分</th>
+                                  </tr>
+
+                                  <apex:variable var="num" value="0" />
+                                  <apex:repeat value="{!screenManaComItemList}" var="D" >
+                                    <tr>
+                                      <td><apex:inputCheckbox id="panel2_r_1" value="{! D.manaComItemCheck}"/><apex:outputLabel for="panel2_r_1" styleClass="serach_check3"></apex:outputLabel></td>
+                                      <td>
+                                        <apex:commandLink value="{! D.manaComItemRecord.ItemName__c}" action="{! editManagementCompanyItemModal}" reRender="managementCompanyItem,dialogPanel4" onclick="blockUi();"
+                                                          status="loadComponent" oncomplete="unblockUi(); jQuery('#dialog-modal4').dialog('open');">
+                                          <apex:param value="{!VALUE(num)}" name="manaComItemIndex" assignTo="{!manaComItemIndex}" />
+                                        </apex:commandLink>
+                                      </td>
+
+                                      <td><apex:outputText value="{! D.manaComItemAmount} / {! D.manaComItemRecord.TaxType__c}"/></td>
+                                      <!--<td></td>-->
+                                      <td>{! D.manaComItemRecord.PaymentType__c}</td>
+                                    </tr>
+                                  <apex:variable var="num" value="{!VALUE(num)+1}" />
+                                  </apex:repeat>
+    
+                                </tbody>
+                              </table>
+        
+                            </li>
+        
+                            </ul>
+                          </apex:outputPanel>
+                          </li>
+        
+        
+        
+                          <li class="default open ">
+        
+                            <div class="link"><i class="fa fa-chevron-up"></i>建物名</div>
+                            <ul class="submenu-defalt">
+                              <li>
+                              <!--<form name="stationform">-->
+                                <!-- 外枠 -->
+                                <div class="x_data_area ">
+                                <!-- ロック部分 -->
+                                  <div class="lock_box">
+                                    <table id="buildTableHeader" class="width300 data gray scrollableHidden" style="height:304px;"
+                                            onscroll="linkScrollY(this, 'buildTable');">
+                                    <!-- <col style="width: 10%;" /> -->
+                                      <tr>
+                                        <th class="wd0"></th>
+                                        <th class="r_none">建物情報</th>
+                                      </tr>
+                                      <apex:variable var="num" value="0" />
+                                      <apex:repeat value="{! buildingList}" var="D" > 
+                                        <tr>
+                                          <td class="r_none text-center">{!VALUE(num)+1}</td>
+                                          <td class="r_none">
+                                            <apex:commandLink reRender="dummy" onclick="showPage('GA104003View', '', 'true', 'id={! buildingList[VALUE(num)].id}')" value="{! D.Name}"/>
+                                          </td>
+                                        </tr>
+                                      <apex:variable var="num" value="{!VALUE(num)+1}" />
+                                      </apex:repeat>
+                                    </table>
+                                  </div>
+                      
+                                  <!-- /ロック部分 -->
+                        
+                                  <!-- 横スクロール部分 -->
+                                  <div class="x_scroll_box" style="overflow-x: hidden;">
+                                    <table id="buildTable" class="width2500 data gray" style="height:323px;"
+                                            onscroll="linkScrollY(this, 'buildTableHeader');">
+                                      <col style="width: 10%;" />
+                                      <col style="width: 10%;" />
+                                      <col style="width: 10%;" />
+                                      <col style="width: 10%;" />
+
+                                      <tr>
+                                        <th class="wd7">住所</th>
+                                        <th class="wd5">構造</th>
+                                        <th class="wd4">築年</th>
+                                        <th class="wd5">最寄駅</th>
+                                        <th class="wdlast">駅徒歩</th>
+                                      </tr>
+                                      
+                                      <apex:variable var="num" value="0" />
+                                      <apex:repeat value="{! buildingList}" var="D" > 
+                                        <tr>
+                                          <td>{! D.Address__c}</td> 
+                                          <td>{! D.Structure__c}</td>
+                                          <td>{! D.BuildingYMFormat__c}</td>
+                                          <td>{! D.Station1__r.Name}</td>
+                                          <td>{! D.StationWalkTimeFormat1__c}</td>
+                                        </tr>
+                                        <apex:variable var="num" value="{!VALUE(num)+1}" />
+                                      </apex:repeat>
+                                    </table>
+              
+                                  </div>
+                                
+                                <!-- /横スクロール部分 -->                        
+                                </div>
+                              <!-- /外枠 -->
+                              <!--</form>-->
+                              </li>
+                            </ul>
+                          </li>
+
+                        </ul>
+                      </div><!--関連タブおわり-->
+
+					<!-- ポータル掲載設定タブ -->
+					<div id="panel3" class="tab_panel">
+						<!-- ▼ 2022.04.06 CHINTAI対応にて順番並び変え -->
+                        <div>
+                        	<apex:inputCheckbox id="portalPostingSettings3" value="{! screenTargetRecord.suumoPressBan}" />
+                          	<apex:outputLabel for="portalPostingSettings3" styleClass="serach_check" >SUUMO掲載不可</apex:outputLabel>
+                        </div>
+                        <div>
+                          	<apex:inputCheckbox id="portalPostingSettings2" value="{! screenTargetRecord.homesPressBan}" />
+                          	<apex:outputLabel for="portalPostingSettings2" styleClass="serach_check" >HOME'S掲載不可</apex:outputLabel>
+                        </div>
+                        <div>
+                          	<apex:inputCheckbox id="portalPostingSettings1" value="{! screenTargetRecord.atHomePressBan}" />
+                          	<apex:outputLabel for="portalPostingSettings1" styleClass="serach_check" >at home掲載不可</apex:outputLabel>
+                        </div>
+						<!-- ▲ 2022.04.06 CHINTAI対応にて順番並び変え -->
+						<!-- ▼ 2022.04.06 CHINTAI対応により追記 -->
+                        <div>
+                          	<apex:inputCheckbox id="portalPostingSettings5" value="{! screenTargetRecord.chintaiPressBan}" />
+                          	<apex:outputLabel for="portalPostingSettings5" styleClass="serach_check" >CHINTAI掲載不可</apex:outputLabel>
+                        </div>
+						<!-- ▲ 2022.04.06 CHINTAI対応により追記 -->
+                        <div>
+                          	<apex:inputCheckbox id="portalPostingSettings4" value="{! screenTargetRecord.ourHpPressBan}" />
+                          	<apex:outputLabel for="portalPostingSettings4" styleClass="serach_check" >自社HP掲載不可</apex:outputLabel>
+                        </div>
+					</div><!-- ポータル掲載設定タブおわり -->
+        
+                  </div>
+                </div>
+      
+              </div>
+      
+              <div class="flex-wrap justify-center flex-xs-xolumn  mt60">
+    
+                <apex:commandButton styleClass="btn  btn-cancel text-center mauto_xs wd30 ml5 mr5 modal " value="キャンセル" oncomplete="closePage()"/>
+                <apex:commandButton styleClass="btn btn200 btn-primary text-center mauto_xs wd30 ml5 mr5 modal " value="保存" reRender="dummy" disabled="{!isOpenError}" 
+                                    onclick="checkSave()" id="save"/>
+  
+              </div>
+            </section>
+          </section>
+          </article>
+        </main>
+    <apex:outputPanel id="js">
+      <script language="javascript" type="text/javascript">
+          //初期フォーカスを外す
+          beenFocused = true;
+          $(function () {
+              var Accordion = function (el, multiple) {
+                  this.el = el || {};
+                  this.multiple = multiple || false;
+                  
+                  // Variables privadas
+                  var links = this.el.find('.link');
+                  // Evento
+                  links.off('click');//重複登録を防ぐ
+                  links.on('click', { el: this.el, multiple: this.multiple }, this.dropdown)
+                  
+                  // 追加（ボタンでは効かないように）
+                  var btns = links.find('.ab_btn');
+                  btns.on('click', function(e){return false;})
+                  
+              }
+              
+              Accordion.prototype.dropdown = function (e) {
+                  var $el = e.data.el;
+                  $this = $(this),
+                      $next = $this.next();
+                  
+                  $next.slideToggle();
+                  $this.parent().toggleClass('open');
+                  
+              }
+              
+              var accordion = new Accordion($('#accordion'),  false);
+              var accordion = new Accordion($('#accordion2'), false);
+
+               /**
+                * 保証会社プランの一括変更ボタンsubmit制御
+                * ※ActionFunctionの描画処理との順序が入れ替わる為、ボタン押下時の描画処理を停止
+                **/
+               $("[id$=bulkChgGuaranteeidCorp]").on('click', function() {
+                   return false;
+               });
+
+              /**
+               * 火災保険会社プランの一括変更ボタンsubmit制御
+               * ※ActionFunctionの描画処理との順序が入れ替わる為、ボタン押下時の描画処理を停止
+               **/
+              $("[id$=bulkChgFireInsuranceCorp]").on('click', function() {
+                  return false;
+              });
+
+              /**
+               * 管理会社指定商品の一括変更ボタンsubmit制御
+               * ※ActionFunctionの描画処理との順序が入れ替わる為、ボタン押下時の描画処理を停止
+               **/
+              $("[id$=bulkChgManaCorpItem]").on('click', function() {
+                  return false;
+              });
+          });
+          
+          $(function () {
+              $('#btn').on('click', function (e) {
+                  
+                  var textList = document.getElementById('accordion');
+                  let elements = textList.getElementsByTagName('li');
+                  Array.prototype.forEach.call(elements, function (element) {
+                      element.classList.remove('open', 'default');
+                      $('.submenu-defalt').fadeOut()
+                  });
+              });
+          });
+
+          // モーダル幅の設定用
+          var clientWidth = 0; 
+          // モーダルの高さ設定
+          var clientHeight = 0;
+
+          //郵便番号ダイアログを表示
+          jQuery(function () {
+              if(document.body.clientWidth > 800){
+                  clientWidth = 800;
+              }else{
+                  clientWidth = document.body.clientWidth;
+              }
+              if(document.body.clientHeight > 850){
+                  clientHeight = 850;
+              }else{
+                  clientHeight = document.body.clientHeight;
+              }
+              jQuery("#dialog-modal1").dialog({
+                  modal: true,
+                  autoOpen: false,
+                  width: clientWidth,
+                  height: clientHeight,
+              });
+          });
+          
+          //郵便番号モーダルを閉じる際の処理
+          function closeGA102006View() {
+              jQuery("#dialog-modal1").dialog("close");
+              closeModal();
+          }
+
+          //保証プランダイアログを表示
+          jQuery(function () {
+              if(document.body.clientWidth > 1000){
+                  clientWidth = 1000;
+              }else{
+                  clientWidth = document.body.clientWidth;
+              }
+             
+              jQuery("#dialog-modal2").dialog({
+                  modal: true,
+                  autoOpen: false,
+                  width: clientWidth,
+              });
+          });
+          
+          //保証プランモーダルを閉じる際の処理
+          function closeGD101003View() {
+              jQuery("#dialog-modal2").dialog("close");
+              closeGuaranteeModal();
+          }
+
+          //火災保険プランダイアログを表示
+          jQuery(function () {
+              if(document.body.clientWidth > 1000){
+                  clientWidth = 1000;
+              }else{
+                  clientWidth = document.body.clientWidth;
+              }
+              jQuery("#dialog-modal3").dialog({
+                  modal: true,
+                  autoOpen: false,
+                  width: clientWidth,
+              });
+          });
+          
+          //火災保険プランモーダルを閉じる際の処理
+          function closeGD101004View() {
+              jQuery("#dialog-modal3").dialog("close");
+              closeFireModal();
+          }
+
+          //管理会社指定商品プランダイアログを表示
+          jQuery(function () {
+              if(document.body.clientWidth > 1000){
+                  clientWidth = 1000;
+              }else{
+                  clientWidth = document.body.clientWidth;
+              }
+              jQuery("#dialog-modal4").dialog({
+                  modal: true,
+                  autoOpen: false,
+                  width: clientWidth,
+              });
+          });
+          
+          //管理会社指定商品プランダイアログを表示
+          function closeGD101002Modal1View() {
+              jQuery("#dialog-modal4").dialog("close");
+              closeManagementCompanyItemModal();
+          }
+
+          /**
+           * 業者プラン一括変更画面の設定
+          **/
+          $(function () {
+              $("#dialog-modal5").dialog({
+                  modal    : true,
+                  autoOpen : false,
+                  width    : document.documentElement.clientWidth,
+                  height   : document.documentElement.clientHeight
+              });
+          });
+
+          /**
+           * 業者プラン一括変更画面クローズ処理
+          **/
+          function closeGD101002Modal2View() {
+              closeSupplierPlanBulkChg();
+          }
+
+          //カナ自動入力
+          $(document).ready(
+            function() {               
+                $.fn.autoKana('.Name', '.NameKana', {
+                    katakana : true  //true：カタカナ、false：ひらがな（デフォルト）
+                });           
+            });
+
+
+        //削除確認メッセージ
+        async function checkDelete(mode){
+            var message = "{! MSG_COM_V_DELETE}";
+            if (await showConfirm(message)) {
+                blockUi();
+                if (mode == 'deleteButton') {
+                    deleteButton();
+                } else if (mode == 'deleteGuarantee') {
+                    deleteGuarantee();
+                } else if (mode == 'deleteFire') {
+                    deleteFire();
+                } else if (mode == 'deleteManaComItem') {
+                    deleteManaComItem();
+                }
+            }
+        }
+        
+        //保存確認メッセージ
+        async function checkSave(){
+            var message = "{! MSG_COM_V_SAVE}";
+            if (await showConfirm(message)) {
+                blockUi();
+                save();
+            }
+        }
+        
+        //削除完了メッセージ
+        async function alertDeleteFinish(){
+            //完了メッセージ
+            await showAlert("{! MSG_COM_I_DELETE}");
+
+            //画面を閉じる
+            closePage();
+        } 
+        
+        //保存完了メッセージ
+        async function alertSaveFinish(message, isSaveFinish){
+            //完了メッセージ
+            await showAlert2(message);
+          
+            //物件更新がすべて完了している場合
+          if(isSaveFinish){
+            //画面を閉じる
+            closePage();
+          }
+            
+        }
+        
+        /**
+         * 保証会社プランの業者プラン一括変更画面起動処理
+        **/
+        async function openSupplierPlanBulkChgGuaranteeidCorpProcess() {
+
+            // 明細のチェック件数を取得
+            let count = $('[id$=guaranteeList] [id$=panel2_r_1]:checked').length;
+
+            // 選択件数チェック
+            if (count != 1) {
+                await showAlert("{! MSG_SELECTED_ONE_GUARANTEEID_COMPANY }");
+                return false;
+            }
+
+            // 業者プラン一括変更画面を起動
+            openSupplierPlanBulkChgGuaranteeidCorp();
+            blockUi();
+                        
+            return true;
+        }
+        
+        /**
+         * 火災保険会社プランの業者プラン一括変更画面起動処理
+        **/
+        async function openSupplierPlanBulkChgFireInsuranceCorpProcess() {
+
+            // 明細のチェック件数を取得
+            let count = $('[id$=fire] [id$=panel2_r_1]:checked').length;
+
+            // 選択件数チェック
+            if (count != 1) {
+                await showAlert("{! MSG_SELECTED_ONE_FIRE_INSURANCE_COMPANY }");
+                return false;
+            }
+
+            // 業者プラン一括変更画面を起動
+            openSupplierPlanBulkChgFireInsuranceCorp();
+            blockUi();
+                        
+            return true;
+        }
+        
+        /**
+         * 管理会社指定商品の業者プラン一括変更画面起動処理
+        **/
+        async function openSupplierPlanBulkChgManaCorpItemProcess() {
+
+            // 明細のチェック件数を取得
+            let count = $('[id$=managementCompanyItem] [id$=panel2_r_1]:checked').length;
+
+            // 選択件数チェック
+            if (count != 1) {
+                await showAlert("{! MSG_SELECTED_ONE_MANAGEMENT_COMPANY_ITEM }");
+                return false;
+            }
+
+            // 業者プラン一括変更画面を起動
+            openSupplierPlanBulkChgManaCorpItem();
+            blockUi();
+                        
+            return true;
+        }
+
+      </script>
+    </apex:outputPanel>
+    
+    </body>
+    <!-- actionfunction -->
+    <apex:actionFunction action="{!closeModal}" name="closeModal" rerender="basicInfo" />   
+    <apex:actionFunction action="{!closeGuaranteeModal}" name="closeGuaranteeModal" rerender="guaranteeList" />        
+    <apex:actionFunction action="{!closeFireModal}" name="closeFireModal" rerender="fire" />        
+    <apex:actionFunction action="{!closeManagementCompanyItemModal}" name="closeManagementCompanyItemModal" rerender="managementCompanyItem" />
+    <apex:actionFunction action="{! closeSupplierPlanBulkChg }" name="closeSupplierPlanBulkChg" rerender="guaranteeList, fire, managementCompanyItem" />
+    <apex:actionFunction name="save"              action="{! save}"              oncomplete="unblockUi();if(!{! hasErrorMessage}){alertSaveFinish('{! MSG_COM_I_SAVEBUTTON}', {! isSaveFinish}) }else{gotoTop()}" reRender="messageArea" />
+<!--
+    <apex:actionFunction name="save"              action="{! save}"              oncomplete="if(!{! hasErrorMessage}){alertSaveFinish()}else{gotoTop()}unblockUi();" reRender="messageArea" />
+-->
+    <apex:actionFunction name="deleteButton"      action="{! deleteButton}"      oncomplete="unblockUi();if(!{! hasErrorMessage}){alertDeleteFinish()}else{gotoTop()}" reRender="messageArea" />
+    <apex:actionFunction name="deleteGuarantee"   action="{! deleteGuarantee}"   oncomplete="unblockUi();if({! hasErrorMessage}){gotoTop()}" reRender="guaranteeList,messageArea" />
+    <apex:actionFunction name="deleteFire"        action="{! deleteFire}"        oncomplete="unblockUi();if({! hasErrorMessage}){gotoTop()}" reRender="fire,messageArea" />
+    <apex:actionFunction name="deleteManaComItem" action="{! deleteManaComItem}" oncomplete="unblockUi();if({! hasErrorMessage}){gotoTop()}" reRender="managementCompanyItem,messageArea" />
+
+    <apex:actionFunction name="openSupplierPlanBulkChgGuaranteeidCorp"   action="{! openSupplierPlanBulkChgGuaranteeidCorp }"   oncomplete="unblockUi(); $('#dialog-modal5').dialog('open')" reRender="js, dialogPanel5, messageArea" />
+    <apex:actionFunction name="openSupplierPlanBulkChgFireInsuranceCorp" action="{! openSupplierPlanBulkChgFireInsuranceCorp }" oncomplete="unblockUi(); $('#dialog-modal5').dialog('open')" reRender="js, dialogPanel5, messageArea" />
+    <apex:actionFunction name="openSupplierPlanBulkChgManaCorpItem"      action="{! openSupplierPlanBulkChgManaCorpItem }"      oncomplete="unblockUi(); $('#dialog-modal5').dialog('open')" reRender="js, dialogPanel5, messageArea" />
+  </apex:form>
+
+    <!-- 【モーダルダイアログ郵便番号】 -->
+  <div id="dialog-modal1" title="">
+    <apex:outputPanel id="dialogPanel1">
+        <c:GA102006View ParameterClass="{!GA102006Parameter}" />
+    </apex:outputPanel>
+  </div>
+    <!-- 【モーダルダイアログ保証プラン】 -->
+    <div id="dialog-modal2" title="">
+      <apex:outputPanel id="dialogPanel2">
+          <c:GD101003View ParameterClass="{!GD101003Parameter}" />
+      </apex:outputPanel>
+    </div>
+    <!-- 【モーダルダイアログ火災保険プラン】 -->
+    <div id="dialog-modal3" title="">
+      <apex:outputPanel id="dialogPanel3">
+          <c:GD101004View ParameterClass="{!GD101004Parameter}" />
+      </apex:outputPanel>
+    </div>
+    <!-- 【モーダルダイアログ管理会社指定商品】 -->
+    <div id="dialog-modal4" title="">
+      <apex:outputPanel id="dialogPanel4">
+          <c:GD101002Modal1View ParameterClass="{!GD101002Modal1Parameter}" />
+      </apex:outputPanel>
+    </div>
+    <!-- 【モーダルダイアログ業者プラン一括変更】 -->
+    <div id="dialog-modal5">
+      <apex:outputPanel id="dialogPanel5">
+          <c:GD101002Modal2View ParameterClass="{!GD101002Modal2Parameter}" />
+      </apex:outputPanel>
+    </div>
+
+</apex:page>

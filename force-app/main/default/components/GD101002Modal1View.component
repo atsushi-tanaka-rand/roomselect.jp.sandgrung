@@ -1,0 +1,88 @@
+<!--管理会社指定商品選択画面-->
+
+<apex:component controller="GD101002Modal1Controller">
+    
+    <apex:attribute name="ParameterClass" type="GD101002Modal1ParameterClass" assignTo="{!Parameter}" description="key" />
+    
+    <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/reset.min.css')}" />
+    <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/foundation.css')}" />
+    <apex:stylesheet value="https://use.fontawesome.com/releases/v5.0.6/css/all.css" />
+    <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/style.css')}" />
+    <apex:stylesheet value="{!URLFOR($Resource.external_file, 'external_file/common_style.css')}" />
+    <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery-3.6.0.min.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery.blockUI.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/common_screen_util.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/input_rules.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.designer_file, 'designer_file/js/modaal.js')}" />
+        
+    <apex:form id="GD101002Modal1Form">
+        <apex:pageBlock rendered="{!Parameter.noFirst}">
+            <apex:outputText rendered="{!init}" />
+            
+            <body style="background-color:#ffffff;">
+                <main id="ga102003">
+                    <apex:pageMessages id="error"/>
+                    <article>
+
+                        <div id="modal" style="">
+      
+                            <div class="modal-body">
+                              <section style="display:flex">
+                                <div class="mb10">
+                                  <div class="information_title fontb font16">管理会社指定商品登録</div>
+                                </div>
+                                <apex:commandButton style=" visibility:hidden;" rerender="dummy"/> 
+                              </section>
+                              
+                
+                              <div class="flex-wrap flex_wrap justify-between flex-xs-xolumn  mt30">
+                
+                                <div class="wd47 mb10">
+                                  <div class="information_title">商品名</div>
+                                  <apex:input value="{! screenMciRecord.itemName}" styleClass="form-control" onchange="correctInputRules(this,'text', '255')"/>
+                                </div>
+                
+                                <div class="wd47 mb10">
+                                  <div class="information_title">金額</div>
+                                  <apex:input value="{! screenMciRecord.amount}" styleClass="form-control" onchange="correctInputRules(this,'currency', '7','0')"/>
+                                </div>
+                
+                                <div class="wd47 mb10">
+                                  <div class="information_title">税区分</div>
+                                  <apex:selectList value="{! screenMciRecord.taxType}" size="1" styleClass="form-control">
+                                    <apex:selectOptions value="{! SelectTaxTypeList}"/>
+                                  </apex:selectList>   
+                                </div>
+                
+                                <div class="wd47 mb10">
+                                  <div class="information_title">支払区分</div>
+                                  <apex:selectList value="{! screenMciRecord.paymentType}" size="1" styleClass="form-control">
+                                    <apex:selectOptions value="{! SelectPaymentTypeList}"/>
+                                  </apex:selectList>   
+                                </div>
+
+                                <!--
+                                <div class="wd47 mb10">
+                                  <div class="information_title">商品内容</div>
+                                  <input type="text"  class="form-control"/>
+                                </div>
+                                -->
+                
+                              </div>
+                            </div>
+                
+                            <div class="modal-footer">
+                              <div class="flex-wrap justify-around flex_wrap mt30">
+                                <apex:commandButton value="登録" styleClass="mb10 message btn btn-primary btn-submit text-center" action="{! register}" onclick="blockUi();" 
+                                                    oncomplete=" if(!{! hasErrorMessage}){closeGD101002Modal1View()}unblockUi();" reRender="error"/>
+                              </div>
+                            </div>
+                
+                        </div>
+
+                    </article>
+                </main>
+            </body>
+        </apex:pageBlock>
+    </apex:form>
+</apex:component>

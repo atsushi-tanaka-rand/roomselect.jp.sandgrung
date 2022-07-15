@@ -1,0 +1,73 @@
+<!--物件メンテナンス履歴-->
+<apex:component controller="GA104006Modal4Controller">
+    <apex:attribute name="ParameterClass" type="GA104006Modal4ParameterClass" assignTo="{!Parameter}" description="key" />
+    <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery-3.6.0.min.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery.blockUI.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/common_screen_util.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.designer_file, 'designer_file/js/modaal.js')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/reset.min.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/foundation.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/style.css')}"/>
+    <apex:stylesheet value="https://use.fontawesome.com/releases/v5.0.6/css/all.css"/>
+    <body style="background-color:#ffffff;">
+
+        <apex:form id="GA104006Modal4Form" >
+            <apex:pageBlock rendered="{!parameter.noFirst}">
+                <apex:outputText rendered="{!init}" />
+                <apex:pageMessages />
+                <div class="modal-header">
+                        <h4 class="modal-title fontb mb20">物件メンテナンス履歴 </h4>               
+                </div>
+
+                <table class="gray mb30 tableSize">
+                    <tbody>
+                        <tr>
+                            <th class="wd1 border-r-none"></th>
+                            <th class="wd5">メンテナンス日</th>
+                            <th class="wd3">区分</th>
+                            <th class="wd5">入力者</th>
+                            <th class="wdlastPropertyHistoryModal">メンテナンスコメント</th>
+                        </tr>
+                        <!-- メンテナンス履歴レコード START -->
+                        <apex:variable var="propertyMaintenanceHistoryIndex" value="0" />
+                        <apex:repeat value="{!Parameter.propertyMaintenanceHistoryList}" var="propertyMaintenanceHistory">
+                            <tr>
+                                <td>
+                                    <!-- 行番号 -->
+                                    <apex:outputText value="{!VALUE(propertyMaintenanceHistoryIndex)+1}" />
+                                </td>
+                                <td>
+                                    <!-- メンテナンス日 -->
+                                    <apex:outputField value="{!propertyMaintenanceHistory.CreatedDate}" />
+                                </td>
+                                <td>
+                                    <!-- メンテナンス区分 -->
+                                    <apex:outputText value="{!propertyMaintenanceHistory.MaintenanceType__c}" />
+                                </td>
+                                <td>
+                                    <!-- 入力者 -->
+                                    <apex:outputText value="{!propertyMaintenanceHistory.MaintenanceStaff__r.Name}" />
+                                </td>
+                                <td>
+                                    <!-- メンテナンスコメント -->
+                                    <apex:outputText value="{!propertyMaintenanceHistory.MaintenanceCommentArea__c}" escape="false" styleClass="nowrap"/>
+                                </td>
+                            </tr>
+                            <apex:variable var="propertyMaintenanceHistoryIndex"
+                                           value="{!VALUE(propertyMaintenanceHistoryIndex)+1}" />
+                        </apex:repeat>
+                        <!-- メンテナンス履歴レコード   END -->
+                    </tbody>
+                </table>
+            </apex:pageBlock>
+            <style>
+                .tableSize {
+                    height: calc(100vh - 150px);
+                }
+                .wdlastPropertyHistoryModal{
+                    min-width:100px;
+                }
+            </style>
+        </apex:form>
+    </body>
+</apex:component>

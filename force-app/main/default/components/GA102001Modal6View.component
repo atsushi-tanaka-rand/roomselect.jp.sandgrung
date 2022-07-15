@@ -1,0 +1,147 @@
+<!--スケジュールボタン-->
+<apex:component controller="GA102001Modal6Controller" allowDML="true">
+    <apex:attribute name="ParameterClass" type="GA102001Modal6ParameterClass" assignTo="{!Parameter}" description="key" />
+    <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery-3.6.0.min.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery.blockUI.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/common_screen_util.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.designer_file, 'designer_file/js/modaal.js')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/reset.min.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/foundation.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/style.css')}"/>
+    <apex:stylesheet value="https://use.fontawesome.com/releases/v5.0.6/css/all.css"/>
+    <body style="background-color:#ffffff;">
+
+        <apex:form id="GA102001Modal6" >
+            <apex:pageBlock rendered="{!parameter.noFirst}">
+                <apex:outputText rendered="{!init}" />
+                <apex:pageMessages />
+                <div class="modal-header">
+                    <!-- ▼ 2021.09.28 問合せNo.521 対応種別との余白、インデントを変更 -->
+                    <h4 class="modal-title fontb mb10">スケジュール </h4>       
+                    <!-- ▲ 2021.09.28 問合せNo.521 -->
+                </div>
+
+                <!-- ▼ 2021.09.28 問合せNo.521 タイトル部との余白、インデントを変更 -->
+                <div class="modal-body">
+                    <div>対応種別<apex:commandButton style="visibility:hidden;" rerender="dummy"/></div>
+                    <apex:selectList styleClass="form-control  mb10" size="1" onchange="blockUi();changeScheduleDetails();" value="{!screenCorrespondDetail.ScheduleDetails}" >
+                        <apex:selectOptions value="{!selectScheduleDetailsList}"/>
+                    </apex:selectList>            
+
+
+                    <div class="information_title">表題</div>
+                    <apex:input value="{!screenCorrespondDetail.SupportedTitle}" styleClass="form-control mb10"  onchange="correctInputRules(this,'text', '255')" />
+
+                    <div class="flex-wrap flex_wrap flex_wrap justify-between align_center">
+
+                        <apex:outputPanel styleClass="mb10 wd100">
+
+                            <div class="flex-wrap align_center wd100_xs justify-between">
+                                <div class="mb10 wd48 ">
+                                    <div class="information_title">開始日時</div>
+                                    <apex:input type="date" value="{!screenCorrespondDetail.StartDate}" html-min="1700-01-01" html-max="4000-12-31"
+                                                onkeydown="dateInputKeydownFocusAdjust(this, event)"
+                                                onblur="clearValidateErrorValue(this)" styleClass="form-control modalStartDate" />
+                                </div>
+                                <div class="mb10 wd48 ">
+                                    <div class="information_title"> 　</div>
+                                    <apex:input type="time" value="{!screenCorrespondDetail.StartDateTime}"
+                                                onkeydown="dateInputKeydownFocusAdjust(this, event)"
+                                                onblur="clearValidateErrorValue(this)" styleClass="form-control modalStartDateTime" />
+                                </div>
+                            </div>
+                            <div class="flex-wrap align_center wd100_xs justify-between">
+                                <div class="mb10 wd48 ">
+                                    <div class="information_title">終了日時</div>
+                                    <apex:input type="date" value="{! screenCorrespondDetail.EndDate}" html-min="1700-01-01" html-max="4000-12-31"
+                                                onkeydown="dateInputKeydownFocusAdjust(this, event)"
+                                                onblur="clearValidateErrorValue(this)" styleClass="form-control modalEndDate" />
+                                </div>
+                                <div class="mb10 wd48 ">
+                                    <div class="information_title">　</div>
+                                    <apex:input type="time" value="{! screenCorrespondDetail.EndDateTime}"
+                                                onkeydown="dateInputKeydownFocusAdjust(this, event)"
+                                                onblur="clearValidateErrorValue(this)" styleClass="form-control modalEndDateTime" />
+                                </div>
+                            </div>
+
+                            <div class="flex-wrap align_center wd100_xs justify-between">
+                                <div class=" mb10 wd48 wd100_xs">
+                                    <div>店舗</div>
+                                        <apex:selectList id="selectShop" styleClass="form-control" size="1" value="{!screenCorrespondDetail.Shop}" disabled="{! !isChoiceStaffFlg }">
+                                            <apex:selectOptions value="{!selectShopList}"/>
+                                            <apex:actionSupport event="onchange" onsubmit="blockUi();" action="{!getShopList}" oncomplete="unblockUi();" reRender="selectStaffList" />    
+                                        </apex:selectList>
+                                </div>
+
+                                <apex:outputPanel id="selectStaffList" layout="block" styleClass="mb10 wd48 wd100_xs">
+                                    <div>担当者</div>
+                                    <apex:selectList id="selectStaff" styleClass="form-control" size="1" value="{!screenCorrespondDetail.Staff}" disabled="{! !isChoiceStaffFlg }"> 
+                                        <apex:selectOptions value="{!selectStaffList}" />
+                                    </apex:selectList>
+                                </apex:outputPanel>
+                            </div>
+
+                            <div class=" mb10 wd100">
+                                <div class="information_title">物件名</div>
+                                <apex:selectList id="selectBuildingName" styleClass="form-control" size="1" value="{!screenCorrespondDetail.BuildingName}">
+                                                <apex:selectOptions value="{!screenFavoritePropertyList}"/>   
+                                            </apex:selectList>
+                            </div>
+                        </apex:outputPanel>
+                <!-- ▲ 2021.09.28 問合せNo.521 -->
+                                        
+                    </div>
+                    <div class="information_title">対応内容</div>
+                    <!-- ▼ 2021.09.28 問合せNo.521 対応内容の高さを変更 -->
+                    <apex:inputTextarea value="{!screenCorrespondDetail.SupportedContent}" onchange="correctInputRules(this,'text',131072)"
+                                                                                            cols="20" rows="15" styleClass="form-control" style="font-size:80%" />
+                    <!-- ▲ 2021.09.28 問合せNo.521 -->
+
+                </div>
+                <div class="modal-footer">
+                    <div class="flex-wrap justify-around flex_wrap">
+                        <!-- ▼ 2021.09.28 問合せNo.521 レスポンシブ時にボタンサイズが変更される不具合の為、変更 -->
+                        <div class="mb10">
+                        <!-- ▲ 2021.09.28 問合せNo.521 -->
+                            <apex:commandButton styleClass="btn btn-submit btn-primary text-center mauto_xs" id="register" value="登録" disabled="{!isOpenError}"
+                                    reRender="dummy" 
+                                    onclick="checkInsert2();" 
+                            />
+                        </div>
+                    </div>
+                </div>
+                <!-- actionfunction -->
+                <apex:actionFunction name="changeScheduleDetails" action="{! changeScheduleDetails}" oncomplete="unblockUi();" reRender="selectShop, selectStaff"/>
+                <apex:actionFunction name="insetdate" action="{!saveData}"                                                                  
+                        oncomplete="if({!hasErrorMessage}){unblockUi();return false;}closeDialogModal8();"
+                        reRender="GA102001Modal6" />
+
+                <apex:outputPanel id="js">
+                    <script language="javascript" type="text/javascript">
+                        //登録確認メッセージ
+                        async function checkInsert2() {
+                            var message = "{! MSG_COM_V_SAVE}";
+                            if (!await showConfirm(message)) {
+                                return false;
+                            }
+                            insetdate();
+                            blockUi();
+                            return true;
+                        }
+                        $(document).ready(
+                            function(){
+                                $('.modalStartDate').val('{! Text(screenCorrespondDetail.StartDate)}'); //なぜか開始日時が入っているので、強制的に上書く
+                                $('.modalStartDateTime').val('{! Text(screenCorrespondDetail.StartDateTime)}'); //なぜか開始日時が入っているので、強制的に上書く
+
+                                $('.modalEndDate').val('{! Text(screenCorrespondDetail.EndDate)}'); //なぜか終了日時が入っているので、強制的に上書く
+                                $('.modalEndDateTime').val('{! Text(screenCorrespondDetail.EndDateTime)}'); //なぜか終了日時が入っているので、強制的に上書く
+                            }
+                        );
+
+                    </script>
+                </apex:outputPanel>
+            </apex:pageBlock>
+        </apex:form>
+    </body>
+</apex:component>

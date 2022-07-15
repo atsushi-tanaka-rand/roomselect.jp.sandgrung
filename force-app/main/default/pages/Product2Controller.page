@@ -1,0 +1,66 @@
+<apex:page standardController="Product2" extensions="ItemKensakuGamenController" tabStyle="Product2" >
+  <head>
+    <style type="text/css">
+      table{
+        width: 100%
+      }
+
+      th{
+        padding: 20px 10px;
+        background-color:ghostwhite; 
+        font-size: 15px;
+        
+        
+      }
+      td{ 
+        padding: 20px 10px;
+      }
+  
+
+    </style>
+  </head>
+    <apex:form >
+      <apex:pageBlock title="商品登録">
+        <apex:pageBlockSection columns="1">
+           <apex:inputField value="{!Product2.Name}"/>
+           <apex:inputField value="{!Product2.Family}"/>
+           <apex:inputField value="{!Product2.ProductCode}"/>
+        </apex:pageBlockSection>
+        <apex:pageBlockButtons location="bottom">
+           <apex:commandButton action="{!save}" value="登録"/>
+        </apex:pageBlockButtons>
+      </apex:pageBlock>
+    </apex:form>
+    <apex:form > 
+        <apex:pageBlock title="商品検索" tabStyle="Product2">
+          <apex:pageBlockSection columns="1">
+             <apex:inputField value="{!conditions.Name}" required="false"/>
+             <apex:inputField value="{!conditions.Family}"/>
+             <apex:inputField value="{!conditions.ProductCode}"/>
+          </apex:pageBlockSection>
+          <apex:pageBlockButtons location="bottom">
+            <apex:commandButton action="{!search}" value="検索開始"/>
+          </apex:pageBlockButtons>
+        </apex:pageBlock>
+    </apex:form>
+    <table style="border-collapse: collapse ;">
+        <thead>
+          <tr>
+            <th>商品ID</th>
+            <th>商品名</th>
+            <th>商品ファミリ</th>
+            <th>商品コード</th>
+          </tr>
+        </thead>
+        <tbody>
+          <apex:repeat value="{!results}" var="a">
+            <tr>
+              <td style="border:1px solid gray;"><apex:outputText value="{!a.Id}"/></td>
+              <td style="border:1px solid gray;"><apex:outputText value="{!a.Name}"/></td>
+              <td style="border:1px solid gray;"><apex:outputText value="{!a.Family}"/></td>
+              <td style="border:1px solid gray;"><apex:outputText value="{!a.Productcode}"/></td>
+            </tr>
+          </apex:repeat>
+        </tbody>
+      </table>
+</apex:page>

@@ -1,0 +1,69 @@
+<!--店舗・地区選択-->
+<apex:component controller="GH201005Controller" >
+    <apex:attribute name="ParameterClass" type="GH201005ParameterClass" assignTo="{!Parameter}" description="key"/>
+    
+    <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery-3.6.0.min.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery.blockUI.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/common_screen_util.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.designer_file, 'designer_file/js/modaal.js')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/reset.min.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/foundation.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/style.css')}"/>
+    <apex:stylesheet value="https://use.fontawesome.com/releases/v5.0.6/css/all.css"/>
+    <body style="background-color:#ffffff;">
+        <main id="gh201005">
+            <article>
+                <section>
+                    <apex:form id="GH201005Form" >
+                        <apex:commandButton style="display:none;" rerender="dummy"/>
+                        <apex:pageBlock rendered="{!Parameter.noFirst}">
+                            <apex:outputText rendered="{!init}" />
+                            <apex:pageMessages />
+                                <section style="display:flex">
+                                    <h1 class="fontb font2rem">地区検索</h1>
+                                    <apex:commandButton style=" visibility:hidden;" rerender="dummy"/> 
+                                </section>
+
+                            <div class="information_title">都道府県</div>             
+                            <div class="flex-wrap align_center">
+                                <apex:selectList value="{! selectedTradeArea}" size="1" styleClass="form-control mr5">
+                                    <apex:selectOptions value="{! TradeAreaList}"/>
+                                    <apex:actionSupport event="onchange" action="{!changeTradeArea}" rerender="GH201005Form" onsubmit="blockUi();" oncomplete="unblockUi();" />
+                                </apex:selectList>
+                            </div>
+
+                            <section>
+                                <table class="gray">
+                                    <tbody>
+                                        <tr>
+                                            <th class="">
+                                                <apex:outputlabel style="width: 200px;" for="sc" value="{! selectedTradeArea}" rendered="{! !isOpenError}" /> 
+                                            </th>
+                                        </tr>
+                                    </tbody>
+                                
+                                    <div class="information_title">地区</div>   
+                                    <tbody style="height:200px; overflow-y:scroll; display:block;" >
+                                        <tr>
+                                            <td>
+                                                <apex:repeat value="{!displayDistrictList}" var="D" >
+                                                    <apex:inputCheckbox id="sc" value="{!D.isSelected}" styleClass="districtCheck" />
+                                                    <apex:outputlabel styleClass="serach_check" style="width: 200px;" for="sc" value="{!D.districtName}" /> 
+                                                </apex:repeat>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                
+                                </table>                                
+                            </section>
+
+                            <div class="btn btn-submit btn-primary text-center " style="margin-top: 20px;">
+                                <apex:commandButton disabled="{! isOpenError}" onclick="blockUi();" action="{!settingSelect}" oncomplete=" if(!{!hasErrorMessage}){closeGH201005View();} unblockUi();" rerender="renderedGH201005, GH201005Form" value="設定" styleClass="btn btn-submit btn-primary modal mb10" />  
+                            </div>
+                        </apex:pageBlock>
+                    </apex:form>
+                </section>
+            </article>
+        </main>
+    </body>
+</apex:component>

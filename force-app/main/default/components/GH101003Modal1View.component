@@ -1,0 +1,115 @@
+<!--新規ユーザー異動画面-->
+
+<apex:component controller="GH101003Modal1Controller">
+
+    <apex:attribute name="ParameterClass" type="GH101003Modal1ParameterClass" assignTo="{!Parameter}" description="key" />
+    
+    <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/reset.min.css')}" />
+    <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/foundation.css')}" />
+    <apex:stylesheet value="https://use.fontawesome.com/releases/v5.0.6/css/all.css" />
+    <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/style.css')}" />
+    <apex:stylesheet value="{!URLFOR($Resource.external_file, 'external_file/common_style.css')}" />
+    <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery-3.6.0.min.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery.blockUI.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/common_screen_util.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/input_rules.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.designer_file, 'designer_file/js/modaal.js')}" />
+    <apex:form id="GD101002Modal1Form">
+        <apex:pageBlock rendered="{!Parameter.noFirst}">
+            <apex:outputText rendered="{!init}" />
+
+            <body style="background-color:#ffffff;">
+                <main id="ga102003">
+                    <apex:pageMessages id="error"/>
+                    <article>
+
+                        <div id="modal" style="">                    
+
+                                
+                                <section style="display:flex">
+                                  <div class="modal-header">
+                                    <div class="modal-title fontb mb20">ユーザー異動登録</div>
+                                  </div>
+                                  <apex:commandButton style=" visibility:hidden;" rerender="dummy"/> 
+                                </section>
+                                <div class="modal-body">
+
+                                <div class="flex-wrap flex_wrap justify-between align-items_end">
+                
+                                <div class="wd49  wd100_xs mb10">
+                                　<div class="information_title">ユーザー名</div>
+                                  <apex:selectList value="{! screenShopTransferRecord.staffName}" size="1" styleClass="form-control">
+                                    <apex:selectOptions value="{! SelectStaffList}"/>
+                                  </apex:selectList>
+                                </div>
+
+                                <div class="wd49  wd100_xs mb10">
+                                  <div class="information_title">組織</div>
+                                  <apex:selectList value="{! screenShopTransferRecord.orgzanizationHierarchy}" size="1" styleClass="form-control">
+                                    <apex:selectOptions value="{! SelectOrgzanizationHierarchyList}"/>
+                                  </apex:selectList>
+                                </div>
+
+                                <div class="wd49  wd100_xs mb10">   
+                                  <div class="information_title">開始日</div>
+                                  <apex:input type="date" value="{! screenShopTransferRecord.startDate}"
+                                            onkeydown="dateInputKeydownFocusAdjust(this, event)"
+                                            onblur="clearValidateErrorValue(this)" html-min="1700-01-01" html-max="4000-12-31" styleClass="form-control modalStartDate" />
+                                </div>
+
+                                <div class="wd49  wd100_xs mb10">   
+                                  <div class="information_title">終了日</div>
+                                  <apex:input type="date" value="{! screenShopTransferRecord.endDate}"
+                                            onkeydown="dateInputKeydownFocusAdjust(this, event)"
+                                            onblur="clearValidateErrorValue(this)" html-min="1700-01-01" html-max="4000-12-31" styleClass="form-control modalEndDate" />
+                                </div>
+
+                                <div class="wd49  wd100_xs mb10">
+                                  <div class="information_title">入退社・異動情報</div>
+                                  <apex:selectList value="{! screenShopTransferRecord.statusType}" size="1" styleClass="form-control">
+                                    <apex:selectOptions value="{! SelectStatusTypeList}"/>
+                                  </apex:selectList>
+                                </div>
+
+                                <div class="wd49  wd100_xs mb10">
+                                  <div class="information_title">役職</div>
+                                  <apex:outputPanel id="StaffTypeCheck" layout="block"
+                                                      styleClass="mb10 pdl7 flex-wrap align_center">
+                                      <apex:selectRadio styleClass="choice_box choice_box_wide"
+                                                         value="{! screenShopTransferRecord.staffType}">
+                                        <apex:selectOptions value="{! SelectStaffTypeList}" />
+                                      </apex:selectRadio>
+                                  </apex:outputPanel>
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <div class="modal-footer">
+                            <div class="flex-wrap justify-around flex_wrap mt30">
+                              <apex:commandButton value="設定" styleClass="mb10 message btn btn-primary btn-submit text-center" action="{! setShopTransferInfo}" onclick="blockUi();" 
+                                                  oncomplete=" if(!{! hasErrorMessage}){closeGH101003Modal1View()}unblockUi();" reRender="error"/>
+                            </div>
+                        </div>
+
+                        </div>
+
+                    </article>
+                </main>
+            </body>
+
+            <script type="text/javascript">
+              $(document).ready(
+                  function() {
+  
+                    //開始日を強制的に上書く
+                    $('.modalStartDate').val('{! Text(screenShopTransferRecord.startDate)}');
+                    //終了日を強制的に上書く
+                    $('.modalEndDate').val('{! Text(screenShopTransferRecord.endDate)}');                     
+   
+                  });
+            </script>
+
+        </apex:pageBlock>
+    </apex:form>
+</apex:component>

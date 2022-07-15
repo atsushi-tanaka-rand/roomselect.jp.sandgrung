@@ -1,0 +1,83 @@
+<!--郵便番号・住所検索モーダル画面-->
+<apex:component controller="GA102006Controller">
+    <apex:attribute name="ParameterClass" type="GA102006ParameterClass" assignTo="{!Parameter}" description="key" />
+    
+    <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery-3.6.0.min.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery.blockUI.js')}" />
+    <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/reset.min.css')}" />
+    <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/foundation.css')}" />
+    <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/style.css')}" />
+    <apex:stylesheet value="https://use.fontawesome.com/releases/v5.0.6/css/all.css" />
+    <apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/common_screen_util.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.designer_file, 'designer_file/js/modaal.js')}" />
+    
+    <apex:form id="GA102006Form">
+        <apex:pageBlock rendered="{!Parameter.noFirst}">
+            <apex:outputText rendered="{!init}" />
+            
+            <body style="background-color:#ffffff;" id="ga102006">
+                <main>
+                    <article>
+                        <apex:pageMessages />
+                        <section class="post-pop">
+                            <section class="mb20" >
+                                <section style="display:flex">
+                                    <h1 class="fontb font2rem">郵便番号・住所検索</h1>
+                                    <apex:commandButton styleClass="btn btn-submit btn-primary" value="検索(非表示))" disabled="{!isOpenError}" 
+                                    onclick="blockUi();" 
+                                    action="{! searchAddress}" reRender="GA102006Form" 
+                                    oncomplete="unblockUi();" 
+                                    status="loadComponent" style="visibility:hidden;"/>   
+                                </section>
+                                <p>郵便番号または住所</p>
+                                <apex:input type="text" value="{! screenText}" styleClass="form-control mb20" onchange="correctInputRules(this,'text', '512')" />
+                                <div class="text-center">
+                                    <apex:commandbutton value="検索" styleClass="btn btn-submit btn-primary modal mb10" disabled="{! isOpenError}"  action="{! searchAddress}"  onclick="blockUi();" oncomplete="unblockUi();" reRender="GA102006Form" />                                  
+                                </div>
+                            </section>
+                            <section>
+                                <table class="gray">
+                                    <tbody>
+                                        <tr>
+                                            <th class="choice">
+                                                <apex:outputlabel /> 
+                                            </th>
+                                            <th class="pop-prefectures">
+                                                <apex:outputlabel value="郵便番号" /> 
+                                            </th>
+                                            <th class="pop-address">
+                                                <apex:outputlabel value="住所" />                                                 
+                                            </th>
+                                        </tr>
+                                    </tbody>     
+                                    <tbody style="height:320px; overflow-y:scroll; display:block; overflow-x: hidden;">
+                                        
+                                        <apex:variable var="num" value="0" />
+                                        <apex:repeat value="{!targetList}" var="D" >
+                                            <tr>
+                                                <td class="choice right-border text-center" style="height:0px;">
+                                                    <apex:commandLink value="選択" action="{! clickSelect}"  onclick="blockUi();" oncomplete=" if(!{!hasErrorMessage}){closeGA102006View();} unblockUi();" rerender="renderedGA102006, GA102006Form">
+                                                        <apex:param value="{!VALUE(num)}" name="index" assignTo="{!index}" />
+                                                    </apex:commandLink>
+                                                </td>
+                                                <td class="pop-post-number" style="height:0px;">
+                                                    <apex:outputlabel styleClass="pop-post-number" for="sc" value="{!D.postalCode}" />                                                  
+                                                </td>
+                                                <td class="pop-address" style="width: 1000px; height:0px;">
+                                                    <apex:outputlabel styleClass="pop-post-number" for="sc" value="{!D.address}" /> 
+                                                </td>
+                                            </tr>                                           
+                                            <apex:variable var="num" value="{!VALUE(num)+1}" />
+                                        </apex:repeat>
+                                        
+                                    </tbody>
+                                </table>
+                                <link rel='stylesheet' href='css/reset.min.css' />
+                            </section>
+                        </section>
+                    </article>
+                </main>
+            </body>
+        </apex:pageBlock>
+    </apex:form>
+</apex:component>

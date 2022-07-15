@@ -1,0 +1,1017 @@
+<!-- 業者名寄せ比較 -->
+<apex:page controller="GD101006Controller" standardStylesheets="false" docType="html-5.0" title="業者名寄せ比較">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="format-detection" content="telephone=no" />
+        <meta name="robots" content="noindex" />
+        <title>業者名寄せ比較</title>
+        <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/reset.min.css')}" />
+        <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/foundation.css')}" />
+        <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/modaal.css')}" />
+        <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/style.css')}" />
+        <apex:stylesheet value="https://use.fontawesome.com/releases/v5.0.6/css/all.css" />
+        <apex:stylesheet value="{!URLFOR($Resource.external_file, 'external_file/common_style.css')}" />
+        <apex:stylesheet value="{!URLFOR($Resource.jQuery,'jQuery/jQueryUI/jquery-ui.css')}" />
+        
+        <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery-3.6.0.min.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery.blockUI.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jQueryUI/jquery-ui.min.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.designer_file, 'designer_file/js/modaal.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/common_screen_util.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/input_rules.js')}" />   
+
+    </head>
+
+    <body id="gd101006">
+        <main>    
+          <article>    
+            <apex:form id="form">
+                <!-- actionFunction -->
+                <apex:actionFunction action="{! save}"   name="save"
+                oncomplete="unblockUi();if(!{! hasErrorMessage}){alertMergeFinish('{! transitionId}' , '{! MSG_COM_I_MERGE}', {! propertyBulkUpdate}) }else{gotoTop()}" reRender="messageArea" />
+
+            <apex:pageMessages id="messageArea" />
+            <section class="">   
+              <section>
+    
+                <div class="border-g ">   
+                    <div class="flex-wrap justify-between back_graydark pdr30 pdl30 pdt10px pdb10px pdr10_xs pdl10_xs">    
+                        <section class="" style="display: flex">
+                            <h2 class="fontb font18">業者名寄せ比較</h2>
+                            <apex:commandButton style=" visibility:hidden;" rerender="dummy"/> 
+                        </section>
+                        <div class="flex-wrap">  
+                            <apex:commandButton styleClass="btn-w-2  blue" value="登録" disabled="{! isOpenError}"  style="padding:0px 14px;"
+                            onclick="checkMerge()" rerender="dummy"/>
+                        </div>   
+                    </div>
+    
+                    <div class="pdr30 pdl30  pdr10_xs pdl10_xs">   
+                        <ul id="accordion" class="accordion-defalt">    
+                            <li class="default open">
+                                <div class="link"><i class="fa fa-chevron-up"></i>メンテナンス情報</div>
+                                <ul class="submenu-defalt">   
+                                    <li>
+
+                                        <div class="flex-wrap justify-between align-items_end">
+                                            <div class="flex-wrap justify-between mb10 wd45  wd100_xs">
+                                                <div class="wd100">
+                                                    <div class="information_title">メンテナンス業者コード</div>
+                                                    <div class="information_contents">{! leftAccount.MaintenanceSupplierCode__c}</div>
+                                                </div>
+                                            </div>
+
+                                            <div class="flex-wrap justify-between mb10">
+                                                <apex:selectRadio value="{! MaintenanceRadioButton}" disabled="{! IsDisableMaintenanceRadioButton}">
+                                                    <apex:selectOptions value="{! MaintenanceRadioButtonSetting}" />
+                                                </apex:selectRadio>
+                                            </div>
+
+                                            <div class="flex-wrap justify-between mb10 wd45  wd100_xs">
+                                                <div class="wd100">
+                                                    <div class="information_title">　</div>
+                                                    <div class="information_contents">{! rightAccount.MaintenanceSupplierCode__c}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="flex-wrap justify-between align-items_end">
+                                            <div class="flex-wrap justify-between mb10 wd45  wd100_xs">
+                                                <div class="wd100">
+                                                    <div class="information_title">取込先</div>
+                                                    <div class="information_contents">{! leftAccount.ImportType__c}</div>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="flex-wrap justify-between mb10">       
+                                            </div>
+                                            
+                                            <div class="flex-wrap justify-between mb10 wd45  wd100_xs">
+                                                <div class="wd100">
+                                                    <div class="information_title">　</div>
+                                                    <div class="information_contents">{! rightAccount.ImportType__c}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </li>
+
+                            <li class="default open">   
+                                <div class="link"><i class="fa fa-chevron-up"></i>基本情報</div>   
+                                <ul class="submenu-defalt">  
+                                    <li>
+    
+                                        <div class="flex-wrap justify-between align-items_end">    
+                                            <div class="flex-wrap mb10 wd45  wd100_xs">    
+                                                <div class="wd100">   
+                                                    <div class="information_title">業者名</div>   
+                                                    <div class="information_contents">{! leftAccount.Name}</div>    
+                                                </div>                                                                                                                                       
+                                            </div>      
+
+                                            <div class="flex-wrap justify-between mb10">
+                                                <apex:selectRadio value="{! BasicInfoRadioButton}">
+                                                    <apex:selectOptions value="{! BasicInfoRadioButtonSetting}" />
+                                                </apex:selectRadio>
+                                            </div>
+
+                                            <div class="flex-wrap mb10 wd45  wd100_xs">   
+                                                <div class="wd100">
+                                                    <div class="information_title">　</div>
+                                                    <div class="information_contents">{! rightAccount.Name}</div>
+                                                </div>
+                                            </div>   
+                                        </div>
+      
+                                        <div class="flex-wrap justify-between align-items_end">
+                                            <div class="flex-wrap mb10 wd45  wd100_xs">   
+                                                <div class="wd100">   
+                                                    <div class="information_title">業者名(カナ)</div>   
+                                                    <div class="information_contents">{! leftAccount.NameKana__c}</div>  
+                                                </div>      
+                                            </div> 
+                                            
+                                            <div class="flex-wrap justify-between mb10">                                                
+                                            </div>
+
+                                            <div class="flex-wrap mb10 wd45  wd100_xs">   
+                                                <div class="wd100">    
+                                                    <div class="information_title">　</div>   
+                                                    <div class="information_contents">{! rightAccount.NameKana__c}</div>   
+                                                </div>  
+                                            </div>    
+                                        </div>
+    
+                                        <div class="flex-wrap justify-between align-items_end">   
+                                            <div class="flex-wrap mb10 wd45  wd100_xs">   
+                                                <div class="wd100">   
+                                                    <div class="information_title">業者種別</div>    
+                                                    <div class="information_contents">{! leftAccount.SupplierType__c}</div> 
+                                                </div>    
+                                            </div>    
+
+                                            <div class="flex-wrap justify-between mb10">                                               
+                                            </div>
+                                             
+                                            <div class="flex-wrap mb10 wd45  wd100_xs">      
+                                                <div class="wd100">    
+                                                    <div class="information_title">　</div>    
+                                                    <div class="information_contents">{! rightAccount.SupplierType__c}</div>    
+                                                </div>    
+                                            </div>   
+                                        </div>
+    
+                                        <div class="flex-wrap justify-between align-items_end">    
+                                            <div class="flex-wrap mb10 wd45  wd100_xs">    
+                                                <div class="wd100">    
+                                                    <div class="information_title">郵便番号</div>    
+                                                    <div class="information_contents">{! leftAccount.PostalCode__c}</div>    
+                                                </div>                                                    
+                                            </div>   
+                                            
+                                            <div class="flex-wrap justify-between mb10">                                               
+                                            </div>
+
+                                            <div class="flex-wrap mb10 wd45  wd100_xs">                                                  
+                                                <div class="wd100">    
+                                                    <div class="information_title">　</div>    
+                                                    <div class="information_contents">{! rightAccount.PostalCode__c}</div>    
+                                                </div>    
+                                            </div>    
+                                        </div>
+    
+                                        <div class="flex-wrap justify-between align-items_end">    
+                                            <div class="flex-wrap mb10 wd45  wd100_xs">   
+                                                <div class="wd100">    
+                                                    <div class="information_title">都道府県</div>    
+                                                    <div class="information_contents">{! leftAccount.State__c}</div>   
+                                                </div>                                                  
+                                            </div>   
+
+                                            <div class="flex-wrap justify-between mb10">                                                
+                                            </div>
+
+                                            <div class="flex-wrap mb10 wd45  wd100_xs">                                                
+                                                <div class="wd100">   
+                                                    <div class="information_title">　</div>    
+                                                    <div class="information_contents">{! rightAccount.State__c}</div>    
+                                                </div>   
+                                            </div>   
+                                        </div>
+    
+                                        <div class="flex-wrap justify-between align-items_end">   
+                                            <div class="flex-wrap mb10 wd45  wd100_xs">   
+                                                <div class="wd100">   
+                                                    <div class="information_title">所在地１(市区町村・丁目まで)</div>   
+                                                    <div class="information_contents">{! leftAccount.City__c}</div>   
+                                                </div>                                                   
+                                            </div>    
+
+                                            <div class="flex-wrap justify-between mb10">                                               
+                                            </div>
+
+                                            <div class="flex-wrap mb10 wd45  wd100_xs">                                                
+                                                <div class="wd100">   
+                                                    <div class="information_title">　</div>    
+                                                    <div class="information_contents">{! rightAccount.City__c}</div>    
+                                                </div>    
+                                            </div>   
+                                        </div>
+    
+                                        <div class="flex-wrap justify-between align-items_end">   
+                                            <div class="flex-wrap mb10 wd45  wd100_xs">    
+                                                <div class="wd100">   
+                                                    <div class="information_title">所在地２(番地以降)</div>   
+                                                    <div class="information_contents">{! leftAccount.Street__c}</div>    
+                                                </div>                                                  
+                                            </div>  
+                                            
+                                            <div class="flex-wrap justify-between mb10">                                                
+                                            </div>
+
+                                            <div class="flex-wrap mb10 wd45  wd100_xs">                                                 
+                                                <div class="wd100">    
+                                                    <div class="information_title">　</div>    
+                                                    <div class="information_contents">{! rightAccount.Street__c}</div>    
+                                                </div>   
+                                            </div>    
+                                        </div>
+    
+                                        <div class="flex-wrap justify-between align-items_end">    
+                                            <div class="flex-wrap mb10 wd45  wd100_xs">    
+                                                <div class="wd100">   
+                                                    <div class="information_title">電話番号</div>   
+                                                    <div class="information_contents">{! leftAccount.Phone}</div>   
+                                                </div>                                                      
+                                            </div> 
+                                            
+                                            <div class="flex-wrap justify-between mb10">                                               
+                                            </div>
+
+                                            <div class="flex-wrap mb10 wd45  wd100_xs">                                                
+                                                <div class="wd100">    
+                                                    <div class="information_title">　</div>    
+                                                    <div class="information_contents">{! rightAccount.Phone}</div>   
+                                                </div>   
+                                            </div>   
+                                        </div>
+    
+                                        <div class="flex-wrap justify-between align-items_end">    
+                                            <div class="flex-wrap mb10 wd45  wd100_xs">    
+                                                <div class="wd100">   
+                                                    <div class="information_title">FAX</div>   
+                                                    <div class="information_contents">{! leftAccount.Fax}</div>   
+                                                </div>                                                      
+                                            </div>    
+
+                                            <div class="flex-wrap justify-between mb10">                                                
+                                            </div>
+
+                                            <div class="flex-wrap mb10 wd45  wd100_xs">                                                
+                                                <div class="wd100">    
+                                                    <div class="information_title">　</div>    
+                                                    <div class="information_contents">{! rightAccount.Fax}</div>   
+                                                </div>   
+                                            </div>   
+                                        </div>
+    
+                                        <div class="flex-wrap justify-between align-items_end">    
+                                            <div class="flex-wrap mb10 wd45  wd100_xs">    
+                                                <div class="wd100">   
+                                                    <div class="information_title">メールアドレス</div>   
+                                                    <div class="information_contents">{! leftAccount.Email__c}</div>   
+                                                </div>                                                       
+                                            </div>   
+                                            
+                                            <div class="flex-wrap justify-between mb10">                                               
+                                            </div>
+
+                                            <div class="flex-wrap mb10 wd45  wd100_xs">                                                
+                                                <div class="wd100">    
+                                                    <div class="information_title">　</div>    
+                                                    <div class="information_contents">{! rightAccount.Email__c}</div>   
+                                                </div>   
+                                            </div>   
+                                        </div>
+    
+                                        <div class="flex-wrap justify-between align-items_end">    
+                                            <div class="flex-wrap mb10 wd45  wd100_xs">    
+                                                <div class="wd100">   
+                                                    <div class="information_title">紹介</div>   
+                                                    <div class="information_contents">{! leftAccount.Introduction__c}</div>   
+                                                </div>                                                      
+                                            </div>    
+
+                                            <div class="flex-wrap justify-between mb10">                                               
+                                            </div>
+
+                                            <div class="flex-wrap mb10 wd45  wd100_xs">                                                 
+                                                <div class="wd100">    
+                                                    <div class="information_title">　</div>    
+                                                    <div class="information_contents">{! rightAccount.Introduction__c}</div>   
+                                                </div>   
+                                            </div>   
+                                        </div>
+    
+                                        <div class="flex-wrap justify-between align-items_end">    
+                                            <div class="flex-wrap mb10 wd45  wd100_xs">    
+                                                <div class="wd100">   
+                                                    <div class="information_title">一般/業物</div>   
+                                                    <div class="information_contents">{! leftAccount.IppamGyobutsu__c}</div>   
+                                                </div>                                                      
+                                            </div>  
+                                            
+                                            <div class="flex-wrap justify-between mb10">                                                
+                                            </div>
+
+                                            <div class="flex-wrap mb10 wd45  wd100_xs">                                               
+                                                <div class="wd100">    
+                                                    <div class="information_title">　</div>    
+                                                    <div class="information_contents">{! rightAccount.IppamGyobutsu__c}</div>   
+                                                </div>   
+                                            </div>   
+                                        </div>
+    
+                                        <div class="flex-wrap justify-between align-items_end">    
+                                            <div class="flex-wrap mb10 wd45  wd100_xs">    
+                                                <div class="wd100">   
+                                                    <div class="information_title">定期送信</div>   
+                                                    <div class="information_contents">{! leftAccount.FixedTermSend__c}</div>   
+                                                </div>                                                       
+                                            </div>    
+
+                                            <div class="flex-wrap justify-between mb10">                                                
+                                            </div>
+
+                                            <div class="flex-wrap mb10 wd45  wd100_xs">                                                
+                                                <div class="wd100">    
+                                                    <div class="information_title">　</div>    
+                                                    <div class="information_contents">{! rightAccount.FixedTermSend__c}</div>   
+                                                </div>   
+                                            </div>   
+                                        </div>
+    
+                                        <div class="flex-wrap justify-between align-items_end">    
+                                            <div class="flex-wrap mb10 wd45  wd100_xs">    
+                                                <div class="wd100">   
+                                                    <div class="information_title">更新料表記</div>   
+                                                    <div class="information_contents">{! leftAccount.RenewalFeeShow__c}</div>   
+                                                </div>                                                       
+                                            </div>    
+
+                                            <div class="flex-wrap justify-between mb10">                                               
+                                            </div>
+
+                                            <div class="flex-wrap mb10 wd45  wd100_xs">                                                
+                                                <div class="wd100">    
+                                                    <div class="information_title">　</div>    
+                                                    <div class="information_contents">{! rightAccount.RenewalFeeShow__c}</div>   
+                                                </div>   
+                                            </div>   
+                                        </div>
+
+                                        <div class="flex-wrap justify-between align-items_end">    
+                                            <div class="flex-wrap mb10 wd45  wd100_xs">    
+                                                <div class="wd100">   
+                                                    <div class="information_title">定額補修費表記</div>   
+                                                    <div class="information_contents">{! leftAccount.CleaningFeeShow__c}</div>   
+                                                </div>                                                       
+                                            </div>    
+
+                                            <div class="flex-wrap justify-between mb10">                                                
+                                            </div>
+
+                                            <div class="flex-wrap mb10 wd45  wd100_xs">                                                
+                                                <div class="wd100">    
+                                                    <div class="information_title">　</div>    
+                                                    <div class="information_contents">{! rightAccount.CleaningFeeShow__c}</div>   
+                                                </div>   
+                                            </div>   
+                                        </div>
+    
+                                        <div class="flex-wrap justify-between align-items_end">    
+                                            <div class="flex-wrap mb10 wd45  wd100_xs">    
+                                                <div class="wd100">   
+                                                    <div class="information_title">suumo保証人代行会社区分コード</div>   
+                                                    <div class="information_contents">{! leftAccount.GuarantorAgencyCompanyType__c}</div>   
+                                                </div>                                                       
+                                            </div>    
+
+                                            <div class="flex-wrap justify-between mb10">                                                
+                                            </div>
+
+                                            <div class="flex-wrap mb10 wd45  wd100_xs">                                                
+                                                <div class="wd100">    
+                                                    <div class="information_title">　</div>    
+                                                    <div class="information_contents">{! rightAccount.GuarantorAgencyCompanyType__c}</div>   
+                                                </div>   
+                                            </div>   
+                                        </div>
+    
+                                        <div class="flex-wrap justify-between align-items_end">    
+                                            <div class="flex-wrap mb10 wd45  wd100_xs">    
+                                                <div class="wd100">   
+                                                    <div class="information_title">備考(公開)</div>   
+                                                    <div class="information_contents">{! leftAccount.RemarksPublic__c}</div>   
+                                                </div>                                                       
+                                            </div>    
+
+                                            <div class="flex-wrap justify-between mb10">                                                
+                                            </div>
+
+                                            <div class="flex-wrap mb10 wd45  wd100_xs">                                                
+                                                <div class="wd100">    
+                                                    <div class="information_title">　</div>    
+                                                    <div class="information_contents">{! rightAccount.RemarksPublic__c}</div>   
+                                                </div>   
+                                            </div>   
+                                        </div>
+    
+                                        <div class="flex-wrap justify-between align-items_end">    
+                                            <div class="flex-wrap mb10 wd45  wd100_xs">    
+                                                <div class="wd100">   
+                                                    <div class="information_title">備考(非公開)</div>   
+                                                    <div class="information_contents">{! leftAccount.RemarksPrivate__c}</div>   
+                                                </div>                                                       
+                                            </div>    
+
+                                            <div class="flex-wrap justify-between mb10">                                                
+                                            </div>
+
+                                            <div class="flex-wrap mb10 wd45  wd100_xs">                                                
+                                                <div class="wd100">    
+                                                    <div class="information_title">　</div>    
+                                                    <div class="information_contents">{! rightAccount.RemarksPrivate__c}</div>   
+                                                </div>   
+                                            </div>   
+                                        </div>
+                                    </li>    
+                                </ul>    
+                            </li>
+    
+                            <li class="default open">    
+                                <div class="link"><i class="fa fa-chevron-up"></i>担当者情報</div>    
+                                <ul class="submenu-defalt">    
+                                    <li>
+
+                                        <div class="flex-wrap justify-between align-items_end">   
+                                            <div class="flex-wrap mb10 wd45  wd100_xs">   
+                                                <div class="wd100">   
+                                                    <div class="information_title">担当者名</div>   
+                                                    <div class="information_contents">{! leftAccount.Representative__c}</div>   
+                                                </div>      
+                                            </div>   
+
+                                            <div class="flex-wrap justify-between mb10">                                               
+                                            </div>
+
+                                            <div class="flex-wrap mb10 wd45  wd100_xs">     
+                                                <div class="wd100">    
+                                                    <div class="information_title">　</div>   
+                                                    <div class="information_contents">{! rightAccount.Representative__c}</div>    
+                                                </div>    
+                                            </div>   
+                                        </div>
+
+                                        <div class="flex-wrap justify-between align-items_end">   
+                                            <div class="flex-wrap mb10 wd45  wd100_xs">   
+                                                <div class="wd100">   
+                                                    <div class="information_title">担当部署</div>   
+                                                    <div class="information_contents">{! leftAccount.RepresentativeDepartment__c}</div>   
+                                                </div>      
+                                            </div>   
+
+                                            <div class="flex-wrap justify-between mb10">                                               
+                                            </div>
+
+                                            <div class="flex-wrap mb10 wd45  wd100_xs">     
+                                                <div class="wd100">    
+                                                    <div class="information_title">　</div>   
+                                                    <div class="information_contents">{! rightAccount.RepresentativeDepartment__c}</div>    
+                                                </div>    
+                                            </div>   
+                                        </div>
+
+                                        <div class="flex-wrap justify-between align-items_end">   
+                                            <div class="flex-wrap mb10 wd45  wd100_xs">   
+                                                <div class="wd100">   
+                                                    <div class="information_title">担当電話番号</div>   
+                                                    <div class="information_contents">{! leftAccount.RepresentativePhone__c}</div>   
+                                                </div>      
+                                            </div>   
+
+                                            <div class="flex-wrap justify-between mb10">                                               
+                                            </div>
+
+                                            <div class="flex-wrap mb10 wd45  wd100_xs">     
+                                                <div class="wd100">    
+                                                    <div class="information_title">　</div>   
+                                                    <div class="information_contents">{! rightAccount.RepresentativePhone__c}</div>    
+                                                </div>    
+                                            </div>   
+                                        </div>                                                           
+                                    </li>    
+                                </ul>    
+                            </li>
+    
+                            <li class="default open">   
+                                <div class="link"><i class="fa fa-chevron-up"></i>電物</div>    
+                                <ul class="submenu-defalt">   
+                                    <li>
+    
+                                        <div class="flex-wrap justify-between align-items_end">   
+                                            <div class="flex-wrap mb10 wd45  wd100_xs">   
+                                                <div class="wd100">   
+                                                    <div class="information_title">電物日</div>   
+                                                    <div class="information_contents">
+                                                        <apex:outputField value="{! leftAccount.DembutsuDate__c}"/>
+                                                    </div>   
+                                                </div>      
+                                            </div>   
+
+                                            <div class="flex-wrap justify-between mb10">                                                
+                                            </div>
+
+                                            <div class="flex-wrap mb10 wd45  wd100_xs">     
+                                                <div class="wd100">    
+                                                    <div class="information_title">　</div>   
+                                                    <div class="information_contents">
+                                                        <apex:outputField value="{! rightAccount.DembutsuDate__c}"/>
+                                                    </div>    
+                                                </div>    
+                                            </div>   
+                                        </div>
+        
+                                        <div class="flex-wrap justify-between align-items_end">   
+                                            <div class="flex-wrap mb10 wd45  wd100_xs">   
+                                                <div class="wd100">   
+                                                    <div class="information_title">電物ステータス</div>   
+                                                    <div class="information_contents">{! leftAccount.DembutsuStatus__c}</div>   
+                                                </div>      
+                                            </div>   
+
+                                            <div class="flex-wrap justify-between mb10">                                               
+                                            </div>
+
+                                            <div class="flex-wrap mb10 wd45  wd100_xs">     
+                                                <div class="wd100">    
+                                                    <div class="information_title">　</div>   
+                                                    <div class="information_contents">{! rightAccount.DembutsuStatus__c}</div>    
+                                                </div>    
+                                            </div>   
+                                        </div>
+    
+                                        <div class="flex-wrap justify-between align-items_end">   
+                                            <div class="flex-wrap mb10 wd45  wd100_xs">   
+                                                <div class="wd100">   
+                                                    <div class="information_title">電物担当者</div>   
+                                                    <div class="information_contents">{! leftAccount.DembutsuStaff__c}</div>   
+                                                </div>      
+                                            </div>   
+
+                                            <div class="flex-wrap justify-between mb10">                                                
+                                            </div>
+
+                                            <div class="flex-wrap mb10 wd45  wd100_xs">     
+                                                <div class="wd100">    
+                                                    <div class="information_title">　</div>   
+                                                    <div class="information_contents">{! rightAccount.DembutsuStaff__c}</div>    
+                                                </div>    
+                                            </div>   
+                                        </div>
+    
+                                        <div class="flex-wrap justify-between align-items_end">   
+                                            <div class="flex-wrap mb10 wd45  wd100_xs">   
+                                                <div class="wd100">   
+                                                    <div class="information_title">電物メモ</div>   
+                                                    <div class="information_contents">{! leftAccount.DembutsuEventMemo__c}</div>   
+                                                </div>      
+                                            </div>   
+
+                                            <div class="flex-wrap justify-between mb10">                                                
+                                            </div>
+
+                                            <div class="flex-wrap mb10 wd45  wd100_xs">     
+                                                <div class="wd100">    
+                                                    <div class="information_title">　</div>   
+                                                    <div class="information_contents">{! rightAccount.DembutsuEventMemo__c}</div>    
+                                                </div>    
+                                            </div>   
+                                        </div>    
+                                    </li>   
+                                </ul>   
+                            </li> 
+                             
+    
+                         <div>保証会社プラン</div>
+                         <div class="flex-wrap justify-between">
+                            <div class="wd49">
+                                <form name="stationform">
+                                    <table class="gray mb30" style="height:255px;">
+                                        <tbody>
+                                            <tr>
+                                                <!-- <th class="wd0 border-r-none"></th> -->
+                                                <th class="wd0"></th>
+                                                <th class="wd6">保証会社名</th>
+                                                <th class="wd6">プラン名</th>
+                                                <th class="wd6">保証内容</th>
+                                                <th class="wd5">保証備考</th>
+                                            </tr>
+                                            <apex:variable var="num" value="0" />
+                                            <apex:repeat value="{!leftGuaranteeList}" var="lg" > 
+                                                <tr>
+                                                    <td></td>
+                                                    <td>{!lg.Item__r.Account__r.Name}</td>
+                                                    <td>{!lg.Item__r.ItemName__c}</td>
+                                                    <td>{!lg.Item__r.AssuranceContent__c}</td>
+                                                    <td>{!lg.Item__r.Remarks__c}</td>
+                                                </tr>
+                                                <apex:variable var="num" value="{!VALUE(num)+1}" />
+                                            </apex:repeat>
+                                        </tbody>
+                                    </table>
+                                </form>
+                            </div>
+    
+                            <div class="wd49">
+                                <form name="stationform">
+                                    <table class="gray mb30" style="height:255px;">
+                                        <tbody>
+                                            <tr>
+                                                <!-- <th class="wd0 border-r-none"></th> -->
+                                                <th class="wd0"></th>
+                                                <th class="wd6">保証会社名</th>
+                                                <th class="wd6">プラン名</th>
+                                                <th class="wd6">保証内容</th>
+                                                <th class="wd5">保証備考</th>
+                                            </tr>
+                                            <apex:variable var="num" value="0" />
+                                            <apex:repeat value="{!rightGuaranteeList}" var="rg" >
+                                                <tr>
+                                                    <td></td>
+                                                    <td>{!rg.Item__r.Account__r.Name}</td>
+                                                    <td>{!rg.Item__r.ItemName__c}</td>
+                                                    <td>{!rg.Item__r.AssuranceContent__c}</td>
+                                                    <td>{!rg.Item__r.Remarks__c}</td>
+                                                </tr>
+                                                <apex:variable var="num" value="{!VALUE(num)+1}" />
+                                            </apex:repeat>
+                                        </tbody>
+                                    </table>
+                                </form>
+                            </div>
+                         </div>
+    
+                         <div>火災保険会社プラン</div>
+                         <div class="flex-wrap justify-between">
+                            <div class="wd49">
+                                <form name="stationform">
+                                    <table class="gray mb30" style="height:258px;">
+                                        <tbody>
+                                            <tr>
+                                                <!-- <th class="wd0 border-r-none"></th> -->
+                                                <th class="wd0"></th>
+                                                <th class="wd6">火災保険会社名</th>
+                                                <th class="wd6">プラン名</th>
+                                                <th class="wd6">保険内容</th>
+                                                <th class="wd5">保証備考</th>
+                                            </tr>
+                                            <apex:variable var="num" value="0" />
+                                            <apex:repeat value="{!leftFireList}" var="lf" >
+                                                <tr>
+                                                    <td></td>
+                                                    <td>{!lf.Item__r.Account__r.Name}</td>
+                                                    <td>{!lf.Item__r.ItemName__c}</td>
+                                                    <td>{!lf.Item__r.FireInsurance__c}</td>
+                                                    <td>{!lf.Item__r.Remarks__c}</td>
+                                                </tr>
+                                                <apex:variable var="num" value="{!VALUE(num)+1}" />
+                                            </apex:repeat>
+                                        </tbody>
+                                    </table>
+                                </form>
+                            </div>
+    
+                            <div class="wd49">
+                                <form name="stationform">
+                                    <table class="gray mb30" style="height:258px;">
+                                        <tbody>
+                                            <tr>
+                                                <!-- <th class="wd0 border-r-none"></th> -->
+                                                <th class="wd0"></th>
+                                                <th class="wd6">火災保険会社名</th>
+                                                <th class="wd6">プラン名</th>
+                                                <th class="wd6">保険内容</th>
+                                                <th class="wd5">保証備考</th>
+                                            </tr>
+                                        </tbody>
+                                        <tbody class="tableBody" onscroll="linkScrollX(this, 'fireRightHeader')">
+                                            <apex:variable var="num" value="0" />
+                                            <apex:repeat value="{!rightFireList}" var="rf" >
+                                                <tr>
+                                                    <td></td>
+                                                    <td>{!rf.Item__r.Account__r.Name}</td>
+                                                    <td>{!rf.Item__r.ItemName__c}</td>
+                                                    <td>{!rf.Item__r.FireInsurance__c}</td>
+                                                    <td>{!rf.Item__r.Remarks__c}</td>
+                                                </tr>
+                                                <apex:variable var="num" value="{!VALUE(num)+1}" />
+                                            </apex:repeat>
+                                        </tbody>
+                                    </table>
+                                </form>
+                            </div>
+                         </div>
+    
+                         <div>管理会社指定商品</div>
+                         <div class="flex-wrap justify-between">
+                            <div class="wd49">
+                                <form name="stationform">
+                                    <table class="gray mb30" style="height:252px;">
+                                        <tbody>
+                                            <tr>
+                                                <!-- <th class="wd0 border-r-none"></th> -->
+                                                <th class="wd0"></th>
+                                                <th class="wd6">商品名</th>
+                                                <th class="wdlast">金額</th>
+                                            </tr>
+                                            <apex:variable var="num" value="0" />
+                                            <apex:repeat value="{!leftMCIList}" var="lp" > 
+                                                <tr>
+                                                    <td></td>
+                                                    <td>{!lp.ItemName__c}</td>
+                                                    <td>
+                                                        <apex:outputText value="{0, Number, ###,###}">
+                                                            <apex:param value="{!lp.AmountTax__c}"/>
+                                                        </apex:outputText>円
+                                                    </td>
+                                                </tr>
+                                                <apex:variable var="num" value="{!VALUE(num)+1}" />
+                                            </apex:repeat>
+                                        </tbody>
+                                    </table>
+                                </form>
+                            </div>
+    
+                            <div class="wd49">
+                                <form name="stationform">
+                                    <table class="gray mb30" style="height:252px;">
+                                        <tbody>
+                                            <tr>
+                                                <!-- <th class="wd0 border-r-none"></th> -->
+                                                <th class="wd0"></th>
+                                                <th class="wd6">商品名</th>
+                                                <th class="wdlast">金額</th>
+                                            </tr>
+                                            <apex:variable var="num" value="0" />
+                                            <apex:repeat value="{!rightMCIList}" var="rp" >
+                                                <tr>
+                                                    <td></td>
+                                                    <td>{!rp.ItemName__c}</td>
+                                                    <td>
+                                                        <apex:outputText value="{0, Number, ###,###}">
+                                                            <apex:param value="{!rp.AmountTax__c}"/>
+                                                        </apex:outputText>円
+                                                    </td>
+                                                </tr>
+                                                <apex:variable var="num" value="{!VALUE(num)+1}" />
+                                            </apex:repeat>
+                                        </tbody>
+                                    </table>
+                                </form>
+                            </div>
+                         </div>
+    
+                         <div>建物情報</div>
+                         <div class="flex-wrap justify-between">
+                            <div class="wd49">
+                                <form name="stationform">
+                                    <table class="gray mb30" style="height:255px;">
+                                        <tbody>
+                                            <tr>
+                                                <!-- <th class="wd0 border-r-none"></th> -->
+                                                <th class="wd0"></th>
+                                                <th class="wd6">建物名</th>
+                                                <th class="wd6">住所</th>
+                                                <th class="wd6">築年月</th>
+                                                <th class="wd5">沿線</th>
+                                                <th class="wd5">最寄駅</th>
+                                                <th class="wd5">駅徒歩</th>
+                                            </tr>
+                                            <apex:variable var="num" value="0" />
+                                            <apex:repeat value="{!leftBuildingList}" var="lb" > 
+                                                <tr>
+                                                    <td></td>
+                                                    <td>{!lb.Name}</td>
+                                                    <td>{!lb.Address__c}</td>
+                                                    <td>{!lb.BuildingYMFormat__c}</td>
+                                                    <td>{!lb.TrainRoute1__r.Name}</td>
+                                                    <td>{!lb.Station1__r.Name}</td>
+                                                    <td>{!lb.StationWalkTimeFormat1__c}</td>
+                                                </tr>
+                                                <apex:variable var="num" value="{!VALUE(num)+1}" />
+                                            </apex:repeat>
+                                        </tbody>
+                                    </table>
+                                </form>
+                            </div>
+    
+                            <div class="wd49">
+                                <form name="stationform">
+                                    <table class="gray mb30" style="height:255px;">
+                                        <tbody>
+                                            <tr>
+                                                <!-- <th class="wd0 border-r-none"></th> -->
+                                                <th class="wd0"></th>
+                                                <th class="wd6">建物名</th>
+                                                <th class="wd6">住所</th>
+                                                <th class="wd6">築年月</th>
+                                                <th class="wd5">沿線</th>
+                                                <th class="wd5">最寄駅</th>
+                                                <th class="wd5">駅徒歩</th>
+                                            </tr>
+                                            <apex:variable var="num" value="0" />
+                                            <apex:repeat value="{!rightBuildingList}" var="rb" > 
+                                                <tr>
+                                                    <td></td>
+                                                    <td>{!rb.Name}</td>
+                                                    <td>{!rb.Address__c}</td>
+                                                    <td>{!rb.BuildingYMFormat__c}</td>
+                                                    <td>{!rb.TrainRoute1__r.Name}</td>
+                                                    <td>{!rb.Station1__r.Name}</td>
+                                                    <td>{!rb.StationWalkTimeFormat1__c}</td>
+                                                </tr>
+                                                <apex:variable var="num" value="{!VALUE(num)+1}" />
+                                            </apex:repeat>
+                                        </tbody>
+                                    </table>
+                                </form>
+                            </div>
+                         </div>
+                        </ul>
+                    </div>
+                </div>
+              </section>
+            </section>
+            </apex:form>
+          </article>
+    
+        </main>
+    
+        
+        <script>
+    
+        /* $(function() {
+    
+            $('table').resizableColumns();
+    
+        }); */
+    
+    $(function() {
+    
+        var Accordion = function(el, multiple) {
+    
+            this.el = el || {};
+    
+            this.multiple = multiple || false;
+    
+    
+    
+            // Variables privadas
+    
+            var links = this.el.find('.link');
+    
+            // Evento
+    
+            links.on('click', {el: this.el, multiple: this.multiple}, this.dropdown)
+    
+        }
+    
+    
+    
+        Accordion.prototype.dropdown = function(e) {
+    
+            var eventClass = event.target.className;
+    
+            if(eventClass != "modal btn-w-2 btn-w-2_normal blue"){
+    
+                var $el = e.data.el;
+    
+                $this = $(this),
+    
+                $next = $this.next();
+    
+    
+    
+            $next.slideToggle();
+    
+            $this.parent().toggleClass('open');
+    
+    
+    
+            if (!e.data.multiple) {
+    
+               // $el.find('.submenu-defalt').not($next).slideUp().parent().removeClass('open');
+    
+            };
+    
+            }
+    
+    
+    
+        }
+    
+    
+    
+        var accordion = new Accordion($('#accordion'), false);
+    
+    });
+    
+    
+    
+    $(function() {
+    
+        $('#btn').on('click', function(e) {
+    
+            //document.getElementById("accordion").removeClass('open');
+    
+            //document.getElementById("accordion").classList.remove("open")
+    
+            //$el.find('.submenu-defalt').not($next).slideUp().parent().removeClass('open');
+    
+    
+    
+    
+    
+            var textList = document.getElementById('accordion');
+    
+            //li02 = textList.getElementsByTagName('li');
+    
+            let elements = textList.getElementsByTagName('li');
+    
+            Array.prototype.forEach.call(elements, function(element) {
+    
+              element.classList.remove('open','default');
+    
+              $('.submenu-defalt').fadeOut()
+    
+            });
+    
+    
+    
+    
+    
+            //for (var j = 0; li02.length; j++) {
+    
+              //console.log(li02[j].textContent);
+    
+             // li02[j].removeClass("open")
+    
+            //}
+    
+        });
+    
+    });
+    
+    $(function(){
+    
+        $('.modal').modaal();
+    
+    
+    
+    });
+    
+    </script>
+     <script type="text/javascript">
+        //名寄せ確認メッセージ
+        async function checkMerge(){
+            var message = "{! MSG_COM_V_EXECUTE_MERGE}";
+            var retVal = await showConfirm(message);
+            if (retVal) {
+                blockUi();
+                save();
+            }          
+        }
+
+       //名寄せ完了メッセージ
+        async function alertMergeFinish(targetId, message, propertyBulkUpdate){
+
+          //完了メッセージ
+          await showAlert(message);
+          
+          //物件更新がすべて完了している場合
+          if(propertyBulkUpdate){
+            //画面を閉じる
+            showPage('GD101005View', '_self', 'true', 'Id=' + targetId ); 
+          }
+
+      } 
+     </script>
+    
+    
+    
+     </body>
+  
+</apex:page>

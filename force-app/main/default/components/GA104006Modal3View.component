@@ -1,0 +1,124 @@
+<!--おすすめ物件登録-->
+<apex:component controller="GA104006Modal3Controller"  allowDML="true">
+    <apex:attribute name="ParameterClass" type="GA104006Modal3ParameterClass" assignTo="{!parameter}" description="key" />
+
+    <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/reset.min.css')}" />
+    <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/foundation.css')}" />
+    <apex:stylesheet value="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+    <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/modaal.css')}" />
+    <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/style.css')}" />
+    <apex:stylesheet value="{!URLFOR($Resource.external_file, 'external_file/common_style.css')}" />
+    <apex:stylesheet value="{!URLFOR($Resource.jQuery,'jQuery/jQueryUI/jquery-ui.css')}" />
+
+    <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery-3.6.0.min.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery.blockUI.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.designer_file, 'designer_file/js/modaal.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/common_screen_util.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/input_rules.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jQueryUI/jquery-ui.min.js')}" />
+
+    <apex:form id="GA104006Modal3-ModalForm">
+
+        <apex:pageBlock rendered="{!parameter.noFirst}">
+            <apex:pageMessages />
+            <apex:outputText rendered="{!init}" />
+                
+            <section style="display:flex">
+                <div class="flex-wrap  align_center mb10">
+                    <h1 class="fontb font2rem">おすすめ物件登録</h1> 
+                </div>
+            </section>
+
+            <div class="modal-body">
+                <div class=" mb10 wd100">
+                    <div class="information_title">パノラマツアーURL<apex:commandButton style="visibility:hidden;" rerender="dummy"/></div>
+                    <div>
+                        <!--再販対応 追加 Start-->
+                        <!--パノラマツアー権限あり-->
+                        <apex:input type="text" value="{! screenRecoPro.panoramaTourUrl}" rendered="{! isUseAuthorityPanoramaTour}" onchange="correctInputRules(this,'text','255');" styleclass="form-control  mb10"/>
+                        <!--パノラマツアー権限なし-->
+                        <apex:outputPanel rendered="{! !isUseAuthorityPanoramaTour}">
+                            <div class="information_contents mb0" ><apex:outputLabel value=""  style="border: 0;" /></div>
+                        </apex:outputPanel>
+                        <!--再販対応 追加 End-->
+                    </div>
+                </div>
+                    
+                <div class=" mb10 wd100">
+                    <div class="information_title">HOME'Sインポートキー</div>
+                    <div>
+                        <!--再販対応 追加 Start-->
+                        <!--パノラマツアー権限あり-->
+                        <apex:input type="text" value="{! screenRecoPro.homesImportkey}" rendered="{! isUseAuthorityPanoramaTour}" onchange="correctInputRules(this,'text','255');" styleclass="form-control  mb10"/>
+                        <!--パノラマツアー権限なし-->
+                        <apex:outputPanel rendered="{! !isUseAuthorityPanoramaTour}">
+                            <div class="information_contents mb0" ><apex:outputLabel value=""  style="border: 0;" /></div>
+                        </apex:outputPanel>
+                        <!--再販対応 追加 End-->
+                    </div>
+                </div>
+
+                <div class=" mb10 wd100">
+                    <div class="information_title">コメント</div>
+                    <div>
+                        <apex:inputTextarea value="{! screenRecoPro.comment}" onchange="correctInputRules(this,'text','255');" rows="5"  styleClass="form-control"/>
+                    </div>
+                </div>
+
+                <div class=" mb10 wd100">
+                    <div class="information_title">表示画像選択</div>
+                    <div style="margin:10px 10px;border:1px solid  #d2d2d2;height:450px;overflow-y:scroll;">
+                        <apex:outputPanel rendered="{!IF(screenPhotoList.size == 0, false, true)}"  >
+
+                            <apex:repeat value="{!screenPhotoList}" var="publicPhoto" >
+                                <div style="mb10 wd100">
+                                    
+                                    <!--チェックボックスとカテゴリ-->
+                                    <apex:inputCheckbox id="check1" value="{!publicPhoto.checkBox}" styleClass="guaranteeSelectCheck"  
+                                                            onchange="changeCheck1(this)"/>
+                                    <apex:outputLabel for="check1" styleclass="serach_check2" value="{!publicPhoto.photoTag}" style="font-size:105%;"></apex:outputLabel>    
+                                    <!--写真-->
+                                    <div class=" mb50_xs wd50" style="margin-left: 10px;">
+                                        <div class="img-wrapper md10">
+                                            <div class="img-wrapper-inner">
+                                                <apex:image alt="" value="{!publicPhoto.FilePath}" styleClass="img-contain" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mb10 wd100 ">
+                                            
+                                </div>
+                            </apex:repeat>
+                        </apex:outputPanel>
+                    </div>
+                </div>
+
+
+                <div class="modal-footer">
+                    <div class="flex-wrap justify-around flex_wrap">
+                        
+                        <apex:commandButton value="保存" styleClass="mb10 message btn btn-primary btn-submit text-center"
+                                            onclick="blockUi();"
+                                            disabled="{!isOpenError}"
+                                            action="{!registrationCleck}"
+                                            oncomplete="unblockUi(); if({! !hasErrorMessage}){closeDialogModal3Portal();}"
+                                            rerender="GA104006Modal3-ModalForm"/>
+                    </div>
+                </div>
+            </div>
+        </apex:pageBlock>
+
+    </apex:form>
+    <script>
+
+        // 保証商品一覧の選択変更処理
+        function changeCheck1(CheckObject) {
+            // 選択行以外の行のチェックを外す
+            onchangeListCheckBoxSingleSelect(CheckObject);
+
+        }
+
+    </script>
+
+</apex:component>

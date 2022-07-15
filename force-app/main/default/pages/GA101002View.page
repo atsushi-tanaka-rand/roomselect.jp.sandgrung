@@ -1,0 +1,249 @@
+<!-- 反響一覧処理 -->
+<apex:page docType="html-5.0" standardStylesheets="false" controller="GA101002Controller" title="反響一覧">
+    <apex:form id="form" html-novalidate="novalidate">
+
+        <head>
+            <meta charset="utf-8" />
+            <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+            <meta name="format-detection" content="telephone=no" />
+            <meta name="robots" content="noindex" />
+            <title>反響一覧</title>
+            <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/reset.min.css')}" />
+            <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/foundation.css')}" />
+            <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/modaal.css')}" />
+            <apex:stylesheet value="{!URLFOR($Resource.designer_file,'designer_file/css/style.css')}" />
+            <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery-3.6.0.min.js')}" />
+            <apex:includeScript value="{!URLFOR($Resource.designer_file, 'designer_file/js/modaal.js')}" />
+            <apex:stylesheet value="https://use.fontawesome.com/releases/v5.0.6/css/all.css" />
+    
+            <apex:stylesheet value="{!URLFOR($Resource.external_file, 'external_file/common_style.css')}" />
+            <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jquery.blockUI.js')}" />
+            <apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/common_screen_util.js')}" />
+            <apex:includeScript value="{!URLFOR($Resource.external_file,'external_file/input_rules.js')}" />
+            <apex:includeScript value="{!URLFOR($Resource.jQuery,'jQuery/jQueryUI/jquery-ui.min.js')}" />
+            <apex:stylesheet value="{!URLFOR($Resource.jQuery,'jQuery/jQueryUI/jquery-ui.css')}" />
+        </head>
+        <script type="text/javascript">
+            $(function(){
+                var email = $("[id$=EventType]").data('mail');
+                var pursuit = $("[id$=EventType]").data('pursuit');
+                var otherStaff = $("[id$=EventType]").data('otherstaff');
+                var autoRecive = $("[id$=EventType]").data('autorecive');
+                let visitReservation = $("[id$=EventType]").data('visitReservation');
+                let propertyIntroductionPossible = $("[id$=EventType]").data('propertyIntroductionPossible');
+                callEach();
+
+                function selectBackgroundColer(Correspond) {
+                    var CorrespondVal = $(Correspond).data('correspodevent');
+                    var StaffFlg = $(Correspond).data('correspondstaff');
+                    var ReplyFlg = $(Correspond).data('correspondreply');
+                    if(CorrespondVal == email || 
+                      CorrespondVal == otherStaff || 
+                      CorrespondVal == propertyIntroductionPossible ||
+                       // ▼ 2021.11.25 LINE連携対応より、"LINE追加"と"LINE受信"の追加と修正
+                      (CorrespondVal == pursuit && StaffFlg == false) ||
+                       CorrespondVal == '{! EVENT_LINE_FRIEND_ADD }' ||
+                       CorrespondVal == '{! EVENT_LINE_RECEIVE }') {
+                       // ▲ 2021.11.25
+                        return '#f2dede;';
+                    } else if (CorrespondVal == autoRecive ||
+                              (CorrespondVal == pursuit && ReplyFlg == true)) {
+                        return '##ffffcc;';
+                    } else if (CorrespondVal == visitReservation) {
+                        return '#e0ffef';
+                    }
+                    return '#ffffff;';
+                    }
+
+                    function callEach() {
+                    $("[id$=recordList]").each(function(index, element){
+                        $(this).css('background-color', selectBackgroundColer(this));
+                    });
+                }
+            });
+            //# sourceURL=sample.js
+        </script>
+        <body style="background-color:#ffffff;">
+            <main id="ga102003">
+                <article>
+                    <section>
+                        <apex:outputPanel id="searchItem"> <!-- 問合せNo0438で追加 -->
+                            <apex:pageMessages />
+                            <div class="flex-wrap justify-between align_center mb10">
+                                <h1 class="fontb font2rem" style="float:left">反響一覧</h1>
+                                <!-- 非表示検索ボタン（Enterキー押下時動作用の隠し項目） -->
+                                <apex:commandButton styleClass="btn btn-submit btn-primary" value="検索(非表示))" disabled="{!isOpenError}" 
+                                onclick="blockUi();"
+                                action="{!getCorrespondList}" rerender="form"
+                                oncomplete="unblockUi();if(!{! isOpenError}){gotoTop()}"
+                                status="loadComponent" style="visibility:hidden;"/>
+                            </div>
+                            <div class="border-g-3 mb60">
+                                <div class="flex-wrap  flex_wrap justify-between align_center ">
+                                    <div class=" mb10 wd32 wd49_md wd100_xs">
+                                        所属部署
+                                        <div class="textbox-pen " >
+                                            <apex:input type="text" html-readonly="readonly" value="{!ShopsName}" style="margin-right:30px;width : 90%;"  tabindex="1" />
+                                            <div class="info" align="right">
+                                                <apex:commandButton image="{!URLFOR($Resource.designer_file, 'designer_file/images/pencil.png')}"
+                                                                    onclick="blockUi();" action="{!openModal}" rerender="GA101002Form" disabled="{!isOpenError}" 
+                                                                    status="loadComponent" oncomplete="unblockUi(); jQuery('#dialog-modal1').dialog('open'); "
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class=" mb10 wd32 wd49_md wd100_xs">
+                                        <div>反響担当</div>
+                                        <apex:selectList styleClass="form-control" size="1" value="{!EchoStaff}" tabindex="2">
+                                            <apex:selectOptions value="{!SelectEchoStaffList}" />
+                                        </apex:selectList>
+                                    </div>
+                                    
+                                    <div class="mr10 wd32 wd49_md wd100_xs">
+                                        <!-- <div class="mr20 "></div> -->
+                                        <apex:inputCheckbox id="sc" value="{!isAppointChecked}" tabindex="3" />
+                                        <apex:outputlabel styleClass="serach_check" for="sc" value="アポイント確定含む" tabindex="3" />
+                                    </div>
+                                </div>
+                                <div class="text-center ">
+                                    <apex:commandButton styleClass="btn btn-submit btn-primary text-center mauto_xs" value="検索" disabled="{!isOpenError}" 
+                                        onclick="blockUi();"
+                                        action="{!getCorrespondList}" rerender="form"
+                                        oncomplete="unblockUi();if(!{! isOpenError}){gotoTop()};callEach();"
+                                        status="loadComponent" tabIndex="4"
+                                    />
+                                </div>
+                            </div>
+                        </apex:outputPanel> <!-- 問合せNo0438で追加 -->
+                    </section>
+                    <section>
+                        <h2 class="fontb font2rem">検索結果</h2>
+                        <input type ="hidden" data-mail="{!EVENT_EMAIL}" data-pursuit="{!EVENT_PURSUIT_VIEWED}" data-otherstaff="{!EVENT_OTHERSTAFFSUPPORTED}" data-autorecive="{!EVENT_AUTO_RECIVE}" data-visit-reservation="{!EVENT_VISIT_RESERVATION}" data-property-introduction-possible="{!EVENT_PROPERTY_INTRODUCTION_POSSIBLE}" id="EventType"/>
+                        <table class="gray" style="height:530px;">
+                            <tbody>
+                                <tr>
+                                    <th class="wd4">お客様名</th>
+                                    <th class="wd2">電話番号</th>
+                                    <th class="wd2">ステータス</th>
+                                    <th class="wd3">イベント</th>
+                                    <th class="wd3">イベント時刻</th>
+                                    <th class="wd4">メモ</th>
+                                    <th class="wd5">物件名</th>
+                                    <th class="wd1">地区</th>
+                                    <th class="wd4">反響担当</th>
+                                    <th class="wd3">ポータル</th>
+                                    <!-- 問合せ323で追加 -->
+                                    <th class="wd5">備考</th>
+                                    <th class="wd3">お客様紐づけ</th>
+                                </tr>
+                                <apex:variable var="num" value="0" />
+                                <apex:repeat value="{!screenTargetRecordList}" var="Correspond">
+                                    <!-- イベントが「メール受信」またはイベントが「他スタッフ対応」または「イベントが 閲覧ありで、スタッフ対応フラグがfalse（他スタッフ）の場合」色を赤くし、「自動返信」または「イベントが 閲覧ありで、自動返信後追客フラグがtrueの場合」色を黄色にする -->
+                                    <tr id="recordList" data-correspodevent="{!Correspond.Event}" data-correspondstaff="{!Correspond.staffSupportedFlg}" data-correspondreply="{!Correspond.AutomaticReplyAfterPursuitFlg}">                 
+                                        <td>
+                                            <!-- ▼ 2021.11.25 LINE連携対応より、"tabindex属性"が未定義の不具合を修正 -->
+                                            <!-- お客様名リンクで対応番号と取引先IDを引数として渡す -->
+                                            <apex:commandLink value="{!Correspond.AccountIdName}" onclick="showPage('GA102001View', '', 'true', 
+                                             'AccountId={!Correspond.AccountIdParentId}&Corresponds={!Correspond.Id}')"
+                                             tabIndex="5"
+                                             reRender="dummy">
+                                                <apex:param value="{!VALUE(num)}" name="CorrespondIndex" assignTo="{!CorrespondIndex}" />
+                                            </apex:commandLink>
+                                            <!-- ▲ 2021.11.25 -->
+                                        </td>
+                                        
+                                        <td><apex:outputText value="{!Correspond.AccountIdPhone}" escape="false"/></td>
+                                        <td><apex:outputText value="{!Correspond.Status}" /></td>
+                                        <td>
+                                            <!-- ▼ 2021.11.25 LINE連携対応より、"LINE追加"と"LINE受信"時はリンクで表示するよう修正 -->
+                                            <!-- リンク部 -->
+                                            <apex:commandLink value="{! Correspond.Event }" 
+                                                              onclick="showPage('GL101001View', '', 'true', 'lineMemberId={! Correspond.lineMemberId }&correspondId={! Correspond.Id }')"
+                                                              rendered="{! OR(Correspond.Event == EVENT_LINE_FRIEND_ADD, Correspond.Event == EVENT_LINE_RECEIVE) }"
+                                                              tabIndex="5"
+                                                              reRender="dummy" />
+                                            <!-- ラベル部 -->
+                                            <apex:outputText value="{!Correspond.Event}" rendered="{! AND(Correspond.Event != EVENT_LINE_FRIEND_ADD, Correspond.Event != EVENT_LINE_RECEIVE) }" />
+                                            <!-- ▲ 2021.11.25 -->
+                                        </td>
+                                        <td><apex:outputText value="{!Correspond.EventDateTime}" escape="false"/></td>
+                                        <td><apex:outputText value="{!Correspond.Memo}" /></td>
+                                        <td><apex:outputText value="{!Correspond.BuildingName}" /><apex:outputText value="{!Correspond.PropertyName}" /></td>
+                                        <td><apex:outputText value="{!Correspond.BuildingDistrict}" /></td>
+                                        <td><apex:outputText value="{!Correspond.EchoStaffName}" /><apex:outputText value="{!Correspond.EchoStaffDepartment}" /></td>
+                                        <td><apex:outputText value="{!Correspond.PortalSiteName}" /></td>
+                                        <!-- 問合せ323で追加 -->
+                                        <td><apex:outputText value="{!Correspond.remarks}" escape="false"/></td>
+                                        <td>
+                                            <!-- ▼ 2021.11.25 LINE連携対応より、"LINE追加"でLINE会員と取引先が未紐づけ時の処理を追加・修正、"tabindex属性"が未定義の不具合を修正 -->
+                                            <!-- お客様紐づけで対応IDを渡す。 -->
+                                            <apex:outputPanel rendered="{! !Correspond.isUnlinkedLineMember }" layout="none" >
+                                                <!-- 紐づけ済 -->
+                                                <apex:outputText value="紐づけ済" rendered="{! Correspond.AccountIdParentId != null }"/>
+
+                                                <!-- 対応と取引先の未紐づけ -->
+                                                <apex:commandLink value="未紐づけ"
+                                                                  rendered="{! Correspond.AccountIdParentId == null }"
+                                                                  onclick="showPage('GA105001View', '', 'true', 'Id={!Correspond.Id}')"
+                                                                  tabIndex="5"
+                                                                  reRender="dummy">
+                                                    <apex:param value="{!VALUE(num)}" name="CorrespondIndex" assignTo="{!CorrespondIndex}" />
+                                                </apex:commandLink>
+                                            </apex:outputPanel>
+
+                                            <!-- LINE会員と取引先の未紐づけ -->
+                                            <apex:commandLink value="未紐づけ"
+                                                              rendered="{! Correspond.isUnlinkedLineMember }"
+                                                              onclick="showPage('GL101003View', '', 'true', 'lineMemberId={! Correspond.lineMemberId }&correspondId={! Correspond.Id }')"
+                                                              tabIndex="5"
+                                                              reRender="dummy">
+                                            </apex:commandLink>
+                                            <!-- ▲ 2021.11.25 -->
+                                        </td>
+                                        <apex:variable var="num" value="{!VALUE(num)+1}" />
+                                    </tr>
+                                </apex:repeat>
+                            </tbody>
+                        </table>
+                    </section>
+                     <!-- 問合せNo0438で変更 -->
+                    <apex:actionFunction action="{!closeModal}" name="closeModal" rerender="searchItem" />
+                </article>
+            </main>
+        </body>
+        
+    </apex:form>
+    <!-- 【モーダルダイアログ】 -->
+    <div id="dialog-modal1" title="">
+        <apex:outputPanel id="dialogPanel1">
+            <c:GA101002Modal1View ParameterClass="{!GA101002Paremeter}" />
+        </apex:outputPanel>
+    </div>
+    <!-- 【JAVASCRIPT】 -->
+    <script language="javascript" type="text/javascript">
+        // モーダル幅の設定用
+        var clientWidth = 0; 
+        if(document.body.clientWidth > 800){
+            clientWidth = 800;
+        }else{
+            clientWidth = document.body.clientWidth;
+        }
+        jQuery(function () {
+            //ダイアログを表示
+            jQuery("#dialog-modal1").dialog({
+                modal: true,
+                autoOpen: false,
+                width: clientWidth,
+            });
+        });
+
+        //モーダルを閉じる際の処理
+        function closeGA101002View() {
+
+            jQuery("#dialog-modal1").dialog("close");
+            closeModal();
+
+        }
+    </script>
+
+</apex:page>
